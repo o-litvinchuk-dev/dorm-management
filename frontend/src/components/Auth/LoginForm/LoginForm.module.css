@@ -1,0 +1,253 @@
+.formContainer {
+    border-radius: 8px;
+    display: flex;
+    width: 100%;
+    max-width: 409px;
+    padding: 0 14px 0;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    box-sizing: border-box;
+}
+
+.inputGroup {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 8px;
+}
+
+.inputLabel {
+    font-family: "Roboto", sans-serif;
+    font-weight: 500;
+    color: var(--blue-gray-900, #263238);
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.inputField {
+    width: 100%;
+    font-family: "Roboto", sans-serif;
+    font-weight: 500;
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--blue-gray-100, #cfd8dc);
+    font-size: 14px;
+    transition: border-color 0.3s ease;
+    padding-right: 40px; /* Додано місце для іконки */
+}
+
+.inputField:focus {
+    outline: none;
+    border-color: var(--blue-gray-300, #90a4ae);
+}
+
+.inputField::placeholder {
+    font-family: "Roboto", sans-serif;
+    font-weight: 400;
+}
+
+.passwordToggle {
+    position: absolute;
+    right: 10px;
+    top: 35px;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 0.3s ease;
+}
+
+.passwordToggle:hover {
+    opacity: 1;
+}
+
+.forgotPassword {
+    font-family: "Roboto", sans-serif;
+    font-weight: 500;
+    align-self: flex-end;
+    color: var(--gray-900, #212121);
+    font-weight: 500;
+    font-size: 14px;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+}
+
+.loginButton {
+    font-family: "Roboto", sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 1.4px;
+    width: 100%;
+    padding: 14px 0;
+    border-radius: 8px;
+    background: linear-gradient(45deg, #006aff 0%, #488be9 100%);
+    color: white;
+    font-weight: 700;
+    text-transform: uppercase;
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.3s ease;
+}
+
+.loginButton:hover {
+    opacity: 0.9;
+}
+
+.divider {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    gap: 16px;
+    color: #757575;
+    margin: 4px 0;
+}
+
+.dividerLine {
+    flex: 1;
+    height: 1px;
+    background-color: #e0e0e0;
+}
+
+.textLine {
+    font-family: "Roboto", sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+}
+
+.googleButton {
+    font-family: "Roboto", sans-serif;
+    font-weight: 700;
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: 1px solid #cfd8dc;
+    background-color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: #212121;
+}
+
+.googleButton:hover {
+    background-color: #212121;
+    border-color: #212121;
+    color: white;
+}
+
+.googleButton:hover .googleIconColor {
+    fill: white;
+}
+
+.registerPrompt {
+    color: #757575;
+    font-size: 14px;
+    text-align: center;
+    margin-top: 8px;
+}
+
+.registerLink {
+    font-family: "Roboto", sans-serif;
+    font-weight: 500;
+    color: #212121;
+    font-weight: 500;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    text-decoration: none;
+}
+.textLink {
+    color: var(--gray-900, #757575);
+    text-align: center;
+    font-family: "Roboto", sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 150%; /* 21px */
+}
+
+.notification {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 15px 20px;
+    min-width: 280px;
+    max-width: 90%;
+    border-radius: 12px;
+    text-align: center;
+    font-size: 14px;
+    font-family: "Roboto", sans-serif;
+    font-weight: 500;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    opacity: 0;
+    visibility: hidden;
+    transform: translate(-50%, -20px);
+    transition: opacity 0.5s ease, transform 0.5s ease, visibility 0.5s;
+}
+
+.notification.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, 0);
+}
+
+.notification.success {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #a5d6a7;
+}
+
+.notification.error {
+    background-color: #ffebee;
+    color: #c62828;
+    border: 1px solid #ef9a9a;
+}
+
+.notificationContent {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.notificationText {
+    flex-grow: 1;
+    text-align: left;
+}
+
+.closeButton {
+    background: none;
+    border: none;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    color: inherit;
+    transition: opacity 0.3s ease;
+}
+
+.closeButton:hover {
+    opacity: 0.7;
+}
+
+@media (max-width: 480px) {
+    .notification {
+        min-width: 240px;
+        font-size: 12px;
+        padding: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .formContainer {
+        padding: 14px;
+    }
+
+    .loginButton {
+        font-size: 13px;
+    }
+}

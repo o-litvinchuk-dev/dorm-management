@@ -1,0 +1,105 @@
+.authContainer {
+    display: flex;
+    height: 100vh;
+    justify-content: center;
+    align-items: center;
+    background-color: #f8fafc;
+    padding: 1rem;
+  }
+  
+  .authCard {
+    background: white;
+    border-radius: 12px;
+    padding: 32px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e0e0e0;
+    max-width: 400px;
+    width: 100%;
+  }
+  
+  .title {
+    font-family: "Roboto", sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 16px;
+    color: #212121;
+  }
+  
+  .subtitle {
+    font-family: "Roboto", sans-serif;
+    font-size: 14px;
+    color: #607d8b;
+    text-align: center;
+    margin-bottom: 24px;
+  }
+  
+  .form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .codeInputs {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+  }
+  
+  .input {
+    width: 40px;
+    height: 40px;
+    text-align: center;
+    font-size: 18px;
+    font-family: "Roboto", sans-serif;
+    border: 1px solid #cfd8dc;
+    border-radius: 8px;
+    transition: border-color 0.3s ease;
+  }
+  
+  .input:focus {
+    outline: none;
+    border-color: #006aff;
+  }
+  
+  .submitButton {
+    padding: 12px;
+    border-radius: 8px;
+    background: linear-gradient(45deg, #006aff 0%, #488be9 100%);
+    color: white;
+    font-family: "Roboto", sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.3s ease;
+  }
+  
+  .submitButton:hover:not(:disabled) {
+    opacity: 0.9;
+  }
+  
+  .submitButton:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+  }
+  
+  .resendButton {
+    background: none;
+    border: none;
+    color: #006aff;
+    font-family: "Roboto", sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: center;
+  }
+  
+  .resendButton:hover:not(:disabled) {
+    text-decoration: underline;
+  }
+  
+  .resendButton:disabled {
+    color: #ccc;
+    cursor: not-allowed;
+  }

@@ -1,0 +1,459 @@
+.layout {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    background-color: #f8fafc;
+    font-family: "Roboto", sans-serif;
+}
+
+.mainContent {
+    flex: 1;
+    padding: 90px 17px 18px 34px;
+    transition: margin-left 0.3s ease;
+    box-sizing: border-box;
+    margin-left: 250px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.mainContent.sidebarCollapsed {
+    margin-left: 80px;
+}
+
+.container {
+    background: #fff;
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+    padding: 24px;
+    margin-top: 16px;
+    width: 100%;
+    box-sizing: border-box;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.book {
+    display: flex;
+    justify-content: center;
+    background: #fff;
+    padding: 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    width: 100%;
+    height: 100%;
+}
+
+.pageLeft,
+.pageRight {
+    width: 50%;
+    padding: 15px;
+    background: #fff;
+    box-sizing: border-box;
+}
+
+.pageLeft {
+    border-right: 1px solid #d1d5db;
+}
+
+.pageRight {
+    border-left: none;
+}
+
+.controlsWrapper {
+    background: #fff;
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+    padding: 16px;
+    margin-top: 16px;
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.controlBlock {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.controlBlock button {
+    padding: 10px 20px;
+    background-color: #006aff;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+}
+
+.controlBlock button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.controlBlock button:hover:not(:disabled) {
+    background-color: #0056d2;
+}
+
+.progressBar {
+    flex: 1;
+    height: 20px;
+    background-color: #e5e7eb;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.progressFill {
+    height: 100%;
+    background-color: #006aff;
+    transition: width 0.3s ease;
+}
+
+.navigation {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.navigation button {
+    padding: 10px 20px;
+    background-color: #006aff;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+}
+
+.navigation button:hover {
+    background-color: #0056d2;
+}
+
+.contractText {
+    font-family: "Georgia", serif;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #333;
+    white-space: pre-wrap;
+}
+
+.centeredTitle {
+    text-align: center;
+    font-size: 18px;
+    font-weight: 600;
+    color:inecInputYear #000;
+    margin: 15px 0;
+}
+
+.dateRight {
+    display: flex;
+    justify-content: space-between;
+    text-align: left;
+}
+
+.fixedDate {
+    font-weight: bold;
+    color: #333;
+}
+
+.justifiedText {
+    text-align: justify;
+}
+
+.inlineInput {
+    display: inline-block;
+    width: 150px;
+    padding: 4px 8px;
+    margin: 0 4px;
+    border: none;
+    border-bottom: 1px solid #333;
+    background: none;
+    font-family: "Georgia", serif;
+    font-size: 14px;
+    color: #333;
+    vertical-align: middle;
+    transition: border-color 0.2s ease;
+}
+
+.inlineInputDate {
+    width: 30px;
+    text-align: center;
+    padding: 4px;
+    border: none;
+    border-bottom: 1px solid #333;
+    font-family: "Georgia", serif;
+    font-size: 14px;
+}
+
+.inlineInputYear {
+    width: 50px;
+    text-align: center;
+    padding: 4px;
+    border: none;
+    border-bottom: 1px solid #333;
+    font-family: "Georgia", serif;
+    font-size: 14px;
+}
+
+.fullNameWrapper {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.fullWidthInput {
+    display: block;
+    width: 100%;
+    padding: 4px 8px;
+    margin: 0 auto;
+    border: none;
+    border-bottom: 1px solid #333;
+    background: none;
+    font-family: "Georgia", serif;
+    font-size: 14px;
+    color: #333;
+}
+
+.inputLabel {
+    display: block;
+    font-size: 12px;
+    color: #666;
+    margin-top: 4px;
+}
+
+.taxIdWrapper {
+    display: flex;
+    justify-content: flex-start;
+    margin-bottom: 20px;
+    margin-top: 20px;
+}
+
+.taxIdTable {
+    width: auto;
+}
+
+.taxIdLabel {
+    text-align: left;
+    padding-right: 10px;
+    white-space: nowrap;
+}
+
+.taxIdInputs {
+    display: flex;
+    gap: 5px;
+}
+
+.taxIdInput {
+    width: 20px;
+    text-align: center;
+    border: 1px solid #333;
+    font-family: "Georgia", serif;
+    font-size: 14px;
+    padding: 2px;
+}
+
+.inlineInputDate {
+    width: 30px;
+    text-align: center;
+    padding: 4px;
+    border: none;
+    border-bottom: 1px solid #333;
+    font-family: "Georgia", serif;
+    font-size: 14px;
+}
+
+.inlineInputYear {
+    width: 50px;
+    text-align: center;
+    padding: 4px;
+    border: none;
+    border-bottom: 1px solid #333;
+    font-family: "Georgia", serif;
+    font-size: 14px;
+}
+
+.pageThird {
+    width: 50%;
+    padding: 15px;
+    background: #fff;
+    box-sizing: border-box;
+    border-left: 1px solid #d1d5db;
+}
+
+.twoColumnLayout {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.leftColumn,
+.rightColumn {
+    width: 50%; /* Змінено з 48% на 50%, щоб прибрати пустоту між колонками */
+    border: 1px solid #000; /* Змінено колір обведення на чорний */
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+.leftColumn h4,
+.rightColumn h4 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.rightColumn p {
+    margin-bottom: 10px;
+}
+
+.signatureSection {
+    margin-top: 30px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.signatureLeft,
+.signatureRight {
+    width: 45%;
+    text-align: center;
+}
+
+.signatureSection p {
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+.inputRow {
+    display: flex;          /* Розміщуємо текст і інпут в одному рядку */
+    align-items: center;    /* Вирівнюємо по вертикалі */
+    margin-bottom: 10px;    /* Відступ між рядками */
+}
+
+.label {
+    width: 150px;           /* Фіксована ширина для тексту */
+    text-align: left;       /* Текст вирівняний по лівому краю */
+    /* margin-right видалено, щоб прибрати відступ */
+    font-family: "Georgia", serif;
+    font-size: 14px;
+    color: #333;
+}
+.stretchedInput {
+    flex: 1;                /* Інпут займає весь доступний простір */
+    border: none;           /* Прибираємо стандартну рамку */
+    border-bottom: 1px solid #333; /* Нижня лінія */
+    background: none;       /* Прозорий фон */
+    padding: 2px 5px;       /* Внутрішні відступи */
+    font-family: "Georgia", serif; /* Шрифт */
+    font-size: 14px;        /* Розмір шрифту */
+    color: #333;            /* Колір тексту */
+}
+
+/* Стилі для таблиці на сторінці 11 */
+.inventoryTable {
+    width: 80%; /* Зменшено ширину до 80% від контейнера */
+    max-width: 700px; /* Встановлено максимальну ширину для контролю розміру */
+    margin: 10px auto; /* Центрування з меншими полями */
+    border-collapse: collapse;
+    font-size: 12px; /* Зменшено розмір шрифту для компактності */
+}
+
+.inventoryTable th,
+.inventoryTable td {
+    border: 1px solid #000;
+    padding: 4px 6px; /* Зменшено відступи в комірках */
+    text-align: center;
+    vertical-align: middle;
+}
+
+.inventoryTable th {
+    background-color: #f0f0f0;
+    font-weight: bold;
+    font-size: 13px; /* Трохи більший шрифт для заголовків */
+}
+
+.tableInput {
+    width: 100%;
+    border: none;
+    outline: none;
+    text-align: center;
+    padding: 2px; /* Зменшено відступи в інпутах */
+    font-size: 12px; /* Зменшено розмір шрифту в інпутах */
+    box-sizing: border-box;
+}
+
+/* Зменшення ширини стовпців */
+.inventoryTable th:nth-child(1),
+.inventoryTable td:nth-child(1) {
+    width: 5%; /* Номер */
+}
+
+.inventoryTable th:nth-child(2),
+.inventoryTable td:nth-child(2) {
+    width: 50%; /* Назва інвентарю */
+}
+
+.inventoryTable th:nth-child(3),
+.inventoryTable td:nth-child(3) {
+    width: 20%; /* Кількість */
+}
+
+.inventoryTable th:nth-child(4),
+.inventoryTable td:nth-child(4) {
+    width: 25%; /* Придатність */
+}
+
+@media (max-width: 1024px) {
+    .mainContent {
+        padding: calc(64px + 16px) 16px 16px 16px;
+    }
+    .book {
+        flex-direction: column;
+        height: auto;
+    }
+    .pageLeft,
+    .pageRight {
+        width: 100%;
+        border: none;
+        border-bottom: 1px solid #d1d5db;
+    }
+    .pageLeft {
+        border-right: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 16px;
+        margin-top: 8px;
+    }
+    .contractText {
+        font-size: 12px;
+    }
+    .inlineInput,
+    .inlineSelect {
+        font-size: 14px;
+        padding: 6px 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .mainContent {
+        padding: calc(64px + 8px) 8px 8px 8px;
+    }
+    .container {
+        padding: 12px;
+    }
+    .inlineInput,
+    .inlineSelect {
+        font-size: 16px;
+    }
+    .navigation button {
+        padding: 8px 15px;
+        font-size: 12px;
+    }
+}

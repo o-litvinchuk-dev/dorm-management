@@ -1,0 +1,240 @@
+.formContainer {
+    border-radius: 8px;
+    display: flex;
+    width: 100%;
+    max-width: 409px;
+    padding: 0 14px;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    box-sizing: border-box;
+}
+
+.inputGroup {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 8px;
+}
+
+.inputGroup.invalid .inputField {
+    border-color: #ff4444 !important;
+}
+
+.inputGroup.invalid .inputLabel {
+    color: #ff4444;
+}
+
+.inputLabel {
+    font-family: "Roboto", sans-serif;
+    font-weight: 500;
+    color: #263238;
+    font-size: 14px;
+    transition: color 0.3s ease;
+}
+
+.inputField {
+    width: 100%;
+    font-family: "Roboto", sans-serif;
+    font-weight: 500;
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: 1px solid #cfd8dc;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    padding-right: 40px;
+}
+
+.inputField:focus {
+    outline: none;
+    border-color: #90a4ae;
+    box-shadow: 0 0 0 2px rgba(144, 164, 174, 0.1);
+}
+
+.inputField::placeholder {
+    font-family: "Roboto", sans-serif;
+    font-weight: 400;
+    color: #90a4ae;
+}
+
+.validationMessage {
+    font-family: "Roboto", sans-serif;
+    font-size: 12px;
+    margin-top: 4px;
+    display: none;
+}
+
+.inputGroup.invalid .validationMessage {
+    display: block;
+    color: #ff4444;
+}
+
+.passwordStrengthWrapper {
+    margin-top: 8px;
+    width: 100%;
+    display: flex; /* Вже є у вас */
+    flex-direction: column; /* Вже є у вас */
+    align-items: center; /* Додаємо цю лінію */
+}
+
+.passwordStrength {
+    display: flex;
+    gap: 4px;
+    height: 8px; /* Збільшимо висоту контейнера */
+    margin-bottom: 8px;
+    width: 100%;
+}
+
+.textLink {
+    color: var(--gray-900, #757575);
+    text-align: center;
+    font-family: "Roboto", sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 150%; /* 21px */
+}
+
+.strengthBar {
+    height: 5px; /* Збільшимо висоту палочок */
+    flex: 1;
+    background-color: #e0e0e0;
+    border-radius: 4px; /* Збільшимо радіус */
+    transition: background-color 0.3s ease;
+}
+
+.strengthBar.active {
+    background: #00c851;
+}
+
+.strengthText {
+    font-family: "Roboto", sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    margin-top: 6px;
+    text-align: center; /* Вже є у вас */
+    transition: color 0.3s ease;
+    width: 100%; /* Додаємо цю лінію */
+}
+
+/* Нова класична палітра */
+.strengthBar.veryWeak {
+    background-color: #ff4444;
+}
+.veryWeak {
+    color: #ff4444;
+}
+
+.strengthBar.weak {
+    background-color: #ffa726;
+}
+.weak {
+    color: #ffa726;
+}
+
+.strengthBar.medium {
+    background-color: #ffee58;
+}
+.medium {
+    color: #ffee58;
+}
+
+.strengthBar.strong {
+    background-color: #66bb6a;
+}
+.strong {
+    color: #66bb6a;
+}
+
+.strengthBar.veryStrong {
+    background-color: #2e7d32;
+}
+.veryStrong {
+    color: #2e7d32;
+}
+
+.loginButton {
+    font-family: "Roboto", sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 1.4px;
+    width: 100%;
+    padding: 14px 0;
+    border-radius: 8px;
+    background: linear-gradient(45deg, #006aff 0%, #488be9 100%);
+    color: white;
+    text-transform: uppercase;
+    border: none;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: opacity 0.3s ease;
+    position: relative;
+}
+
+.loginButton:hover {
+    opacity: 0.9;
+}
+
+.loginButton:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.spinner {
+    width: 24px;
+    height: 24px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.registerPrompt {
+    color: #757575;
+    font-size: 14px;
+    text-align: center;
+    margin-top: 8px;
+}
+
+.registerLink {
+    font-family: "Roboto", sans-serif;
+    font-weight: 500;
+    color: #212121;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.error {
+    font-family: "Roboto", sans-serif;
+    font-size: 15px;
+    color: #ffbb33;
+    margin-top: 4px;
+    font-weight: 400;
+}
+
+@media (max-width: 480px) {
+    .formContainer {
+        padding: 16px;
+    }
+
+    .inputField {
+        padding: 10px 14px;
+        font-size: 13px;
+    }
+
+    .loginButton {
+        font-size: 13px;
+        padding: 12px 0;
+    }
+}

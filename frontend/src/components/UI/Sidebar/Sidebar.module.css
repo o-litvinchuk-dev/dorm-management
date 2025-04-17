@@ -1,0 +1,347 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
+:root {
+  --primary-blue: #257BF4;
+  --gray-900: #212121;
+  --gray-700: #616161;
+  --gray-500: #757575;
+  --gray-300: #E0E0E0;
+  --gray-100: #F5F5F5;
+  --white: #FFFFFF;
+  --divider: #F6F6F6;
+  --black: #000000;
+  --logout: #D55F5A;
+  --logout-hover: rgba(213, 95, 90, 0.15);
+  --logout-active: rgba(213, 95, 90, 0.3);
+  --help-hover: rgba(255, 165, 0, 0.15);
+  --help-active: rgba(255, 165, 0, 0.3);
+  --help-orange: #FF9800;
+}
+
+.sidebarContainer {
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 32px);
+  top: 16px;
+  left: 16px;
+  width: 250px;
+  background: var(--white);
+  border: 1px solid var(--gray-300);
+  border-radius: 12px;
+  transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 100;
+  font-family: 'Roboto', sans-serif;
+  margin: 0 16px 16px 0;
+  will-change: width;
+  overflow: visible;
+}
+
+.sidebarContainer.collapsed {
+  width: 80px;
+}
+
+
+.logoContainer {
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  position: relative;
+  z-index: 5;
+}
+
+.logoContainer::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 80%;
+  height: 2px;
+  background: var(--divider);
+  transform: translateX(-50%);
+}
+
+.logoText {
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebarContainer.collapsed .logoText {
+  display: none;
+}
+
+.logoImage {
+  width: 45px;
+  height: 45px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.logoTitle {
+  font-family: 'Roboto', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--gray-900);
+  line-height: 1.2;
+}
+
+.logoSubtitle {
+  font-family: 'Roboto', sans-serif;
+  font-size: 12px;
+  color: var(--gray-700);
+  margin-top: 4px;
+  font-weight: 300;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+}
+
+.toggleButton {
+  display: flex;
+  padding: 6px;
+  align-items: center;
+  position: absolute;
+  z-index: 110;
+  right: -14px;
+  top: 77px;
+  border-radius: 8px;
+  border: 1px solid var(--gray-300);
+  background: var(--white);
+  cursor: pointer;
+  transition: background 0.1s ease;
+}
+
+.toggleButton:hover {
+  background: var(--gray-100);
+}
+
+.toggleIcon {
+  width: 16px;
+  height: 16px;
+  color: var(--gray-700);
+}
+
+.sidebarContent {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: visible;
+  position: relative;
+  z-index: 5;
+}
+
+.sidebarScroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 24px 24px;
+  position: relative;
+}
+
+.sidebarContainer.collapsed .sidebarScroll {
+  padding: 0 16px 16px;
+}
+
+.sidebarContainer.collapsed .logoContainer {
+  justify-content: center;
+  padding: 24px 0;
+}
+
+.sidebarMain {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+}
+
+.menuItem {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 12px 16px;
+  margin: 8px 0;
+  border-radius: 8px;
+  cursor: pointer;
+  gap: 12px;
+  font-family: 'Roboto', sans-serif;
+  font-size: 14px;
+  color: var(--gray-700);
+  background: transparent;
+  border: none;
+  transition: background 0.1s ease, color 0.1s ease;
+  outline: none;
+  z-index: 10;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  text-align: left;
+}
+
+.sidebarContainer.collapsed .menuItem {
+  padding: 12px;
+  justify-content: center;
+}
+
+.menuItem:hover {
+  background: var(--gray-100);
+  color: var(--gray-900);
+}
+
+.menuItem.active {
+  background: var(--primary-blue);
+  color: var(--white);
+}
+
+.menuItem.active .menuText {
+  font-weight: 500;
+}
+
+.menuIcon {
+  width: 20px;
+  height: 20px;
+  transition: color 0.1s ease;
+  pointer-events: none;
+}
+
+.menuItem.active .menuIcon {
+  color: var(--white);
+}
+
+.menuText {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 400;
+  pointer-events: none;
+}
+
+.sidebarContainer.collapsed .menuText {
+  display: none;
+}
+
+.sectionHeader {
+  padding: 8px 0;
+  display: flex;
+  justify-content: flex-start;
+  position: relative;
+  z-index: 5;
+}
+
+.sidebarContainer.collapsed .sectionHeader {
+  justify-content: center;
+}
+
+.sectionTitle {
+  font-family: 'Roboto', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--gray-500);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  pointer-events: none;
+}
+
+.bottomSection {
+  padding: 24px;
+  position: relative;
+  z-index: 5;
+}
+
+.bottomSection::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 80%;
+  height: 2px;
+  background: var(--divider);
+  transform: translateX(-50%);
+}
+
+.bottomSection .menuItem {
+  width: 100%;
+}
+
+.sidebarContainer.collapsed .bottomSection {
+  padding: 16px;
+}
+
+.menuItem[data-name="logout"] {
+  color: var(--logout);
+  transition: all 0.1s ease;
+}
+
+.menuItem[data-name="logout"] .menuIcon {
+  color: var(--logout);
+}
+
+.menuItem[data-name="logout"]:hover {
+  background: var(--logout-hover);
+  color: var(--logout);
+}
+
+.menuItem[data-name="logout"]:active {
+  background: var(--logout-active);
+  color: var(--logout);
+}
+
+.menuItem[data-name="logout"]:hover .menuIcon,
+.menuItem[data-name="logout"]:active .menuIcon {
+  color: var(--logout);
+}
+
+.bottomSection .menuItem:not(:last-child) {
+  margin-bottom: 12px;
+}
+
+.tooltip {
+  position: fixed;
+  transform: translateY(-50%);
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.1s ease;
+}
+
+.tooltipArrow {
+  width: 12px;
+  height: 26px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='26' viewBox='0 0 12 26' fill='none'%3E%3Cpath d='M0.832188 11.1233L11.9555 0V25.9111L0.832189 14.7877C-0.179701 13.7758 -0.179702 12.1352 0.832188 11.1233Z' fill='black'/%3E%3C/svg%3E");
+  background-size: contain;
+  background-repeat: no-repeat;
+  flex-shrink: 0;
+}
+
+.tooltipContent {
+  padding: 10px 12px;
+  border-radius: 4px;
+  background: var(--black);
+  color: var(--white);
+  font-family: 'Roboto', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0px 5px 10px -3.887px rgba(0, 0, 0, 0.25);
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .sidebarContainer {
+    width: calc(100% - 32px);
+    height: auto;
+    position: relative;
+    margin: 16px;
+    top: 0;
+    left: 0;
+  }
+
+  .logoContainer {
+    padding: 16px;
+  }
+
+  .toggleButton {
+    top: 24px;
+  }
+}

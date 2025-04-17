@@ -1,0 +1,38 @@
+# Node.js dependencies
+backend/node_modules/
+frontend/node_modules/
+*.lock
+yarn-error.log
+
+# Environment files
+.env
+*.env
+*.env.*
+
+# MySQL data and temporary files
+database/data/*
+*.sock
+*.log
+*.pid
+*.ibd
+*.frm
+*.MYD
+*.MYI
+
+# Docker temporary files
+*.log
+docker-compose.yml.bak
+
+# Build outputs
+frontend/build/
+backend/dist/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS-specific files
+.DS_Store
+Thumbs.db

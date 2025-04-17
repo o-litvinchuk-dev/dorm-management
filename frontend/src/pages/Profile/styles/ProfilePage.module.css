@@ -1,0 +1,89 @@
+.mainContent {
+  flex: 1;
+  transition: margin-left 0.3s ease;
+  margin-left: calc(250px + 16px);
+  padding: calc(72px + 16px) 16px 16px 16px;
+  box-sizing: border-box;
+  min-height: 100vh;
+}
+
+.mainContent.sidebarCollapsed {
+  margin-left: calc(80px + 16px);
+}
+
+/* Контейнер профілю */
+/* .profileContainer {
+  background: var(--white);
+  border: 1px solid var(--gray-300);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  padding: 24px;
+  margin-top: 16px;
+  width: 100%;
+  height: calc(100vh - 120px);
+  box-sizing: border-box;
+  font-family: "Roboto", sans-serif;
+  position: relative;
+  overflow-y: auto;
+} */
+
+/* Відступи між елементами */
+.profileContainer > *:not(:last-child) {
+  margin-bottom: 16px;
+}
+
+.profileContent {
+  height: 100%;
+  overflow-y: auto;
+}
+
+/* Завантаження та помилки */
+.loading {
+  text-align: center;
+  padding: 20px;
+  font-size: 1.2rem;
+  color: #64748b;
+}
+
+.errorMessage {
+  text-align: center;
+  font-size: 1.1rem;
+  color: #d14343;
+  padding: 20px;
+  background: rgba(209, 67, 67, 0.1);
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+/* Адаптивність */
+@media (max-width: 1024px) {
+  .mainContent {
+    margin-left: calc(80px + 16px);
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .mainContent {
+    margin-left: 0 !important;
+    padding: calc(72px + 16px) 16px 16px 16px;
+  }
+  
+  .profileContainer {
+    height: calc(100vh - 100px);
+    padding: 16px;
+    margin-top: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .mainContent {
+    padding: calc(72px + 8px) 8px 8px 8px;
+  }
+  
+  .profileContainer {
+    padding: 12px;
+    margin-top: 8px;
+  }
+}

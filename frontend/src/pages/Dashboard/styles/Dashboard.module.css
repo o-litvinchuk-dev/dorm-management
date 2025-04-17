@@ -1,0 +1,105 @@
+.dashboardLayout {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f8fafc;
+  position: relative;
+}
+
+.mainContent {
+  flex: 1;
+  transition: margin-left 0.3s ease, padding-left 0.3s ease;
+  margin-left: 250px;
+  padding: 96px 24px 24px 24px; /* Відступ під навбар */
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+.mainContent.sidebarCollapsed {
+  margin-left: 80px;
+}
+
+.dashboardContainer {
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 16px; /* Внутрішні відступи 16px */
+}
+
+.dashboardTitle {
+  font-size: clamp(1.5rem, 2.5vw, 2rem);
+  margin-bottom: 16px; /* Зовнішній відступ знизу 16px */
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.dashboardInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; /* Вирівнювання по лівому краю */
+  gap: 16px; /* Відстань між елементами 16px */
+  text-align: left;
+  font-size: 1rem;
+  color: #333;
+  background: #fff;
+  padding: 16px; /* Внутрішні відступи 16px */
+  border-radius: 12px;
+  margin-bottom: 16px; /* Зовнішній відступ знизу 16px */
+}
+
+.loading {
+  text-align: center;
+  padding: 16px; /* Внутрішні відступи 16px */
+  font-size: 1.2rem;
+  color: #64748b;
+  margin: 16px 0; /* Зовнішні відступи 16px зверху і знизу */
+}
+
+.errorMessage {
+  text-align: center;
+  font-size: 1.1rem;
+  color: #d14343;
+  padding: 16px; /* Внутрішні відступи 16px */
+  background: rgba(209, 67, 67, 0.1);
+  border-radius: 8px;
+  margin: 16px auto; /* Зовнішні відступи 16px */
+  max-width: 500px;
+}
+
+@media (max-width: 1024px) {
+  .mainContent {
+    margin-left: 80px;
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+  
+  .mainContent.sidebarCollapsed {
+    margin-left: 80px;
+  }
+}
+
+@media (max-width: 768px) {
+  .mainContent {
+    margin-left: 0 !important;
+    padding: 80px 15px 15px 15px;
+  }
+
+  .dashboardContainer {
+    padding: 16px; /* Зберігаємо відступи */
+  }
+  
+  .dashboardTitle {
+    font-size: 1.3rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboardInfo {
+    padding: 16px; /* Зберігаємо відступи */
+  }
+  
+  .errorMessage {
+    font-size: 1rem;
+    padding: 16px; /* Зберігаємо відступи */
+    margin: 16px; /* Зовнішні відступи */
+  }
+}

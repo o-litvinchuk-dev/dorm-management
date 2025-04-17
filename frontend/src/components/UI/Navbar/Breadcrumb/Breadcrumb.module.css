@@ -1,0 +1,83 @@
+.breadcrumb {
+    font-family: "Roboto", sans-serif;
+    font-size: 14px;
+    color: var(--gray-700);
+  }
+  
+  .breadcrumbList {
+    display: flex;
+    align-items: center;
+    list-style: none;
+    padding: 6px 12px;
+    margin: 0;
+    background: var(--gray-50); /* Легкий фон без тіні */
+    border: 1px solid var(--gray-200);
+    border-radius: 8px;
+  }
+  
+  .breadcrumbItem {
+    display: flex;
+    align-items: center;
+    padding: 4px 8px;
+    transition: background 0.2s ease, color 0.2s ease;
+  }
+  
+  .breadcrumbItem:hover {
+    background: var(--gray-100);
+    border-radius: 6px;
+  }
+  
+  .breadcrumbIcon {
+    width: 18px;
+    height: 18px;
+    color: var(--gray-600);
+    margin-right: 6px;
+    flex-shrink: 0;
+  }
+  
+  .breadcrumbLink {
+    color: var(--gray-700);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease;
+  }
+  
+  .breadcrumbLink:hover {
+    color: var(--primary-blue-dark);
+  }
+  
+  .breadcrumbCurrent {
+    color: var(--gray-900);
+    font-weight: 600;
+  }
+  
+  .breadcrumbSeparator {
+    width: 16px;
+    height: 16px;
+    color: var(--gray-400);
+    margin: 0 4px;
+    flex-shrink: 0;
+  }
+  
+  /* Адаптивність */
+  @media (max-width: 768px) {
+    .breadcrumbList {
+      padding: 4px 8px;
+    }
+  
+    .breadcrumbItem {
+      padding: 3px 6px;
+    }
+  
+    .breadcrumbIcon {
+      width: 16px;
+      height: 16px;
+      margin-right: 4px;
+    }
+  
+    .breadcrumbSeparator {
+      width: 14px;
+      height: 14px;
+      margin: 0 2px;
+    }
+  }

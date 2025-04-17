@@ -1,0 +1,12 @@
+# Встановити LF для всіх текстових файлів
+* text=auto eol=lf
+
+# Позначити певні файли як бінарні (без конвертації)
+*.sock binary
+*.cnf binary
+*.index binary
+*.ibd binary
+*.frm binary
+*.MYD binary
+*.MYI binary
+database/data/* binary
