@@ -8,7 +8,7 @@ import {
 import redisClient from "../config/redis.js";
 import pool from "../config/db.js";
 import { OAuth2Client } from "google-auth-library";
-
+import Joi from "joi";
 
 // Валідація пароля
 const validatePassword = (password) => {
@@ -717,81 +717,132 @@ export const resetPassword = async (req, res) => {
 
 export const getProfile = async (req, res) => {
     try {
-        const userId = req.user.userId;
-
-        const [user] = await pool.query(`
-            SELECT 
-                u.id, u.email, u.name, u.avatar, 
-                up.birthday, up.phone, up.about_me, 
-                up.interests, up.room, up.dormitory, 
-                up.instagram, up.telegram
-            FROM users u
-            LEFT JOIN user_profiles up ON u.id = up.user_id
-            WHERE u.id = ?
-        `, [userId]);
-
-        if (!user[0]) return res.status(404).json({ error: 'Користувача не знайдено' });
-
-        res.json({
-            ...user[0],
-            birthday: user[0].birthday?.toISOString().split('T')[0] || null,
-        });
-    } catch (error) {
-        console.error('Помилка отримання профілю:', error);
-        res.status(500).json({ error: 'Помилка сервера' });
-    }
-};
+      const userId = req.user.userId;
   
-export const updateProfile = async (req, res) => {
-    try {
-        const userId = req.user.userId;
-        const profileData = req.body;
-
-        const schema = Joi.object({
-            birthday: Joi.date().max(new Date()).optional(),
-            phone: Joi.string().pattern(/^\+380\d{9}$/).optional(),
-            aboutMe: Joi.string().max(1000).optional(),
-            interests: Joi.string().max(255).optional(),
-            room: Joi.string().max(10).optional(),
-            dormitory: Joi.string().max(50).optional(),
-            instagram: Joi.string().uri().optional(),
-            telegram: Joi.string().uri().optional()
-        });
-
-        const { error } = schema.validate(profileData);
-        if (error) return res.status(400).json({ error: error.details[0].message });
-
-        await pool.query(`
-            INSERT INTO user_profiles 
-              (user_id, birthday, phone, about_me, interests, room, dormitory, instagram, telegram)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON DUPLICATE KEY UPDATE
-              birthday = VALUES(birthday),
-              phone = VALUES(phone),
-              about_me = VALUES(about_me),
-              interests = VALUES(interests),
-              room = VALUES(room),
-              dormitory = VALUES(dormitory),
-              instagram = VALUES(instagram),
-              telegram = VALUES(telegram)
-        `, [
-            userId,
-            profileData.birthday,
-            profileData.phone,
-            profileData.aboutMe,
-            profileData.interests,
-            profileData.room,
-            profileData.dormitory,
-            profileData.instagram,
-            profileData.telegram
-        ]);
-
-        res.json({ message: 'Профіль оновлено' });
+      const [user] = await pool.query(
+        `
+        SELECT 
+          u.id, u.email, u.name, u.avatar, u.role,
+          up.birthday, up.phone, up.about_me, 
+          up.interests, up.room, up.dormitory, 
+          up.instagram, up.telegram
+        FROM users u
+        LEFT JOIN user_profiles up ON u.id = up.user_id
+        WHERE u.id = ?
+      `,
+        [userId]
+      );
+  
+      if (!user[0]) {
+        return res.status(404).json({ error: "Користувача не знайдено" });
+      }
+  
+      // Ensure user_profiles exists
+      if (!user[0].about_me && !user[0].phone && !user[0].birthday) {
+        await pool.execute(
+          `INSERT INTO user_profiles (user_id) VALUES (?) 
+           ON DUPLICATE KEY UPDATE user_id = user_id`,
+          [userId]
+        );
+      }
+  
+      res.json({
+        id: user[0].id,
+        email: user[0].email,
+        name: user[0].name,
+        avatar: user[0].avatar,
+        role: user[0].role,
+        birthday: user[0].birthday?.toISOString().split("T")[0] || null,
+        phone: user[0].phone || null,
+        about_me: user[0].about_me || null,
+        interests: user[0].interests || null,
+        room: user[0].room || null,
+        dormitory: user[0].dormitory || null,
+        instagram: user[0].instagram || null,
+        telegram: user[0].telegram || null,
+      });
     } catch (error) {
-        console.error('Помилка оновлення профілю:', error);
-        res.status(500).json({ error: 'Помилка сервера' });
+      console.error("Помилка отримання профілю:", error);
+      res.status(500).json({ error: "Помилка сервера" });
     }
-};
+  };
+  
+  export const updateProfile = async (req, res) => {
+    try {
+      const userId = req.user.userId;
+      const profileData = req.body;
+  
+      const schema = Joi.object({
+        birthday: Joi.date().max(new Date()).optional().allow(null),
+        phone: Joi.string().pattern(/^\+380\d{9}$/).optional().allow(null),
+        aboutMe: Joi.string().max(1000).optional().allow(null),
+        interests: Joi.string().max(255).optional().allow(null),
+        room: Joi.string().max(10).optional().allow(null),
+        dormitory: Joi.string().max(50).optional().allow(null),
+        instagram: Joi.string().uri().optional().allow(null),
+        telegram: Joi.string().uri().optional().allow(null),
+      });
+  
+      const { error } = schema.validate(profileData, { abortEarly: false });
+      if (error) {
+        const errorDetails = error.details.map(detail => ({
+          field: detail.path[0],
+          message: detail.message
+        }));
+        return res.status(400).json({ error: "Невалідні дані", details: errorDetails });
+      }
+  
+      const connection = await pool.getConnection();
+      try {
+        await connection.beginTransaction();
+  
+        // Ensure user_profiles exists
+        await connection.execute(
+            `INSERT INTO user_profiles (user_id) VALUES (?) 
+             ON DUPLICATE KEY UPDATE user_id = user_id`,
+            [userId]
+        );
+  
+        await connection.query(
+          `
+          UPDATE user_profiles 
+          SET 
+            birthday = ?, 
+            phone = ?, 
+            about_me = ?, 
+            interests = ?, 
+            room = ?, 
+            dormitory = ?, 
+            instagram = ?, 
+            telegram = ?
+          WHERE user_id = ?
+        `,
+          [
+            profileData.birthday || null,
+            profileData.phone || null,
+            profileData.aboutMe || null,
+            profileData.interests || null,
+            profileData.room || null,
+            profileData.dormitory || null,
+            profileData.instagram || null,
+            profileData.telegram || null,
+            userId,
+          ]
+        );
+  
+        await connection.commit();
+        res.json({ message: "Профіль оновлено" });
+      } catch (error) {
+        await connection.rollback();
+        throw error;
+      } finally {
+        connection.release();
+      }
+    } catch (error) {
+      console.error("Помилка оновлення профілю:", error);
+      res.status(500).json({ error: "Помилка сервера" });
+    }
+  };
   
   
   export default {
@@ -804,6 +855,7 @@ export const updateProfile = async (req, res) => {
     verifyGoogleToken,
     googleSignIn,
     getProfile,
-    updateProfile 
-};
+    updateProfile,
+    logout,
+  };
 

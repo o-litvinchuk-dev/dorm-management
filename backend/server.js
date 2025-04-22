@@ -14,17 +14,17 @@ import servicesRoutes from "./src/routes/v1/servicesRoutes.js";
 const app = express();
 const server = createServer(app);
 
-// CORS налаштування
+// Налаштування CORS
 app.use(
   cors({
-      origin: [
-          process.env.FRONTEND_URL, // http://localhost:3000
-          "https://accounts.google.com",
-          "https://*.googleapis.com"
-      ],
-      methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"], // Додано PATCH та OPTIONS
-      allowedHeaders: ["Content-Type", "Authorization"],
-      credentials: true
+    origin: [
+      process.env.FRONTEND_URL || "http://localhost:3000",
+      "https://accounts.google.com",
+      "https://*.googleapis.com"
+    ],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+    credentials: true
   })
 );
 
@@ -36,19 +36,16 @@ app.use(rateLimiter);
 
 // Логування запитів
 app.use((req, res, next) => {
-    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-    next();
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
 });
-
-// Захист Helmet
-app.use(helmet());
 
 // Обмеження запитів
 app.use(rateLimiter);
 
 // Підключення маршрутів
 app.use("/api/v1/auth", authRoutes);
-app.use("/api/v1/secure", secureRoutes); // Додано secureRoutes
+app.use("/api/v1/secure", secureRoutes);
 app.use("/api/v1/services", servicesRoutes);
 
 // Обробка помилок
@@ -59,13 +56,13 @@ import "./src/config/redis.js";
 
 // Тестовий маршрут
 app.get("/", (req, res) => {
-    res.send("Сервер працює!");
+  res.send("Сервер працює!");
 });
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-app.use(express.static(path.join(__dirname, "src"))); // Дозволяє доступ до /src
+app.use(express.static(path.join(__dirname, "src")));
 
 // Запуск сервера
 const PORT = process.env.PORT || 5000;
