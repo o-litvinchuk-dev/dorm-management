@@ -1,0 +1,133 @@
+.notificationsContainer {
+    position: relative;
+  }
+  
+  .bellButton {
+    background: none;
+    border: none;
+    cursor: pointer;
+    position: relative;
+    padding: 8px;
+  }
+  
+  .bellIcon {
+    width: 24px;
+    height: 24px;
+    color: #333;
+  }
+  
+  .badge {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 10px;
+    height: 10px;
+    background-color: #ff4d4f;
+    border-radius: 50%;
+  }
+  
+  .notificationsDropdown {
+    position: absolute;
+    top: 40px;
+    right: 0;
+    width: 320px;
+    background-color: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+  }
+  
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .header h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+  }
+  
+  .closeButton {
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .closeIcon {
+    width: 18px;
+    height: 18px;
+    color: #666;
+  }
+  
+  .notificationsList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+  
+  .notificationItem {
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+    transition: background-color 0.2s;
+  }
+  
+  .notificationItem.read {
+    background-color: #f9f9f9;
+  }
+  
+  .notificationItem:hover {
+    background-color: #f5f5f5;
+  }
+  
+  .notificationContent h4 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 500;
+  }
+  
+  .notificationContent p {
+    margin: 4px 0;
+    font-size: 12px;
+    color: #666;
+  }
+  
+  .timestamp {
+    font-size: 10px;
+    color: #999;
+  }
+  
+  .actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 8px;
+  }
+  
+  .readButton,
+  .deleteButton {
+    background: none;
+    border: none;
+    color: #006aff;
+    cursor: pointer;
+    font-size: 12px;
+    margin-left: 12px;
+    padding: 0;
+  }
+  
+  .readButton:hover,
+  .deleteButton:hover {
+    text-decoration: underline;
+  }
+  
+  .noNotifications {
+    padding: 12px;
+    text-align: center;
+    color: #666;
+    font-size: 14px;
+  }

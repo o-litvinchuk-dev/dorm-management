@@ -4,6 +4,8 @@ import api from "../../../utils/api";
 import { useUser } from "../../../contexts/UserContext";
 import styles from "./Navbar.module.css";
 import Breadcrumb from "./Breadcrumb/Breadcrumb";
+import Avatar from "../Avatar/Avatar";
+import Notifications from "../Notifications/Notifications"; // Імпортуємо компонент сповіщень
 
 import {
   BellIcon,
@@ -38,32 +40,6 @@ const Navbar = ({ isSidebarExpanded }) => {
   const getNickname = (email) => {
     if (!email) return "Користувач";
     return email.split("@")[0]; // Беремо частину до "@"
-  };
-
-  const getInitials = (email) => {
-    if (!email) return "U";
-    return email
-      .split("@")[0]
-      .split(/[._]/)
-      .map((part) => part[0] || "")
-      .join("")
-      .toUpperCase()
-      .substring(0, 2);
-  };
-
-  const stringToColor = (str) => {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
-    return `#${Array.from({ length: 3 }, (_, i) =>
-      ((hash >> (i * 8)) & 0xFF).toString(16).padStart(2, "0")
-    ).join("")}`;
-  };
-
-  const processAvatarUrl = (url) => {
-    if (!url) return null;
-    return url.includes("googleusercontent.com")
-      ? `${url.replace(/(=s\d+)(-c)?$/, "=s96-c")}?${Date.now()}`
-      : `${url}?${Date.now()}`;
   };
 
   useEffect(() => {
@@ -123,14 +99,7 @@ const Navbar = ({ isSidebarExpanded }) => {
             <MagnifyingGlassIcon className={styles.searchIcon} />
           </button>
 
-          <div className={styles.notificationWrapper}>
-            <button className={styles.notificationButton} aria-label="Сповіщення">
-              <BellIcon className={styles.notificationIcon} />
-              {unreadNotifications > 0 && (
-                <span className={styles.notificationBadge}>{unreadNotifications}</span>
-              )}
-            </button>
-          </div>
+          <Notifications /> {/* Додаємо компонент сповіщень */}
 
           <div className={styles.divider}></div>
 
@@ -141,27 +110,7 @@ const Navbar = ({ isSidebarExpanded }) => {
             aria-expanded={isDropdownOpen}
           >
             <div className={styles.avatar}>
-              {user?.avatar ? (
-                <img
-                  src={processAvatarUrl(user.avatar)}
-                  alt="Аватар"
-                  className={styles.avatarImage}
-                  referrerPolicy="no-referrer"
-                  onError={(e) => (e.target.style.display = "none")}
-                  loading="lazy"
-                />
-              ) : (
-                <div
-                  className={styles.avatarFallback}
-                  style={{
-                    backgroundColor: stringToColor(user?.email || "user"),
-                    color: getComputedStyle(document.documentElement)
-                      .getPropertyValue("--text-color-primary") || "#fff",
-                  }}
-                >
-                  {getInitials(user?.email)}
-                </div>
-              )}
+              <Avatar user={user} size={40} />
             </div>
             <div className={styles.userInfo}>
               <span className={styles.userName}>{getNickname(user?.email)}</span>

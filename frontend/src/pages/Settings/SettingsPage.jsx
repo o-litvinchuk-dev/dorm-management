@@ -15,7 +15,6 @@ const SettingsPage = () => {
     return savedState !== null ? JSON.parse(savedState) : true;
   });
 
-  // Оновлюємо стан у localStorage при зміні
   useEffect(() => {
     localStorage.setItem("sidebarOpen", JSON.stringify(isSidebarExpanded));
   }, [isSidebarExpanded]);

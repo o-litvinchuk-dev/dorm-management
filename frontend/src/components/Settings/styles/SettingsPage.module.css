@@ -1,0 +1,317 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+:root {
+  --border-radius: 8px;
+  --primary-color: #006aff;
+  --secondary-color: #488be9;
+  --text-color: #263238;
+  --gray-light: #cfd8dc;
+  --gray-dark: #90a4ae;
+  --background-light: #ffffff;
+  --background-dark: #1e1e1e;
+  --text-dark: #ffffff;
+}
+
+.settingsLayout {
+  display: flex;
+  height: 100vh;
+  background: var(--background-light);
+}
+
+.mainContent {
+  flex: 1;
+  transition: margin-left 0.3s ease;
+}
+
+.sidebarCollapsed {
+  margin-left: 80px;
+}
+
+.settingsContainer {
+  display: flex;
+  padding: 20px;
+  gap: 20px;
+}
+
+.navigationWrapper {
+  width: 250px;
+}
+
+.settingsHeader {
+  font-family: "Roboto", sans-serif;
+  font-size: 24px;
+  font-weight: 500;
+  color: var(--text-color);
+  margin-bottom: 20px;
+}
+
+.navigation {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.navButton {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border: none;
+  background: #f5f5f5;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.navButton:hover {
+  background: #e0e0e0;
+  transform: translateX(5px);
+}
+
+.navButton.active {
+  background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+  color: white;
+  box-shadow: 0 2px 10px rgba(0, 106, 255, 0.5);
+}
+
+.navButton:active {
+  transform: scale(0.98);
+}
+
+.navIcon {
+  width: 20px;
+  height: 20px;
+  margin-right: 10px;
+}
+
+.navText {
+  font-family: "Roboto", sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.content {
+  flex: 1;
+  padding: 20px;
+  background: var(--background-light);
+  border-radius: var(--border-radius);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.settingsSection {
+  max-width: 500px;
+}
+
+.sectionTitle {
+  font-family: "Roboto", sans-serif;
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--text-color);
+  margin-bottom: 16px;
+}
+
+.formContainer {
+  border-radius: var(--border-radius);
+  display: flex;
+  width: 100%;
+  max-width: 409px;
+  padding: 0 14px;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  box-sizing: border-box;
+}
+
+.inputGroup {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 8px;
+}
+
+.inputLabel {
+  font-family: "Roboto", sans-serif;
+  font-weight: 500;
+  color: var(--text-color);
+  font-size: 14px;
+}
+
+.inputField, .selectField {
+  width: 100%;
+  font-family: "Roboto", sans-serif;
+  font-weight: 500;
+  padding: 12px 16px;
+  border-radius: var(--border-radius);
+  border: 1px solid var(--gray-light);
+  font-size: 14px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.inputField:focus, .selectField:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 5px rgba(0, 106, 255, 0.3);
+}
+
+.inputField::placeholder {
+  font-family: "Roboto", sans-serif;
+  font-weight: 400;
+  color: #757575;
+}
+
+.passwordToggle {
+  position: absolute;
+  right: 10px;
+  top: 35px;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.3s ease;
+}
+
+.passwordToggle:hover {
+  opacity: 1;
+}
+
+.toggleIcon {
+  width: 20px;
+  height: 20px;
+}
+
+.checkboxLabel {
+  font-family: "Roboto", sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--text-color);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.checkbox {
+  accent-color: var(--primary-color);
+  width: 16px;
+  height: 16px;
+}
+
+.submitButton {
+  font-family: "Roboto", sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  width: 100%;
+  padding: 14px 0;
+  border-radius: var(--border-radius);
+  background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+  color: white;
+  text-transform: uppercase;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.3s ease;
+}
+
+.submitButton:hover {
+  opacity: 0.9;
+}
+
+.avatarPreview {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-top: 10px;
+}
+
+.spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid var(--primary-color);
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Темна тема */
+body.dark {
+  background: var(--background-dark);
+}
+
+body.dark .settingsHeader,
+body.dark .sectionTitle,
+body.dark .inputLabel,
+body.dark .checkboxLabel,
+body.dark .navText {
+  color: var(--text-dark);
+}
+
+body.dark .content,
+body.dark .settingsContainer {
+  background: var(--background-dark);
+}
+
+body.dark .inputField,
+body.dark .selectField {
+  background: #333;
+  border-color: #555;
+  color: var(--text-dark);
+}
+
+body.dark .inputField::placeholder {
+  color: #aaa;
+}
+
+body.dark .submitButton {
+  background: linear-gradient(45deg, #004ecb, #3267d6);
+}
+
+body.dark .navButton {
+  background: #333;
+}
+
+body.dark .navButton:hover {
+  background: #444;
+}
+
+/* Адаптивність */
+@media (max-width: 768px) {
+  .settingsContainer {
+    flex-direction: column;
+  }
+
+  .navigationWrapper {
+    width: 100%;
+  }
+
+  .content {
+    padding: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .formContainer {
+    min-width: 100%;
+    padding: 10px;
+  }
+
+  .settingsHeader {
+    font-size: 20px;
+  }
+
+  .navText {
+    font-size: 14px;
+  }
+
+  .navIcon {
+    width: 18px;
+    height: 18px;
+  }
+
+  .submitButton {
+    font-size: 13px;
+  }
+}

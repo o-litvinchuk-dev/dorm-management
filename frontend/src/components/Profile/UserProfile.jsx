@@ -4,6 +4,7 @@ import { PencilIcon, XMarkIcon, CheckIcon } from "@heroicons/react/24/outline";
 import instagramIcon from "../../images/instagram-icon.svg";
 import telegramIcon from "../../images/telegram-icon.svg";
 import styles from "./UserProfile.module.css";
+import Avatar from "../UI/Avatar/Avatar"; // Імпортуємо новий компонент Avatar
 
 // Визначаємо URL бекенду як константу (для Vite використовуємо import.meta.env)
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
@@ -21,7 +22,7 @@ const UserProfile = ({ initialUserData }) => {
     dormitory: userData.dormitory || "",
     room: userData.room || "",
     instagram: userData.instagram || "",
-    telegram: userData.telegram || ""
+    telegram: userData.telegram || "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -107,7 +108,7 @@ const UserProfile = ({ initialUserData }) => {
         dormitory: response.data.dormitory || "",
         room: response.data.room || "",
         instagram: response.data.instagram?.replace("https://instagram.com/", "") || "",
-        telegram: response.data.telegram?.replace("https://t.me/", "") || ""
+        telegram: response.data.telegram?.replace("https://t.me/", "") || "",
       });
     } catch (err) {
       setError("Не вдалося завантажити профіль");
@@ -138,7 +139,9 @@ const UserProfile = ({ initialUserData }) => {
       interests: formData.interests || null,
       room: formData.room || null,
       dormitory: formData.dormitory || null,
-      instagram: formData.instagram ? `https://instagram.com/${formData.instagram.replace(/^@/, "")}` : null,
+      instagram: formData.instagram
+        ? `https://instagram.com/${formData.instagram.replace(/^@/, "")}`
+        : null,
       telegram: formData.telegram ? `https://t.me/${formData.telegram.replace(/^@/, "")}` : null,
     };
 
@@ -168,7 +171,7 @@ const UserProfile = ({ initialUserData }) => {
       dormitory: userData.dormitory || "",
       room: userData.room || "",
       instagram: userData.instagram?.replace("https://instagram.com/", "") || "",
-      telegram: userData.telegram?.replace("https://t.me/", "") || ""
+      telegram: userData.telegram?.replace("https://t.me/", "") || "",
     });
     setEditMode(false);
     setError(null);
@@ -185,18 +188,12 @@ const UserProfile = ({ initialUserData }) => {
       <div className={styles.profileBody}>
         <div className={styles.profileContent}>
           {error && <div className={styles.errorMessage}>{error}</div>}
-          {successMessage && (
-            <div className={styles.successMessage}>{successMessage}</div>
-          )}
+          {successMessage && <div className={styles.successMessage}>{successMessage}</div>}
 
           <div className={styles.profileTopSection}>
             <div className={styles.mainInfo}>
               <div className={styles.avatarWrapper}>
-                <div className={styles.avatar}>
-                  {userData.avatar && (
-                    <img src={userData.avatar} alt="Avatar" />
-                  )}
-                </div>
+                <Avatar user={userData} size={120} /> {/* Використовуємо компонент Avatar */}
                 <div className={styles.socialLinks}>
                   {formData.instagram && (
                     <a
@@ -208,11 +205,7 @@ const UserProfile = ({ initialUserData }) => {
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      <img
-                        src={instagramIcon}
-                        alt="Instagram"
-                        className={styles.socialIcon}
-                      />
+                      <img src={instagramIcon} alt="Instagram" className={styles.socialIcon} />
                     </a>
                   )}
                   {formData.telegram && (
@@ -225,11 +218,7 @@ const UserProfile = ({ initialUserData }) => {
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      <img
-                        src={telegramIcon}
-                        alt="Telegram"
-                        className={styles.socialIcon}
-                      />
+                      <img src={telegramIcon} alt="Telegram" className={styles.socialIcon} />
                     </a>
                   )}
                 </div>
@@ -248,9 +237,7 @@ const UserProfile = ({ initialUserData }) => {
                   <h1 className={styles.userName}>{formData.name}</h1>
                 )}
                 <p className={styles.userEmail}>{formData.email}</p>
-                <span className={styles.userStatus}>
-                  {userData.role || "Студент"}
-                </span>
+                <span className={styles.userStatus}>{userData.role || "Студент"}</span>
               </div>
             </div>
 
@@ -405,11 +392,7 @@ const UserProfile = ({ initialUserData }) => {
           </div>
 
           {editMode && (
-            <button
-              className={styles.saveButton}
-              onClick={handleSubmit}
-              disabled={loading}
-            >
+            <button className={styles.saveButton} onClick={handleSubmit} disabled={loading}>
               <CheckIcon className={styles.checkIcon} />
               {loading ? "Зберігання..." : "Зберегти зміни"}
             </button>

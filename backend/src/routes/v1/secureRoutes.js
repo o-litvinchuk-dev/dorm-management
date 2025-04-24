@@ -1,30 +1,25 @@
 import { Router } from "express";
-import { authenticate, authorize } from "../../middlewares/auth.js";
-import { checkPermission } from "../../config/permissions.js";
+import { authenticate } from "../../middlewares/auth.js";
+import {
+  getNotifications,
+  markNotificationAsRead,
+  deleteNotification,
+  createNotification, // Import the new controller function
+} from "../../controllers/notificationController.js";
 import { getDashboardData } from "../../controllers/secureController.js";
 import { getProfile, updateProfile } from "../../controllers/authController.js";
 
 const router = Router();
 
-// Маршрути
+// Existing routes
 router.get("/dashboard", authenticate, getDashboardData);
-
-router.get("/admin", authenticate, authorize(["admin"]), (req, res) => {
-    res.json({ message: "Адмінська панель" });
-});
-
-router.put(
-    "/users/:id",
-    authenticate,
-    checkPermission("manage:users"),
-    (req, res) => {
-        // Логіка оновлення користувача
-    }
-);
-
-// Маршрути для профілю
 router.get("/profile", authenticate, getProfile);
 router.patch("/profile", authenticate, updateProfile);
+router.get("/notifications", authenticate, getNotifications);
+router.put("/notifications/:id/read", authenticate, markNotificationAsRead);
+router.delete("/notifications/:id", authenticate, deleteNotification);
 
-// Експорт іменованого маршрутника
+// New POST route for creating notifications
+router.post("/notifications", authenticate, createNotification);
+
 export { router as secureRoutes };
