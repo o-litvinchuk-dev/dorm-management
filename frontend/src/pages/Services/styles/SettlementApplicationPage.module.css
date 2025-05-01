@@ -3,7 +3,7 @@
     height: 100vh;
     overflow: hidden;
     background-color: #f8fafc;
-    font-family: "Roboto", sans-serif;
+    font-family: "Times New Roman", serif;
 }
 
 .mainContent {
@@ -42,6 +42,8 @@
     border-radius: 8px;
     width: 100%;
     height: 100%;
+    box-sizing: border-box;
+    overflow-y: auto;
 }
 
 .pageLeft,
@@ -61,94 +63,157 @@
 }
 
 .controlsWrapper {
-    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 12px;
+    background: #ffffff;
     border: 1px solid #d1d5db;
-    border-radius: 12px;
-    padding: 16px;
+    border-radius: 8px;
     margin-top: 16px;
     width: 100%;
     box-sizing: border-box;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-wrap: nowrap;
 }
 
-.controlBlock {
-    display: flex;
+.hint {
+    display: inline-flex;
     align-items: center;
-    gap: 20px;
-}
-
-.controlBlock button {
-    padding: 10px 20px;
-    background-color: #006aff;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
+    gap: 4px; /* Reduced gap for thicker icon */
+    padding: 6px 10px;
+    border-radius: 4px;
+    border: 1px solid #FBEEB1;
+    font-family: "Roboto", sans-serif;
     font-size: 14px;
-    font-weight: 500;
-    transition: background-color 0.2s ease;
+    background-color: #FFFCF0;
+    color: #DC7609;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    order: 2;
 }
 
-.controlBlock button:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
-}
-
-.controlBlock button:hover:not(:disabled) {
-    background-color: #0056d2;
+.hintIcon {
+    width: 18px; /* Slightly smaller for balance */
+    height: 18px;
+    color: #DC7609;
 }
 
 .progressBar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     flex: 1;
-    height: 20px;
-    background-color: #e5e7eb;
-    border-radius: 10px;
-    overflow: hidden;
+    order: 3;
 }
 
-.progressFill {
-    height: 100%;
+.progressBar progress {
+    flex-grow: 1;
+    height: 6px;
+    border-radius: 3px;
+    background-color: #e5e7eb;
+    border: none;
+}
+
+.progressBar progress::-webkit-progress-bar {
+    background-color: #e5e7eb;
+    border-radius: 3px;
+}
+
+.progressBar progress::-webkit-progress-value {
     background-color: #006aff;
+    border-radius: 3px;
     transition: width 0.3s ease;
 }
 
-.navigation {
-    display: flex;
-    justify-content: flex-end;
+.progressBar progress::-moz-progress-bar {
+    background-color: #006aff;
+    border-radius: 3px;
+    transition: width 0.3s ease;
 }
 
-.navigation button {
-    padding: 10px 20px;
-    background-color: #006aff;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
+.progressBar span {
+    font-family: "Roboto", sans-serif;
     font-size: 14px;
     font-weight: 500;
-    transition: background-color 0.2s ease;
+    color: #333;
+    min-width: 30px;
+    text-align: right;
 }
 
-.navigation button:hover {
+.navButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px; /* Reduced gap for thicker icons */
+    padding: 8px 16px;
+    background-color: #006aff;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: "Roboto", sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    min-width: 100px;
+    text-align: center;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.navButton:hover {
     background-color: #0056d2;
+    transform: translateY(-1px);
+}
+
+.navButton:active {
+    transform: translateY(0);
+}
+
+.navButton:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.buttonIcon {
+    width: 18px; /* Slightly smaller for balance */
+    height: 18px;
+    color: #ffffff;
+}
+
+.buttonIcon,
+.hintIcon {
+    stroke-width: 3; /* Default is 2 in Heroicons outline */
+}
+
+.backButton {
+    order: 1;
+}
+
+.nextButton {
+    order: 4;
+}
+
+.simplifiedForm {
+    display: none;
 }
 
 .contractText {
-    font-family: "Georgia", serif;
-    font-size: 14px;
-    line-height: 1.6;
-    color: #333;
-    white-space: pre-wrap;
+    font-family: "Times New Roman", serif;
+    font-size: 15px;
+    line-height: 1.5;
+    color: #000;
+    text-align: justify;
+    margin: 20px;
 }
 
 .centeredTitle {
-    text-align: center;
+    font-family: "Times New Roman", serif;
     font-size: 18px;
-    font-weight: 600;
-    color:inecInputYear #000;
-    margin: 15px 0;
+    font-weight: bold;
+    text-align: center;
+    margin: 10px 0;
 }
 
 .dateRight {
@@ -174,11 +239,16 @@
     border: none;
     border-bottom: 1px solid #333;
     background: none;
-    font-family: "Georgia", serif;
+    font-family: "Times New Roman", serif;
     font-size: 14px;
     color: #333;
     vertical-align: middle;
     transition: border-color 0.2s ease;
+}
+
+.inlineInput:focus {
+    border-bottom: 2px solid #006aff;
+    outline: none;
 }
 
 .inlineInputDate {
@@ -187,8 +257,13 @@
     padding: 4px;
     border: none;
     border-bottom: 1px solid #333;
-    font-family: "Georgia", serif;
+    font-family: "Times New Roman", serif;
     font-size: 14px;
+}
+
+.inlineInputDate:focus {
+    border-bottom: 2px solid #006aff;
+    outline: none;
 }
 
 .inlineInputYear {
@@ -197,13 +272,17 @@
     padding: 4px;
     border: none;
     border-bottom: 1px solid #333;
-    font-family: "Georgia", serif;
+    font-family: "Times New Roman", serif;
     font-size: 14px;
+}
+
+.inlineInputYear:focus {
+    border-bottom: 2px solid #006aff;
+    outline: none;
 }
 
 .fullNameWrapper {
     text-align: center;
-    margin-bottom: 20px;
 }
 
 .fullWidthInput {
@@ -214,9 +293,14 @@
     border: none;
     border-bottom: 1px solid #333;
     background: none;
-    font-family: "Georgia", serif;
+    font-family: "Times New Roman", serif;
     font-size: 14px;
     color: #333;
+}
+
+.fullWidthInput:focus {
+    border-bottom: 2px solid #006aff;
+    outline: none;
 }
 
 .inputLabel {
@@ -252,37 +336,14 @@
     width: 20px;
     text-align: center;
     border: 1px solid #333;
-    font-family: "Georgia", serif;
+    font-family: "Times New Roman", serif;
     font-size: 14px;
     padding: 2px;
 }
 
-.inlineInputDate {
-    width: 30px;
-    text-align: center;
-    padding: 4px;
-    border: none;
-    border-bottom: 1px solid #333;
-    font-family: "Georgia", serif;
-    font-size: 14px;
-}
-
-.inlineInputYear {
-    width: 50px;
-    text-align: center;
-    padding: 4px;
-    border: none;
-    border-bottom: 1px solid #333;
-    font-family: "Georgia", serif;
-    font-size: 14px;
-}
-
-.pageThird {
-    width: 50%;
-    padding: 15px;
-    background: #fff;
-    box-sizing: border-box;
-    border-left: 1px solid #d1d5db;
+.taxIdInput:focus {
+    border: 2px solid #006aff;
+    outline: none;
 }
 
 .twoColumnLayout {
@@ -293,8 +354,8 @@
 
 .leftColumn,
 .rightColumn {
-    width: 50%; /* Змінено з 48% на 50%, щоб прибрати пустоту між колонками */
-    border: 1px solid #000; /* Змінено колір обведення на чорний */
+    width: 50%;
+    border: 1px solid #000;
     padding: 10px;
     box-sizing: border-box;
 }
@@ -317,8 +378,7 @@
     justify-content: space-between;
 }
 
-.signatureLeft,
-.signatureRight {
+.signatureBlock {
     width: 45%;
     text-align: center;
 }
@@ -329,91 +389,159 @@
 }
 
 .inputRow {
-    display: flex;          /* Розміщуємо текст і інпут в одному рядку */
-    align-items: center;    /* Вирівнюємо по вертикалі */
-    margin-bottom: 10px;    /* Відступ між рядками */
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
 }
 
 .label {
-    width: 150px;           /* Фіксована ширина для тексту */
-    text-align: left;       /* Текст вирівняний по лівому краю */
-    /* margin-right видалено, щоб прибрати відступ */
-    font-family: "Georgia", serif;
+    width: 150px;
+    text-align: left;
+    font-family: "Times New Roman", serif;
     font-size: 14px;
     color: #333;
 }
+
 .stretchedInput {
-    flex: 1;                /* Інпут займає весь доступний простір */
-    border: none;           /* Прибираємо стандартну рамку */
-    border-bottom: 1px solid #333; /* Нижня лінія */
-    background: none;       /* Прозорий фон */
-    padding: 2px 5px;       /* Внутрішні відступи */
-    font-family: "Georgia", serif; /* Шрифт */
-    font-size: 14px;        /* Розмір шрифту */
-    color: #333;            /* Колір тексту */
+    flex: 1;
+    border: none;
+    border-bottom: 1px solid #333;
+    background: none;
+    padding: 2px 5px;
+    font-family: "Times New Roman", serif;
+    font-size: 14px;
+    color: #333;
 }
 
-/* Стилі для таблиці на сторінці 11 */
+.stretchedInput:focus {
+    border-bottom: 2px solid #006aff;
+    outline: none;
+}
+
 .inventoryTable {
-    width: 80%; /* Зменшено ширину до 80% від контейнера */
-    max-width: 700px; /* Встановлено максимальну ширину для контролю розміру */
-    margin: 10px auto; /* Центрування з меншими полями */
+    font-family: "Times New Roman", serif;
+    font-size: 12px;
+    width: 100%;
     border-collapse: collapse;
-    font-size: 12px; /* Зменшено розмір шрифту для компактності */
+    margin: 20px 0;
 }
 
-.inventoryTable th,
-.inventoryTable td {
+.inventoryTable th, .inventoryTable td {
     border: 1px solid #000;
-    padding: 4px 6px; /* Зменшено відступи в комірках */
+    padding: 5px;
     text-align: center;
-    vertical-align: middle;
 }
 
 .inventoryTable th {
     background-color: #f0f0f0;
     font-weight: bold;
-    font-size: 13px; /* Трохи більший шрифт для заголовків */
+    font-size: 12px;
 }
 
 .tableInput {
     width: 100%;
     border: none;
     outline: none;
-    text-align: center;
-    padding: 2px; /* Зменшено відступи в інпутах */
-    font-size: 12px; /* Зменшено розмір шрифту в інпутах */
+    text-align: left;
+    padding: 1px;
+    font-size: 12px;
     box-sizing: border-box;
+    height: 20px;
 }
 
-/* Зменшення ширини стовпців */
+.tableInput:focus {
+    border-bottom: 2px solid #006aff;
+}
+
 .inventoryTable th:nth-child(1),
 .inventoryTable td:nth-child(1) {
-    width: 5%; /* Номер */
+    width: 5%;
 }
 
 .inventoryTable th:nth-child(2),
 .inventoryTable td:nth-child(2) {
-    width: 50%; /* Назва інвентарю */
+    width: 20%;
 }
 
 .inventoryTable th:nth-child(3),
 .inventoryTable td:nth-child(3) {
-    width: 20%; /* Кількість */
+    width: 15%;
 }
 
 .inventoryTable th:nth-child(4),
 .inventoryTable td:nth-child(4) {
-    width: 25%; /* Придатність */
+    width: 10%;
+}
+
+.inventoryTable th:nth-child(5),
+.inventoryTable td:nth-child(5) {
+    width: 10%;
+}
+
+.inventoryTable th:nth-child(6),
+.inventoryTable td:nth-child(6) {
+    width: 40%;
+}
+
+.verticalSignatureSection {
+    display: flex;
+    flex-direction: column;
+    width: 60%;
+}
+
+.centeredText {
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: #000;
+    margin: 2px 0;
+}
+
+.centereddText {
+    text-align: center;
+    font-size: 14px;
+    font-weight: 300;
+    color: #000;
+    margin: 2px 0;
+}
+
+.centeredInput70 {
+    width: 70%;
+    border: none;
+    border-bottom: 1px solid #333;
+    font-family: "Times New Roman", serif;
+    font-size: 14px;
+    text-align: center;
+}
+
+.centeredInput70:focus {
+    border-bottom: 2px solid #006aff;
+    outline: none;
+}
+
+.dateInput {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.footnote {
+    font-size: 12px;
+    text-align: left;
+    margin-top: 10px;
+}
+
+.error {
+    color: #ff0000;
+    font-size: 12px;
+    margin-top: 2px;
+    text-align: left;
 }
 
 @media (max-width: 1024px) {
-    .mainContent {
-        padding: calc(64px + 16px) 16px 16px 16px;
-    }
     .book {
         flex-direction: column;
         height: auto;
+        overflow-y: auto;
     }
     .pageLeft,
     .pageRight {
@@ -424,20 +552,48 @@
     .pageLeft {
         border-right: none;
     }
+    .controlsWrapper {
+        gap: 10px;
+        padding: 10px 12px;
+    }
+    .hint {
+        font-size: 11px;
+    }
+    .progressBar {
+        flex: 1;
+    }
+    .navButton {
+        min-width: 80px;
+        font-size: 13px;
+        padding: 6px 12px;
+    }
 }
 
 @media (max-width: 768px) {
-    .container {
-        padding: 16px;
-        margin-top: 8px;
+    .controlsWrapper {
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        gap: 8px;
     }
-    .contractText {
-        font-size: 12px;
+    .hint {
+        max-width: 100%;
+        order: 2;
     }
-    .inlineInput,
-    .inlineSelect {
-        font-size: 14px;
-        padding: 6px 10px;
+    .progressBar {
+        width: 100%;
+        order: 3;
+    }
+    .navButton {
+        width: 100%;
+        min-width: auto;
+        padding: 8px;
+        font-size: 13px;
+    }
+    .backButton {
+        order: 1;
+    }
+    .nextButton {
+        order: 4;
     }
 }
 
@@ -448,12 +604,26 @@
     .container {
         padding: 12px;
     }
-    .inlineInput,
-    .inlineSelect {
-        font-size: 16px;
+    .controlsWrapper {
+        padding: 8px;
+        gap: 6px;
     }
-    .navigation button {
-        padding: 8px 15px;
+    .hint {
+        font-size: 10px;
+    }
+    .hintIcon {
+        width: 12px; /* Further reduced for mobile */
+        height: 12px;
+    }
+    .progressBar span {
+        font-size: 11px;
+    }
+    .navButton {
+        padding: 6px;
         font-size: 12px;
+    }
+    .buttonIcon {
+        width: 12px; /* Further reduced for mobile */
+        height: 12px;
     }
 }
