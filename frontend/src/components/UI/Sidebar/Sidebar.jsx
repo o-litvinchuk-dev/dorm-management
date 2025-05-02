@@ -1,21 +1,33 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useUser } from "../../../contexts/UserContext";
 import styles from "./Sidebar.module.css";
 import {
-  ChartBarIcon, UserGroupIcon, DocumentTextIcon, CalendarIcon,
-  Cog6ToothIcon, QuestionMarkCircleIcon, ArrowLeftOnRectangleIcon,
-  ChevronRightIcon, ChevronLeftIcon, ClipboardDocumentListIcon
+  ChartBarIcon,
+  UserGroupIcon,
+  DocumentTextIcon,
+  CalendarIcon,
+  Cog6ToothIcon,
+  QuestionMarkCircleIcon,
+  ArrowLeftOnRectangleIcon,
+  ChevronRightIcon,
+  ChevronLeftIcon,
+  ClipboardDocumentListIcon,
 } from "@heroicons/react/24/outline";
 import {
-  ChartBarIcon as ChartBarSolidIcon, UserGroupIcon as UserGroupSolidIcon,
-  DocumentTextIcon as DocumentTextSolidIcon, CalendarIcon as CalendarSolidIcon,
-  Cog6ToothIcon as Cog6ToothSolidIcon, QuestionMarkCircleIcon as QuestionMarkCircleSolidIcon,
+  ChartBarIcon as ChartBarSolidIcon,
+  UserGroupIcon as UserGroupSolidIcon,
+  DocumentTextIcon as DocumentTextSolidIcon,
+  CalendarIcon as CalendarSolidIcon,
+  Cog6ToothIcon as Cog6ToothSolidIcon,
+  QuestionMarkCircleIcon as QuestionMarkCircleSolidIcon,
   ArrowLeftOnRectangleIcon as ArrowLeftOnRectangleSolidIcon,
-  ClipboardDocumentListIcon as ClipboardDocumentListSolidIcon
+  ClipboardDocumentListIcon as ClipboardDocumentListSolidIcon,
 } from "@heroicons/react/24/solid";
 import api from "../../../utils/api";
 
 const Sidebar = ({ onToggle }) => {
+  const { user } = useUser();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
     const savedState = localStorage.getItem("sidebarOpen");
@@ -27,11 +39,23 @@ const Sidebar = ({ onToggle }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const isAdmin = user && ["admin", "superadmin", "dorm_admin"].includes(user.role);
+
   useEffect(() => {
-    const pathSegments = location.pathname.slice(1).split('/');
+    const pathSegments = location.pathname.slice(1).split("/");
     const basePath = pathSegments[0] || "dashboard";
-    const mainTabs = ["dashboard", "applications", "dormitories", "services", "settlement", "settings", "help", "logout"];
-    
+    const mainTabs = [
+      "dashboard",
+      "applications",
+      "dormitories",
+      "services",
+      "settlement",
+      "settings",
+      "help",
+      "logout",
+      "adminApplications",
+    ];
+
     if (mainTabs.includes(basePath)) {
       setActiveTab(basePath);
     } else if (pathSegments[0] === "services") {
@@ -41,48 +65,56 @@ const Sidebar = ({ onToggle }) => {
 
   useEffect(() => {
     localStorage.setItem("sidebarOpen", JSON.stringify(isSidebarOpen));
-    if (onToggle) onToggle(isSidebarOpen); // Передаємо стан у батьківський компонент
+    if (onToggle) onToggle(isSidebarOpen);
   }, [isSidebarOpen, onToggle]);
 
   const hideTooltip = useCallback(() => {
     if (tooltipTimeoutRef.current) clearTimeout(tooltipTimeoutRef.current);
-    setTooltipData(prev => ({ ...prev, visible: false }));
+    setTooltipData((prev) => ({ ...prev, visible: false }));
   }, []);
 
-  const showTooltip = useCallback((e, label) => {
-    if (!isSidebarOpen) {
-      if (tooltipTimeoutRef.current) clearTimeout(tooltipTimeoutRef.current);
-      const rect = e.currentTarget.getBoundingClientRect();
-      setTooltipData({
-        visible: true,
-        content: label,
-        top: rect.top + window.scrollY + rect.height / 2,
-        left: rect.right + 10
-      });
-    }
-  }, [isSidebarOpen]);
+  const showTooltip = useCallback(
+    (e, label) => {
+      if (!isSidebarOpen) {
+        if (tooltipTimeoutRef.current) clearTimeout(tooltipTimeoutRef.current);
+        const rect = e.currentTarget.getBoundingClientRect();
+        setTooltipData({
+          visible: true,
+          content: label,
+          top: rect.top + window.scrollY + rect.height / 2,
+          left: rect.right + 10,
+        });
+      }
+    },
+    [isSidebarOpen]
+  );
 
-  const handleNavigation = useCallback((tab) => {
-    console.log("Navigating to:", tab);
-    setActiveTab(tab);
-    hideTooltip();
-    if (tab === "logout") {
-      handleLogout();
-    } else {
-      navigate(`/${tab}`);
-    }
-  }, [navigate, hideTooltip]);
+  const handleNavigation = useCallback(
+    (tab) => {
+      setActiveTab(tab);
+      hideTooltip();
+      if (tab === "logout") {
+        handleLogout();
+      } else {
+        navigate(`/${tab}`);
+      }
+    },
+    [navigate, hideTooltip]
+  );
 
-  const handleLogout = useCallback(async () => {
-    try {
-      await api.post("/auth/logout");
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-      navigate("/login");
-    } catch (error) {
-      console.error("Logout error:", error);
-    }
-  }, [navigate]);
+  const handleLogout = useCallback(
+    async () => {
+      try {
+        await api.post("/auth/logout");
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        navigate("/login");
+      } catch (error) {
+        console.error("Logout error:", error);
+      }
+    },
+    [navigate]
+  );
 
   const toggleSidebar = useCallback(() => {
     const newState = !isSidebarOpen;
@@ -94,11 +126,14 @@ const Sidebar = ({ onToggle }) => {
     if (isSidebarOpen) hideTooltip();
   }, [isSidebarOpen, hideTooltip]);
 
-  const handleClickOutside = useCallback((e) => {
-    if (sidebarRef.current && !sidebarRef.current.contains(e.target) && tooltipData.visible) {
-      hideTooltip();
-    }
-  }, [tooltipData.visible, hideTooltip]);
+  const handleClickOutside = useCallback(
+    (e) => {
+      if (sidebarRef.current && !sidebarRef.current.contains(e.target) && tooltipData.visible) {
+        hideTooltip();
+      }
+    },
+    [tooltipData.visible, hideTooltip]
+  );
 
   useEffect(() => {
     document.addEventListener("click", handleClickOutside);
@@ -114,7 +149,8 @@ const Sidebar = ({ onToggle }) => {
       settlement: isActive ? CalendarSolidIcon : CalendarIcon,
       settings: isActive ? Cog6ToothSolidIcon : Cog6ToothIcon,
       help: isActive ? QuestionMarkCircleSolidIcon : QuestionMarkCircleIcon,
-      logout: isActive ? ArrowLeftOnRectangleSolidIcon : ArrowLeftOnRectangleIcon
+      logout: isActive ? ArrowLeftOnRectangleSolidIcon : ArrowLeftOnRectangleIcon,
+      adminApplications: isActive ? DocumentTextSolidIcon : DocumentTextIcon,
     };
     const IconComponent = icons[iconName];
     return <IconComponent className={styles.menuIcon} />;
@@ -154,16 +190,17 @@ const Sidebar = ({ onToggle }) => {
         </div>
       </div>
 
-      <button 
-        className={styles.toggleButton} 
-        onClick={toggleSidebar} 
+      <button
+        className={styles.toggleButton}
+        onClick={toggleSidebar}
         type="button"
         aria-label={isSidebarOpen ? "Згорнути бічну панель" : "Розгорнути бічну панель"}
       >
-        {isSidebarOpen ? 
-          <ChevronLeftIcon className={styles.toggleIcon} /> : 
+        {isSidebarOpen ? (
+          <ChevronLeftIcon className={styles.toggleIcon} />
+        ) : (
           <ChevronRightIcon className={styles.toggleIcon} />
-        }
+        )}
       </button>
 
       <div className={styles.sidebarContent}>
@@ -177,6 +214,14 @@ const Sidebar = ({ onToggle }) => {
               {renderMenuItem("services", "Послуги")}
               {renderMenuItem("settlement", "Розклад поселення")}
             </div>
+
+            {isAdmin && (
+              <div className={styles.sidebarSection}>
+                {renderSectionHeader("Управління")}
+                {renderMenuItem("adminApplications", "Усі заявки")}
+              </div>
+            )}
+
             <div className={styles.sidebarSection}>
               {renderSectionHeader("Налашт.")}
               {renderMenuItem("settings", "Налаштування")}

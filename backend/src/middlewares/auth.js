@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
-import { getPermissionsForRole } from "../config/permissions.js";
+import { checkPermission, getEnforcer } from "../config/permissions.js";
 
 export const authenticate = async (req, res, next) => {
     const authHeader = req.headers.authorization;
@@ -22,8 +22,6 @@ export const authenticate = async (req, res, next) => {
             return res.status(403).json({ error: "Користувача не знайдено" });
         }
 
-        console.log("[Auth] tokenVersion з БД:", user.token_version, "tokenVersion з токена:", decoded.tokenVersion);
-
         if (user.token_version !== decoded.tokenVersion) {
             console.log("[Auth] Невідповідність tokenVersion:", {
                 db: user.token_version,
@@ -36,7 +34,6 @@ export const authenticate = async (req, res, next) => {
             userId: user.id,
             role: user.role,
             email: user.email,
-            permissions: await getPermissionsForRole(user.role),
         };
         console.log("[Auth] Користувач автентифікований:", req.user);
         next();
@@ -46,12 +43,24 @@ export const authenticate = async (req, res, next) => {
     }
 };
 
-export const authorize = (roles = []) => (req, res, next) => {
-    if (!req.user || !roles.includes(req.user.role)) {
-        console.log("[Auth] Недостатньо прав, роль користувача:", req.user?.role);
-        return res.status(403).json({
-            error: "Недостатньо прав для виконання цієї дії",
-        });
+export const authorize = (action, resource) => async (req, res, next) => {
+    const enforcer = await getEnforcer();
+    const { user } = req;
+
+    try {
+        const allowed = await enforcer.enforce(user.role, resource, action);
+        if (!allowed) {
+            console.log("[Auth] Недостатньо прав, роль користувача:", user.role);
+            return res.status(403).json({
+                error: "Недостатньо прав для виконання цієї дії",
+            });
+        }
+        next();
+    } catch (error) {
+        console.error("[Auth] Помилка авторизації:", error);
+        res.status(500).json({ error: "Помилка сервера при перевірці прав" });
     }
-    next();
 };
+
+// Експорт функції checkPermission для використання в маршрутах
+export { checkPermission };

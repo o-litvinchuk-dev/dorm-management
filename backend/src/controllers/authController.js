@@ -91,7 +91,7 @@ export const googleSignIn = async (req, res) => {
                 tokenVersion: user.token_version,
             },
             process.env.JWT_SECRET,
-            { expiresIn: "15m" }
+            { expiresIn: "1d" } // Змінено з "15m" на "1d"
         );
 
         const refreshToken = jwt.sign(
@@ -392,7 +392,7 @@ export const login = async (req, res) => {
                 tokenVersion: newTokenVersion,
             },
             process.env.JWT_SECRET,
-            { expiresIn: "15m" }
+            { expiresIn: "1d" } // Змінено з "15m" на "1d"
         );
 
         const refreshToken = jwt.sign(
@@ -477,7 +477,7 @@ export const refreshToken = async (req, res) => {
         const newAccessToken = jwt.sign(
             { userId: decoded.userId },
             process.env.JWT_SECRET,
-            { expiresIn: "15m" }
+            { expiresIn: "1d" } // Змінено з "15m" на "1d"
         );
 
         res.json({ accessToken: newAccessToken });
@@ -857,5 +857,5 @@ export const getProfile = async (req, res) => {
     getProfile,
     updateProfile,
     logout,
+    validateToken,
   };
-

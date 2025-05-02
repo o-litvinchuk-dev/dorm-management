@@ -1,3 +1,4 @@
+// server.js
 import "dotenv/config";
 import express from "express";
 import { createServer } from "http";
@@ -7,12 +8,38 @@ import rateLimiter from "./src/middlewares/rateLimiter.js";
 import cors from "cors";
 import authRoutes from "./src/routes/v1/authRoutes.js";
 import { secureRoutes } from "./src/routes/v1/secureRoutes.js";
+import adminRoutes from "./src/routes/v1/adminRoutes.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import servicesRoutes from "./src/routes/v1/servicesRoutes.js";
+import { getEnforcer, checkPermission } from "./src/config/permissions.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const server = createServer(app);
+
+// Ініціалізація Casbin
+let enforcer;
+(async () => {
+  try {
+    enforcer = await getEnforcer();
+    console.log("[Casbin] Enforcer ініціалізовано");
+
+    // Тестовий маршрут для перевірки прав
+    app.use(
+      "/api/v1/secure/test",
+      checkPermission("secure"),
+      (req, res) => {
+        res.json({ message: "Доступ дозволено до Secure Endpoint" });
+      }
+    );
+  } catch (error) {
+    console.error("[Casbin] Помилка ініціалізації:", error);
+    process.exit(1);
+  }
+})();
 
 // Налаштування CORS
 app.use(
@@ -20,18 +47,22 @@ app.use(
     origin: [
       process.env.FRONTEND_URL || "http://localhost:3000",
       "https://accounts.google.com",
-      "https://*.googleapis.com"
+      "https://*.googleapis.com",
     ],
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
-    credentials: true
+    credentials: true,
   })
 );
 
 // Базові middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(helmet());
+app.use(
+  helmet({
+    crossOriginOpenerPolicy: { policy: "unsafe-none" }, // Дозволяє postMessage
+  })
+);
 app.use(rateLimiter);
 
 // Логування запитів
@@ -40,12 +71,10 @@ app.use((req, res, next) => {
   next();
 });
 
-// Обмеження запитів
-app.use(rateLimiter);
-
 // Підключення маршрутів
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/secure", secureRoutes);
+app.use("/api/v1/admin", adminRoutes);
 app.use("/api/v1/services", servicesRoutes);
 
 // Обробка помилок
@@ -58,9 +87,6 @@ import "./src/config/redis.js";
 app.get("/", (req, res) => {
   res.send("Сервер працює!");
 });
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 app.use(express.static(path.join(__dirname, "src")));
 

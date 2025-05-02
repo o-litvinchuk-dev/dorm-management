@@ -1,3 +1,5 @@
+import jwt from "jsonwebtoken";
+
 export const generateTokens = (user) => {
     const accessToken = jwt.sign(
         {
@@ -7,7 +9,7 @@ export const generateTokens = (user) => {
             provider: user.provider,
         },
         process.env.JWT_SECRET,
-        { expiresIn: "15m" }
+        { expiresIn: "1d" } // Змінено з "15m" на "1d"
     );
 
     const refreshToken = jwt.sign(

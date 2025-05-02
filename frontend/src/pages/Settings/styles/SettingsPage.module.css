@@ -137,7 +137,6 @@
   .navigation {
     width: 100%;
     border-right: none;
-    border-bottom: 1px solid var(--gray-300);
     padding-right: 0;
     padding-bottom: 16px;
   }

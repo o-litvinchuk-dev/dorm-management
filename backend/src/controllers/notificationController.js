@@ -17,16 +17,16 @@ export const createNotification = async (req, res) => {
     }
   };
 
-export const getNotifications = async (req, res) => {
-  try {
-    const userId = req.user.userId;
-    const notifications = await Notification.findByUserId(userId);
-    res.json(notifications);
-  } catch (error) {
-    console.error("Помилка отримання сповіщень:", error);
-    res.status(500).json({ error: "Помилка сервера" });
-  }
-};
+  export const getNotifications = async (req, res) => {
+    try {
+      const userId = req.user.userId;
+      const notifications = await Notification.findByUserId(userId);
+      res.json(notifications);
+    } catch (error) {
+      console.error("Помилка отримання сповіщень:", error);
+      res.status(500).json({ error: "Помилка сервера" });
+    }
+  };
 
 export const markNotificationAsRead = async (req, res) => {
   try {
@@ -57,3 +57,4 @@ export const deleteNotification = async (req, res) => {
     res.status(500).json({ error: "Помилка сервера" });
   }
 };
+

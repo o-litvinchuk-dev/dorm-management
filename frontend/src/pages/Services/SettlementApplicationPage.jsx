@@ -5,7 +5,7 @@ import styles from "./styles/SettlementApplicationPage.module.css";
 import { simplifiedSchema, fullSchema, validateForm } from "../../utils/validation";
 import { useFormSync } from "../../contexts/FormSyncContext";
 import api from "../../utils/api";
-import { InformationCircleIcon, ArrowLeftIcon, ArrowRightIcon, CheckIcon } from "@heroicons/react/24/solid"; // Use solid icons
+import { InformationCircleIcon, ArrowLeftIcon, ArrowRightIcon, CheckIcon } from "@heroicons/react/24/solid";
 
 const SettlementApplicationPage = () => {
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
@@ -13,9 +13,13 @@ const SettlementApplicationPage = () => {
   const [formData, setFormData] = useState(() => {
     const savedData = localStorage.getItem("settlementFormData");
     const defaultFormData = {
-      contractDate: "",
+      contractDay: "",
+      contractMonth: "",
+      contractYear: "",
       proxyNumber: "",
-      proxyDate: "",
+      proxyDay: "",
+      proxyMonth: "",
+      proxyYear: "",
       course: "",
       group: "",
       faculty: "",
@@ -72,13 +76,13 @@ const SettlementApplicationPage = () => {
   const taxIdRefs = useRef([]);
   const startDayRef = useRef(null);
   const startMonthRef = useRef(null);
-  const startYearRef = useRef(null);
+  const startYearSuffixRef = useRef(null);
   const endDayRef = useRef(null);
   const endMonthRef = useRef(null);
-  const endYearRef = useRef(null);
+  const endYearSuffixRef = useRef(null);
   const dayRef = useRef(null);
   const monthRef = useRef(null);
-  const yearRef = useRef(null);
+  const yearSuffixRef = useRef(null);
 
   useEffect(() => {
     localStorage.setItem("settlementFormData", JSON.stringify(formData));
@@ -162,6 +166,14 @@ const SettlementApplicationPage = () => {
     }
   };
 
+  const handleYearChange = (e, field) => {
+    const value = e.target.value;
+    if (/^\d{0,2}$/.test(value)) {
+      const fullYear = value ? `20${value.padStart(2, '0')}` : '';
+      setFormData((prev) => ({ ...prev, [field]: fullYear }));
+    }
+  };
+
   const handleTaxIdChange = (index, value) => {
     if (/^\d*$/.test(value)) {
       const newTaxId = [...formData.taxId];
@@ -191,9 +203,13 @@ const SettlementApplicationPage = () => {
         alert("Заявка успішно подана!");
         localStorage.removeItem("settlementFormData");
         setFormData({
-          contractDate: "",
+          contractDay: "",
+          contractMonth: "",
+          contractYear: "",
           proxyNumber: "",
-          proxyDate: "",
+          proxyDay: "",
+          proxyMonth: "",
+          proxyYear: "",
           course: "",
           group: "",
           faculty: "",
@@ -261,9 +277,13 @@ const SettlementApplicationPage = () => {
   };
 
   const hints = {
-    contractDate: "Введіть дату договору, наприклад: 15.09.2023",
+    contractDay: "Введіть день укладання договору, наприклад: 15",
+    contractMonth: "Введіть місяць укладання договору, наприклад: 09",
+    contractYear: "Введіть останні дві цифри року укладання договору, наприклад: 23",
     proxyNumber: "Введіть номер довіреності, наприклад: 123/АБ",
-    proxyDate: "Введіть дату довіреності, наприклад: 01.09.2023",
+    proxyDay: "Введіть день довіреності, наприклад: 01",
+    proxyMonth: "Введіть місяць довіреності, наприклад: 09",
+    proxyYear: "Введіть останні дві цифри року довіреності, наприклад: 23",
     course: "Вкажіть номер курсу, наприклад: 1",
     group: "Вкажіть групу, наприклад: БІО-11",
     faculty: "Вкажіть факультет, наприклад: Біологічний",
@@ -276,10 +296,10 @@ const SettlementApplicationPage = () => {
     dormBuilding: "Вкажіть номер будинку, наприклад: 15",
     startDay: "Вкажіть день початку, наприклад: 01",
     startMonth: "Вкажіть місяць початку, наприклад: 09",
-    startYear: "Вкажіть рік початку, наприклад: 2023",
+    startYear: "Введіть останні дві цифри року початку, наприклад: 23",
     endDay: "Вкажіть день закінчення, наприклад: 31",
     endMonth: "Вкажіть місяць закінчення, наприклад: 08",
-    endYear: "Вкажіть рік закінчення, наприклад: 2024",
+    endYear: "Введіть останні дві цифри року закінчення, наприклад: 24",
     residentFullName: "Введіть повне ім'я мешканця, наприклад: Іванов Іван Іванович",
     residentRegion: "Вкажіть область, наприклад: Київська",
     residentDistrict: "Вкажіть район, наприклад: Голосіївський",
@@ -291,7 +311,7 @@ const SettlementApplicationPage = () => {
     parentFullName: "Введіть П.І.Б. одного з батьків, наприклад: Іванова Марія Петрівна",
     day: "Вкажіть день, наприклад: 01",
     month: "Вкажіть місяць, наприклад: 09",
-    year: "Вкажіть рік, наприклад: 2023",
+    year: "Введіть останні дві цифри року, наприклад: 23",
     dormNumber: "Вкажіть номер гуртожитку, наприклад: 5",
     roomNumber: "Вкажіть номер кімнати, наприклад: 101",
     address: "Вкажіть повну адресу, наприклад: вул. Героїв Оборони, 15, Київ",
@@ -315,34 +335,183 @@ const SettlementApplicationPage = () => {
       <div className={styles.contractText}>
         <h2 className={styles.centeredTitle}>Договір</h2>
         <p className={styles.dateRight}>
-          м. Київ <span className={styles.fixedDate}><input type="text" name="contractDate" value={formData.contractDate} onChange={handleChange} onFocus={() => handleFocus("contractDate")} onBlur={handleBlur} className={styles.inlineInput} required /></span>
+          м. Київ{" "}
+          <span className={styles.fixedDate}>
+            «{" "}
+            <input
+              type="text"
+              name="contractDay"
+              value={formData.contractDay}
+              onChange={handleChange}
+              onFocus={() => handleFocus("contractDay")}
+              onBlur={handleBlur}
+              maxLength="2"
+              placeholder="__"
+              className={styles.inlineInputDate}
+              required
+            />{" "}
+            »{" "}
+            <input
+              type="text"
+              name="contractMonth"
+              value={formData.contractMonth}
+              onChange={handleChange}
+              onFocus={() => handleFocus("contractMonth")}
+              onBlur={handleBlur}
+              maxLength="2"
+              placeholder="__"
+              className={styles.inlineInputDate}
+              required
+            />{" "}
+            <span>20</span>
+            <input
+              type="text"
+              value={formData.contractYear.slice(2)}
+              onChange={(e) => handleYearChange(e, "contractYear")}
+              onFocus={() => handleFocus("contractYear")}
+              onBlur={handleBlur}
+              maxLength="2"
+              placeholder="__"
+              className={styles.inlineInputDate}
+              required
+            />{" "}
+            р.
+          </span>
         </p>
         <p className={styles.justifiedText}>
-          між Національним університетом біоресурсів і природокористування України, в особі директора студентського містечка Стецюка Сергія Васильовича, що діє на підставі довіреності №{" "}
-          <input type="text" name="proxyNumber" value={formData.proxyNumber} onChange={handleChange} onFocus={() => handleFocus("proxyNumber")} onBlur={handleBlur} className={styles.inlineInput} required />{" "}
+          між Національним університетом біоресурсів і природокористування України, в особі директора студентського містечка Стецюка Сергія Васильовича,<br />
+          що діє на підставі довіреності №{" "}
+          <input
+            type="text"
+            name="proxyNumber"
+            value={formData.proxyNumber}
+            onChange={handleChange}
+            onFocus={() => handleFocus("proxyNumber")}
+            onBlur={handleBlur}
+            className={styles.inlineInput}
+            required
+          />{" "}
           від{" "}
-          <input type="text" name="proxyDate" value={formData.proxyDate} onChange={handleChange} onFocus={() => handleFocus("proxyDate")} onBlur={handleBlur} className={styles.inlineInput} required />{" "}
-          {new Date().getFullYear()} з одного боку і студент (аспірант, докторант)
+          <input
+            type="text"
+            name="proxyDay"
+            value={formData.proxyDay}
+            onChange={handleChange}
+            onFocus={() => handleFocus("proxyDay")}
+            onBlur={handleBlur}
+            maxLength="2"
+            placeholder="__"
+            className={styles.inlineInputDate}
+            required
+          />{" "}
+          <input
+            type="text"
+            name="proxyMonth"
+            value={formData.proxyMonth}
+            onChange={handleChange}
+            onFocus={() => handleFocus("proxyMonth")}
+            onBlur={handleBlur}
+            maxLength="2"
+            placeholder="__"
+            className={styles.inlineInputDate}
+            required
+          />{" "}
+          <span>20</span>
+          <input
+            type="text"
+            value={formData.proxyYear.slice(2)}
+            onChange={(e) => handleYearChange(e, "proxyYear")}
+            onFocus={() => handleFocus("proxyYear")}
+            onBlur={handleBlur}
+            maxLength="2"
+            placeholder="__"
+            className={styles.inlineInputDate}
+            required
+          />{" "}
+          р., з одного боку і студент (аспірант, докторант)
         </p>
         <p className={styles.justifiedText}>
-          <input type="number" name="course" value={formData.course} onChange={handleChange} onFocus={() => handleFocus("course")} onBlur={handleBlur} className={styles.inlineInput} required />{" "}
+          <input
+            type="number"
+            name="course"
+            value={formData.course}
+            onChange={handleChange}
+            onFocus={() => handleFocus("course")}
+            onBlur={handleBlur}
+            className={styles.inlineInput}
+            required
+          />{" "}
           курсу{" "}
-          <input type="text" name="group" value={formData.group} onChange={handleChange} onFocus={() => handleFocus("group")} onBlur={handleBlur} className={styles.inlineInput} required />{" "}
+          <input
+            type="text"
+            name="group"
+            value={formData.group}
+            onChange={handleChange}
+            onFocus={() => handleFocus("group")}
+            onBlur={handleBlur}
+            className={styles.inlineInput}
+            required
+          />{" "}
           групи,{" "}
-          <input type="text" name="faculty" value={formData.faculty} onChange={handleChange} onFocus={() => handleFocus("faculty")} onBlur={handleBlur} className={styles.inlineInput} required />{" "}
+          <input
+            type="text"
+            name="faculty"
+            value={formData.faculty}
+            onChange={handleChange}
+            onFocus={() => handleFocus("faculty")}
+            onBlur={handleBlur}
+            className={styles.inlineInput}
+            required
+          />{" "}
           ННІ/факультету
         </p>
         <div className={styles.fullNameWrapper}>
-          <input type="text" name="fullName" value={formData.fullName} onChange={handleChange} onFocus={() => handleFocus("fullName")} onBlur={handleBlur} className={styles.fullWidthInput} required />
+          <input
+            type="text"
+            name="fullName"
+            value={formData.fullName}
+            onChange={handleChange}
+            onFocus={() => handleFocus("fullName")}
+            onBlur={handleBlur}
+            className={styles.fullWidthInput}
+            required
+          />
           <span className={styles.inputLabel}>(П.І.Б.)</span>
         </div>
         <p className={styles.justifiedText}>
           Паспорт серії{" "}
-          <input type="text" name="passportSeries" value={formData.passportSeries} onChange={handleChange} onFocus={() => handleFocus("passportSeries")} onBlur={handleBlur} className={styles.inlineInput} required />{" "}
+          <input
+            type="text"
+            name="passportSeries"
+            value={formData.passportSeries}
+            onChange={handleChange}
+            onFocus={() => handleFocus("passportSeries")}
+            onBlur={handleBlur}
+            className={styles.inlineInput}
+            required
+          />{" "}
           №{" "}
-          <input type="text" name="passportNumber" value={formData.passportNumber} onChange={handleChange} onFocus={() => handleFocus("passportNumber")} onBlur={handleBlur} className={styles.inlineInput} required />{" "}
+          <input
+            type="text"
+            name="passportNumber"
+            value={formData.passportNumber}
+            onChange={handleChange}
+            onFocus={() => handleFocus("passportNumber")}
+            onBlur={handleBlur}
+            className={styles.inlineInput}
+            required
+          />{" "}
           виданий{" "}
-          <input type="text" name="passportIssued" value={formData.passportIssued} onChange={handleChange} onFocus={() => handleFocus("passportIssued")} onBlur={handleBlur} className={styles.inlineInput} required />
+          <input
+            type="text"
+            name="passportIssued"
+            value={formData.passportIssued}
+            onChange={handleChange}
+            onFocus={() => handleFocus("passportIssued")}
+            onBlur={handleBlur}
+            className={styles.inlineInput}
+            required
+          />
         </p>
         <div className={styles.taxIdWrapper}>
           <table className={styles.taxIdTable}>
@@ -383,53 +552,147 @@ const SettlementApplicationPage = () => {
         </p>
         <p className={styles.justifiedText}>
           Житлове приміщення знаходиться за адресою м. Київ вул.{" "}
-          <input type="text" name="dormStreet" value={formData.dormStreet} onChange={handleChange} onFocus={() => handleFocus("dormStreet")} onBlur={handleBlur} className={styles.inlineInput} required />{" "}
+          <input
+            type="text"
+            name="dormStreet"
+            value={formData.dormStreet}
+            onChange={handleChange}
+            onFocus={() => handleFocus("dormStreet")}
+            onBlur={handleBlur}
+            className={styles.inlineInput}
+            required
+          />{" "}
           буд.{" "}
-          <input type="text" name="dormBuilding" value={formData.dormBuilding} onChange={handleChange} onFocus={() => handleFocus("dormBuilding")} onBlur={handleBlur} className={styles.inlineInput} required />{" "}
+          <input
+            type="text"
+            name="dormBuilding"
+            value={formData.dormBuilding}
+            onChange={handleChange}
+            onFocus={() => handleFocus("dormBuilding")}
+            onBlur={handleBlur}
+            className={styles.inlineInput}
+            required
+          />{" "}
           гуртожиток №{" "}
-          <input type="text" name="dormNumber" value={formData.dormNumber} onChange={handleChange} onFocus={() => handleFocus("dormNumber")} onBlur={handleBlur} className={styles.inlineInput} required />{" "}
+          <input
+            type="text"
+            name="dormNumber"
+            value={formData.dormNumber}
+            onChange={handleChange}
+            onFocus={() => handleFocus("dormNumber")}
+            onBlur={handleBlur}
+            className={styles.inlineInput}
+            required
+          />{" "}
           кімната №{" "}
-          <input type="text" name="roomNumber" value={formData.roomNumber} onChange={handleChange} onFocus={() => handleFocus("roomNumber")} onBlur={handleBlur} className={styles.inlineInput} required />
+          <input
+            type="text"
+            name="roomNumber"
+            value={formData.roomNumber}
+            onChange={handleChange}
+            onFocus={() => handleFocus("roomNumber")}
+            onBlur={handleBlur}
+            className={styles.inlineInput}
+            required
+          />
         </p>
         <p className={styles.justifiedText}>
-          Строк користування житловим приміщенням за цим договором становить з{" "}
-          <input type="text" name="startDay" value={formData.startDay} onChange={(e) => { handleChange(e); if (e.target.value.length === 2) startMonthRef.current.focus(); }} onFocus={() => handleFocus("startDay")} onBlur={handleBlur} maxLength="2" placeholder="__" className={styles.inlineInputDate} ref={startDayRef} required />{" "}
-          <input type="text" name="startMonth" value={formData.startMonth} onChange={(e) => { handleChange(e); if (e.target.value.length === 2) startYearRef.current.focus(); }} onFocus={() => handleFocus("startMonth")} onBlur={handleBlur} maxLength="2" placeholder="__" className={styles.inlineInputDate} ref={startMonthRef} required />{" "}
-          <input type="text" name="startYear" value={formData.startYear} onChange={handleChange} onFocus={() => handleFocus("startYear")} onBlur={handleBlur} maxLength="4" placeholder="20__" className={styles.inlineInputYear} ref={startYearRef} required />{" "}
-          р. по{" "}
-          <input type="text" name="endDay" value={formData.endDay} onChange={(e) => { handleChange(e); if (e.target.value.length === 2) endMonthRef.current.focus(); }} onFocus={() => handleFocus("endDay")} onBlur={handleBlur} maxLength="2" placeholder="__" className={styles.inlineInputDate} ref={endDayRef} required />{" "}
-          <input type="text" name="endMonth" value={formData.endMonth} onChange={(e) => { handleChange(e); if (e.target.value.length === 2) endYearRef.current.focus(); }} onFocus={() => handleFocus("endMonth")} onBlur={handleBlur} maxLength="2" placeholder="__" className={styles.inlineInputDate} ref={endMonthRef} required />{" "}
-          <input type="text" name="endYear" value={formData.endYear} onChange={handleChange} onFocus={() => handleFocus("endYear")} onBlur={handleBlur} maxLength="4" placeholder="20__" className={styles.inlineInputYear} ref={endYearRef} required />{" "}
+          Строк користування житловим приміщенням за цим договором становить з «{" "}
+          <input
+            type="text"
+            name="startDay"
+            value={formData.startDay}
+            onChange={(e) => {
+              handleChange(e);
+              if (e.target.value.length === 2) startMonthRef.current.focus();
+            }}
+            onFocus={() => handleFocus("startDay")}
+            onBlur={handleBlur}
+            maxLength="2"
+            placeholder="__"
+            className={styles.inlineInputDate}
+            ref={startDayRef}
+            required
+          />{" "}
+          »{" "}
+          <input
+            type="text"
+            name="startMonth"
+            value={formData.startMonth}
+            onChange={(e) => {
+              handleChange(e);
+              if (e.target.value.length === 2) startYearSuffixRef.current.focus();
+            }}
+            onFocus={() => handleFocus("startMonth")}
+            onBlur={handleBlur}
+            maxLength="2"
+            placeholder="__"
+            className={styles.inlineInputDate}
+            ref={startMonthRef}
+            required
+          />{" "}
+          <span>20</span>
+          <input
+            type="text"
+            value={formData.startYear.slice(2)}
+            onChange={(e) => handleYearChange(e, "startYear")}
+            onFocus={() => handleFocus("startYear")}
+            onBlur={handleBlur}
+            maxLength="2"
+            placeholder="__"
+            className={styles.inlineInputDate}
+            ref={startYearSuffixRef}
+            required
+          />{" "}
+          р. по «{" "}
+          <input
+            type="text"
+            name="endDay"
+            value={formData.endDay}
+            onChange={(e) => {
+              handleChange(e);
+              if (e.target.value.length === 2) endMonthRef.current.focus();
+            }}
+            onFocus={() => handleFocus("endDay")}
+            onBlur={handleBlur}
+            maxLength="2"
+            placeholder="__"
+            className={styles.inlineInputDate}
+            ref={endDayRef}
+            required
+          />{" "}
+          »{" "}
+          <input
+            type="text"
+            name="endMonth"
+            value={formData.endMonth}
+            onChange={(e) => {
+              handleChange(e);
+              if (e.target.value.length === 2) endYearSuffixRef.current.focus();
+            }}
+            onFocus={() => handleFocus("endMonth")}
+            onBlur={handleBlur}
+            maxLength="2"
+            placeholder="__"
+            className={styles.inlineInputDate}
+            ref={endMonthRef}
+            required
+          />{" "}
+          <span>20</span>
+          <input
+            type="text"
+            value={formData.endYear.slice(2)}
+            onChange={(e) => handleYearChange(e, "endYear")}
+            onFocus={() => handleFocus("endYear")}
+            onBlur={handleBlur}
+            maxLength="2"
+            placeholder="__"
+            className={styles.inlineInputDate}
+            ref={endYearSuffixRef}
+            required
+          />{" "}
           р.
         </p>
-      </div>
-    );
-  };
-
-  const simplifiedPage1Content = () => {
-    return (
-      <div className={styles.contractText}>
-        <h2 className={styles.centeredTitle}>Спрощена форма договору</h2>
-        <div className={styles.fullNameWrapper}>
-          <input type="text" name="fullName" value={formData.fullName} onChange={handleChange} onFocus={() => handleFocus("fullName")} onBlur={handleBlur} className={styles.fullWidthInput} required />
-          <span className={styles.inputLabel}>(П.І.Б.)</span>
-        </div>
-        <p className={styles.justifiedText}>
-          Паспорт серії{" "}
-          <input type="text" name="passportSeries" value={formData.passportSeries} onChange={handleChange} onFocus={() => handleFocus("passportSeries")} onBlur={handleBlur} className={styles.inlineInput} required />{" "}
-          №{" "}
-          <input type="text" name="passportNumber" value={formData.passportNumber} onChange={handleChange} onFocus={() => handleFocus("passportNumber")} onBlur={handleBlur} className={styles.inlineInput} required />
-        </p>
-        <p className={styles.justifiedText}>
-          Гуртожиток №{" "}
-          <input type="text" name="dormNumber" value={formData.dormNumber} onChange={handleChange} onFocus={() => handleFocus("dormNumber")} onBlur={handleBlur} className={styles.inlineInput} required />{" "}
-          кімната №{" "}
-          <input type="text" name="roomNumber" value={formData.roomNumber} onChange={handleChange} onFocus={() => handleFocus("roomNumber")} onBlur={handleBlur} className={styles.inlineInput} required />
-        </p>
-        <div className={styles.fullNameWrapper}>
-          <input type="text" name="residentPhone" value={formData.residentPhone} onChange={handleChange} onFocus={() => handleFocus("residentPhone")} onBlur={handleBlur} className={styles.fullWidthInput} required />
-          <span className={styles.inputLabel}>(Контактний телефон)</span>
-        </div>
       </div>
     );
   };
@@ -437,7 +700,7 @@ const SettlementApplicationPage = () => {
   const page2Content = () => {
     return (
       <div className={styles.contractText}>
-        <h3>2. ПРАВА СТОРІН</h3>
+        <h3 className={styles.centeredTitle}>2. ПРАВА СТОРІН</h3>
         <p className={styles.justifiedText}>2.1 Університет має право:</p>
         <p className={styles.justifiedText}>
           2.1.1. Вимагати від Мешканця дотримання умов цього Договору. Правил внутрішнього розпорядку
@@ -569,7 +832,7 @@ const SettlementApplicationPage = () => {
     return (
       <div className={styles.contractText}>
         <p className={styles.justifiedText}>
-          3.2.5. Своєчасно сплачувати за тимчасове користування житловим приміщенням згідно Положення про порядок поселення (переселення, виселення) студентів та аспірантів (докторантів) університету в гуртожитки студентського містечка Університету та додаткові послуги (додаток 3) відповідно до цього Договору та наказу Ректора. При цьому оплата за використану електроенергію власними приладами зазначених у додатку 3 проводиться Мешканцем додатково відповідно до затверджених кошторисів на відшкодування витрат.
+          3.2.5. Своєчасно сп Brasileveldt.com – один із найпопулярніших сайтів із пошуку авіаквитків, який пропонує зручний інтерфейс та порівняння цін від різних авіакомпаній.
         </p>
         <p className={styles.justifiedText}>
           3.2.6. Здійснювати вхід до гуртожитку за пред'явленням перепустки встановленого Університетом зразка.
@@ -718,9 +981,52 @@ const SettlementApplicationPage = () => {
         <h3 className={styles.centeredTitle}>7. СТРОК ДІЇ ДОГОВОРУ</h3>
         <p className={styles.justifiedText}>
           7.1. Цей Договір вважається укладеним і набирає чинності з моменту його підписання Сторонами, а закінчується «
-          <input type="text" name="endDay" value={formData.endDay} onChange={(e) => { handleChange(e); if (e.target.value.length === 2) endMonthRef.current.focus(); }} onFocus={() => handleFocus("endDay")} onBlur={handleBlur} maxLength="2" placeholder="__" className={styles.inlineInputDate} ref={endDayRef} required />{" "}
-          <input type="text" name="endMonth" value={formData.endMonth} onChange={(e) => { handleChange(e); if (e.target.value.length === 2) endYearRef.current.focus(); }} onFocus={() => handleFocus("endMonth")} onBlur={handleBlur} maxLength="2" placeholder="__" className={styles.inlineInputDate} ref={endMonthRef} required />{" "}
-          <input type="text" name="endYear" value={formData.endYear} onChange={handleChange} onFocus={() => handleFocus("endYear")} onBlur={handleBlur} maxLength="4" placeholder="20__" className={styles.inlineInputYear} ref={endYearRef} required />{" "}
+          <input
+            type="text"
+            name="endDay"
+            value={formData.endDay}
+            onChange={(e) => {
+              handleChange(e);
+              if (e.target.value.length === 2) endMonthRef.current.focus();
+            }}
+            onFocus={() => handleFocus("endDay")}
+            onBlur={handleBlur}
+            maxLength="2"
+            placeholder="__"
+            className={styles.inlineInputDate}
+            ref={endDayRef}
+            required
+          />{" "}
+          »{" "}
+          <input
+            type="text"
+            name="endMonth"
+            value={formData.endMonth}
+            onChange={(e) => {
+              handleChange(e);
+              if (e.target.value.length === 2) endYearSuffixRef.current.focus();
+            }}
+            onFocus={() => handleFocus("endMonth")}
+            onBlur={handleBlur}
+            maxLength="2"
+            placeholder="__"
+            className={styles.inlineInputDate}
+            ref={endMonthRef}
+            required
+          />{" "}
+          <span>20</span>
+          <input
+            type="text"
+            value={formData.endYear.slice(2)}
+            onChange={(e) => handleYearChange(e, "endYear")}
+            onFocus={() => handleFocus("endYear")}
+            onBlur={handleBlur}
+            maxLength="2"
+            placeholder="__"
+            className={styles.inlineInputDate}
+            ref={endYearSuffixRef}
+            required
+          />{" "}
           р.
         </p>
         <p className={styles.justifiedText}>
@@ -810,48 +1116,128 @@ const SettlementApplicationPage = () => {
               код ЄДРПОУ 00493706
             </p>
             <div className={styles.signatureBlock}>
-              <p className={styles.justifiedText}>Сергій СТЕЦЮК</p>
-              <p className={styles.justifiedText}>Підпис</p>
+              <p className={`${styles.justifiedText} ${styles.centeredSignature}`}>Сергій СТЕЦЮК</p>
             </div>
           </div>
           <div className={styles.rightColumn}>
             <h4>Мешканець</h4>
             <div className={styles.fullNameWrapper}>
-              <input type="text" name="residentFullName" value={formData.residentFullName} onChange={handleChange} onFocus={() => handleFocus("residentFullName")} onBlur={handleBlur} className={styles.fullWidthInput} required />
+              <input
+                type="text"
+                name="residentFullName"
+                value={formData.residentFullName}
+                onChange={handleChange}
+                onFocus={() => handleFocus("residentFullName")}
+                onBlur={handleBlur}
+                className={styles.fullWidthInput}
+                required
+              />
               <span className={styles.inputLabel}>(П.І.Б.)</span>
             </div>
             <p className={styles.justifiedText}>Поштова адреса:</p>
             <div className={styles.inputRow}>
               <label className={styles.label}>Область:</label>
-              <input type="text" name="residentRegion" value={formData.residentRegion} onChange={handleChange} onFocus={() => handleFocus("residentRegion")} onBlur={handleBlur} className={styles.stretchedInput} required />
+              <input
+                type="text"
+                name="residentRegion"
+                value={formData.residentRegion}
+                onChange={handleChange}
+                onFocus={() => handleFocus("residentRegion")}
+                onBlur={handleBlur}
+                className={styles.stretchedInput}
+                required
+              />
             </div>
             <div className={styles.inputRow}>
               <label className={styles.label}>Район:</label>
-              <input type="text" name="residentDistrict" value={formData.residentDistrict} onChange={handleChange} onFocus={() => handleFocus("residentDistrict")} onBlur={handleBlur} className={styles.stretchedInput} required />
+              <input
+                type="text"
+                name="residentDistrict"
+                value={formData.residentDistrict}
+                onChange={handleChange}
+                onFocus={() => handleFocus("residentDistrict")}
+                onBlur={handleBlur}
+                className={styles.stretchedInput}
+                required
+              />
             </div>
             <div className={styles.inputRow}>
               <label className={styles.label}>Населений пункт:</label>
-              <input type="text" name="residentCity" value={formData.residentCity} onChange={handleChange} onFocus={() => handleFocus("residentCity")} onBlur={handleBlur} className={styles.stretchedInput} required />
+              <input
+                type="text"
+                name="residentCity"
+                value={formData.residentCity}
+                onChange={handleChange}
+                onFocus={() => handleFocus("residentCity")}
+                onBlur={handleBlur}
+                className={styles.stretchedInput}
+                required
+              />
             </div>
             <div className={styles.inputRow}>
               <label className={styles.label}>Поштовий індекс:</label>
-              <input type="text" name="residentPostalCode" value={formData.residentPostalCode} onChange={handleChange} onFocus={() => handleFocus("residentPostalCode")} onBlur={handleBlur} className={styles.stretchedInput} required />
+              <input
+                type="text"
+                name="residentPostalCode"
+                value={formData.residentPostalCode}
+                onChange={handleChange}
+                onFocus={() => handleFocus("residentPostalCode")}
+                onBlur={handleBlur}
+                className={styles.stretchedInput}
+                required
+              />
             </div>
             <div className={styles.inputRow}>
               <label className={styles.label}>Контактний тел.:</label>
-              <input type="text" name="residentPhone" value={formData.residentPhone} onChange={handleChange} onFocus={() => handleFocus("residentPhone")} onBlur={handleBlur} className={styles.stretchedInput} required />
+              <input
+                type="text"
+                name="residentPhone"
+                value={formData.residentPhone}
+                onChange={handleChange}
+                onFocus={() => handleFocus("residentPhone")}
+                onBlur={handleBlur}
+                className={styles.stretchedInput}
+                required
+              />
             </div>
             <p className={styles.justifiedText}>Телефон батьків:</p>
             <div className={styles.inputRow}>
               <label className={styles.label}>Мама:</label>
-              <input type="text" name="motherPhone" value={formData.motherPhone} onChange={handleChange} onFocus={() => handleFocus("motherPhone")} onBlur={handleBlur} className={styles.stretchedInput} required />
+              <input
+                type="text"
+                name="motherPhone"
+                value={formData.motherPhone}
+                onChange={handleChange}
+                onFocus={() => handleFocus("motherPhone")}
+                onBlur={handleBlur}
+                className={styles.stretchedInput}
+                required
+              />
             </div>
             <div className={styles.inputRow}>
               <label className={styles.label}>Тато:</label>
-              <input type="text" name="fatherPhone" value={formData.fatherPhone} onChange={handleChange} onFocus={() => handleFocus("fatherPhone")} onBlur={handleBlur} className={styles.stretchedInput} required />
+              <input
+                type="text"
+                name="fatherPhone"
+                value={formData.fatherPhone}
+                onChange={handleChange}
+                onFocus={() => handleFocus("fatherPhone")}
+                onBlur={handleBlur}
+                className={styles.stretchedInput}
+                required
+              />
             </div>
             <div className={styles.fullNameWrapper}>
-              <input type="text" name="parentFullName" value={formData.parentFullName} onChange={handleChange} onFocus={() => handleFocus("parentFullName")} onBlur={handleBlur} className={styles.fullWidthInput} required />
+              <input
+                type="text"
+                name="parentFullName"
+                value={formData.parentFullName}
+                onChange={handleChange}
+                onFocus={() => handleFocus("parentFullName")}
+                onBlur={handleBlur}
+                className={styles.fullWidthInput}
+                required
+              />
               <span className={styles.inputLabel}>(П.І.Б. одного з батьків)</span>
             </div>
           </div>
@@ -867,9 +1253,45 @@ const SettlementApplicationPage = () => {
         <h3 className={styles.centeredTitle}>ПЕРЕЛІК</h3>
         <p className={styles.centeredText}>меблів і м’якого інвентарю</p>
         <div className={styles.rightText}>
-          <input type="text" name="endDay" value={formData.endDay} onChange={handleChange} onFocus={() => handleFocus("endDay")} onBlur={handleBlur} maxLength="2" placeholder="__" className={styles.inlineInputDate} ref={endDayRef} required />{" "}
-          <input type="text" name="endMonth" value={formData.endMonth} onChange={handleChange} onFocus={() => handleFocus("endMonth")} onBlur={handleBlur} maxLength="2" placeholder="__" className={styles.inlineInputDate} ref={endMonthRef} required />{" "}
-          <input type="text" name="endYear" value={formData.endYear} onChange={handleChange} onFocus={() => handleFocus("endYear")} onBlur={handleBlur} maxLength="4" placeholder="20__" className={styles.inlineInputYear} ref={endYearRef} required />{" "}
+          <input
+            type="text"
+            name="endDay"
+            value={formData.endDay}
+            onChange={handleChange}
+            onFocus={() => handleFocus("endDay")}
+            onBlur={handleBlur}
+            maxLength="2"
+            placeholder="__"
+            className={styles.inlineInputDate}
+            ref={endDayRef}
+            required
+          />{" "}
+          <input
+            type="text"
+            name="endMonth"
+            value={formData.endMonth}
+            onChange={handleChange}
+            onFocus={() => handleFocus("endMonth")}
+            onBlur={handleBlur}
+            maxLength="2"
+            placeholder="__"
+            className={styles.inlineInputDate}
+            ref={endMonthRef}
+            required
+          />{" "}
+          <span>20</span>
+          <input
+            type="text"
+            value={formData.endYear.slice(2)}
+            onChange={(e) => handleYearChange(e, "endYear")}
+            onFocus={() => handleFocus("endYear")}
+            onBlur={handleBlur}
+            maxLength="2"
+            placeholder="__"
+            className={styles.inlineInputDate}
+            ref={endYearSuffixRef}
+            required
+          />{" "}
           р.
         </div>
         <p className={styles.centereddText}>
@@ -938,55 +1360,182 @@ const SettlementApplicationPage = () => {
         <p className={styles.centeredText}>прийому–передачі житлового приміщення</p>
         <div className={styles.rightText}>
           «{" "}
-          <input type="text" name="day" value={formData.day} onChange={(e) => { handleChange(e); if (e.target.value.length === 2) monthRef.current.focus(); }} onFocus={() => handleFocus("day")} onBlur={handleBlur} maxLength="2" placeholder="_" className={styles.inlineInputDate} ref={dayRef} required />{" "}
+          <input
+            type="text"
+            name="day"
+            value={formData.day}
+            onChange={(e) => {
+              handleChange(e);
+              if (e.target.value.length === 2) monthRef.current.focus();
+            }}
+            onFocus={() => handleFocus("day")}
+            onBlur={handleBlur}
+            maxLength="2"
+            placeholder="_"
+            className={styles.inlineInputDate}
+            ref={dayRef}
+            required
+          />{" "}
           »{" "}
-          <input type="text" name="month" value={formData.month} onChange={(e) => { handleChange(e); if (e.target.value.length === 2) yearRef.current.focus(); }} onFocus={() => handleFocus("month")} onBlur={handleBlur} maxLength="2" placeholder="___________" className={styles.inlineInput} ref={monthRef} required />{" "}
+          <input
+            type="text"
+            name="month"
+            value={formData.month}
+            onChange={(e) => {
+              handleChange(e);
+              if (e.target.value.length === 2) yearSuffixRef.current.focus();
+            }}
+            onFocus={() => handleFocus("month")}
+            onBlur={handleBlur}
+            maxLength="2"
+            placeholder="__"
+            className={styles.inlineInput}
+            ref={monthRef}
+            required
+          />{" "}
           20{" "}
-          <input type="text" name="year" value={formData.year} onChange={handleChange} onFocus={() => handleFocus("year")} onBlur={handleBlur} maxLength="2" placeholder="__" className={styles.inlineInputYear} ref={yearRef} required />{" "}
+          <input
+            type="text"
+            name="year"
+            value={formData.year.slice(2)}
+            onChange={(e) => handleYearChange(e, "year")}
+            onFocus={() => handleFocus("year")}
+            onBlur={handleBlur}
+            maxLength="2"
+            placeholder="__"
+            className={styles.inlineInputYear}
+            ref={yearSuffixRef}
+            required
+          />{" "}
           р.
         </div>
         <p className={styles.justifiedText}>
           Цей акт складено завідувачем гуртожитку №{" "}
-          <input type="text" name="dormNumber" value={formData.dormNumber} onChange={handleChange} onFocus={() => handleFocus("dormNumber")} onBlur={handleBlur} className={styles.inlineInput} required />
+          <input
+            type="text"
+            name="dormNumber"
+            value={formData.dormNumber}
+            onChange={handleChange}
+            onFocus={() => handleFocus("dormNumber")}
+            onBlur={handleBlur}
+            className={styles.inlineInput}
+            required
+          />
         </p>
         <p className={styles.justifiedText}>з одного боку</p>
         <p className={styles.justifiedText}>
           та Мешканцем кімнати №{" "}
-          <input type="text" name="roomNumber" value={formData.roomNumber} onChange={handleChange} onFocus={() => handleFocus("roomNumber")} onBlur={handleBlur} className={styles.inlineInput} required />{" "}
+          <input
+            type="text"
+            name="roomNumber"
+            value={formData.roomNumber}
+            onChange={handleChange}
+            onFocus={() => handleFocus("roomNumber")}
+            onBlur={handleBlur}
+            className={styles.inlineInput}
+            required
+          />{" "}
           гуртожитку №{" "}
-          <input type="text" name="dormNumber" value={formData.dormNumber} onChange={handleChange} onFocus={() => handleFocus("dormNumber")} onBlur={handleBlur} className={styles.inlineInput} required />
+          <input
+            type="text"
+            name="dormNumber"
+            value={formData.dormNumber}
+            onChange={handleChange}
+            onFocus={() => handleFocus("dormNumber")}
+            onBlur={handleBlur}
+            className={styles.inlineInput}
+            required
+          />
           , розташованого за адресою:{" "}
-          <input type="text" name="address" value={formData.address} onChange={handleChange} onFocus={() => handleFocus("address")} onBlur={handleBlur} className={styles.fullWidthInput} required />
+          <input
+            type="text"
+            name="address"
+            value={formData.address}
+            onChange={handleChange}
+            onFocus={() => handleFocus("address")}
+            onBlur={handleBlur}
+            className={styles.fullWidthInput}
+            required
+          />
         </p>
         <p className={styles.justifiedText}>з другого боку</p>
         <h4>Стан приміщення:</h4>
         <ol>
           <li>
             Стіни, підлога, стеля (штукатурка, побілка, фарбування, тощо):{" "}
-            <input type="text" name="premisesConditions[0].description" value={formData.premisesConditions[0]?.description || ""} onChange={handleChange} onFocus={() => handleFocus("premisesConditions[0].description")} onBlur={handleBlur} className={styles.inlineInput} />
+            <input
+              type="text"
+              name="premisesConditions[0].description"
+              value={formData.premisesConditions[0]?.description || ""}
+              onChange={handleChange}
+              onFocus={() => handleFocus("premisesConditions[0].description")}
+              onBlur={handleBlur}
+              className={styles.inlineInput}
+            />
           </li>
           <li>
             Двері і вікна (фарбування, замки):{" "}
-            <input type="text" name="premisesConditions[1].description" value={formData.premisesConditions[1]?.description || ""} onChange={handleChange} onFocus={() => handleFocus("premisesConditions[1].description")} onBlur={handleBlur} className={styles.inlineInput} />
+            <input
+              type="text"
+              name="premisesConditions[1].description"
+              value={formData.premisesConditions[1]?.description || ""}
+              onChange={handleChange}
+              onFocus={() => handleFocus("premisesConditions[1].description")}
+              onBlur={handleBlur}
+              className={styles.inlineInput}
+            />
           </li>
           <li>
             Електромережа (стан проводки, розеток, вимикачів):{" "}
-            <input type="text" name="premisesConditions[2].description" value={formData.premisesConditions[2]?.description || ""} onChange={handleChange} onFocus={() => handleFocus("premisesConditions[2].description")} onBlur={handleBlur} className={styles.inlineInput} />
+            <input
+              type="text"
+              name="premisesConditions[2].description"
+              value={formData.premisesConditions[2]?.description || ""}
+              onChange={handleChange}
+              onFocus={() => handleFocus("premisesConditions[2].description")}
+              onBlur={handleBlur}
+              className={styles.inlineInput}
+            />
           </li>
           <li>
             Сантехнічне обладнання:{" "}
-            <input type="text" name="premisesConditions[3].description" value={formData.premisesConditions[3]?.description || ""} onChange={handleChange} onFocus={() => handleFocus("premisesConditions[3].description")} onBlur={handleBlur} className={styles.inlineInput} />
+            <input
+              type="text"
+              name="premisesConditions[3].description"
+              value={formData.premisesConditions[3]?.description || ""}
+              onChange={handleChange}
+              onFocus={() => handleFocus("premisesConditions[3].description")}
+              onBlur={handleBlur}
+              className={styles.inlineInput}
+            />
           </li>
           <li>
             Інше:{" "}
-            <input type="text" name="premisesConditions[4].description" value={formData.premisesConditions[4]?.description || ""} onChange={handleChange} onFocus={() => handleFocus("premisesConditions[4].description")} onBlur={handleBlur} className={styles.inlineInput} />
+            <input
+              type="text"
+              name="premisesConditions[4].description"
+              value={formData.premisesConditions[4]?.description || ""}
+              onChange={handleChange}
+              onFocus={() => handleFocus("premisesConditions[4].description")}
+              onBlur={handleBlur}
+              className={styles.inlineInput}
+            />
           </li>
         </ol>
         <div className={styles.signatureSection}>
           <div className={styles.signatureBlock}>
             <p className={styles.justifiedText}>Здав: Завідувач гуртожитку</p>
             <div className={styles.fullNameWrapper}>
-              <input type="text" name="dormManagerName" value={formData.dormManagerName} onChange={handleChange} onFocus={() => handleFocus("dormManagerName")} onBlur={handleBlur} className={styles.fullWidthInput} required />
+              <input
+                type="text"
+                name="dormManagerName"
+                value={formData.dormManagerName}
+                onChange={handleChange}
+                onFocus={() => handleFocus("dormManagerName")}
+                onBlur={handleBlur}
+                className={styles.fullWidthInput}
+                required
+              />
               <span className={styles.inputLabel}>(П.І.Б.)</span>
             </div>
             <p>Підпис _______________</p>
@@ -994,7 +1543,16 @@ const SettlementApplicationPage = () => {
           <div className={styles.signatureBlock}>
             <p className={styles.justifiedText}>Прийняв: Мешканець</p>
             <div className={styles.fullNameWrapper}>
-              <input type="text" name="residentName" value={formData.residentName} onChange={handleChange} onFocus={() => handleFocus("residentName")} onBlur={handleBlur} className={styles.fullWidthInput} required />
+              <input
+                type="text"
+                name="residentName"
+                value={formData.residentName}
+                onChange={handleChange}
+                onFocus={() => handleFocus("residentName")}
+                onBlur={handleBlur}
+                className={styles.fullWidthInput}
+                required
+              />
               <span className={styles.inputLabel}>(П.І.Б.)</span>
             </div>
             <p>Підпис _______________</p>

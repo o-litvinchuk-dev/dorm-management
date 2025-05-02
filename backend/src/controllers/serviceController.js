@@ -20,17 +20,22 @@ export const getServices = (req, res) => {
 
 export const createDormApplication = async (req, res) => {
     try {
-        const { name, surname, faculty, course } = req.body;
-        const user_id = req.user.userId;
-        const applicationId = await DormApplication.create({
-            user_id,
-            name,
-            surname,
-            faculty,
-            course
-        });
-        res.status(201).json({ message: "Заявка успішно подана", applicationId });
+      const { name, surname, faculty, course } = req.body;
+      const user_id = req.user.userId;
+  
+      if (!name || !surname || !faculty || !course) {
+        return res.status(400).json({ error: "Усі поля обов’язкові" });
+      }
+  
+      const applicationId = await DormApplication.create({
+        user_id,
+        name,
+        surname,
+        faculty,
+        course,
+      });
+      res.status(201).json({ message: "Заявка успішно подана", applicationId });
     } catch (error) {
-        res.status(500).json({ error: "Помилка при поданні заявки" });
+      res.status(500).json({ error: "Помилка при поданні заявки" });
     }
-};
+  };
