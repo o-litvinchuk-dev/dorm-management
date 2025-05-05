@@ -5,7 +5,27 @@ import styles from "./styles/SettlementApplicationPage.module.css";
 import { simplifiedSchema, fullSchema, validateForm } from "../../utils/validation";
 import { useFormSync } from "../../contexts/FormSyncContext";
 import api from "../../utils/api";
-import { InformationCircleIcon, ArrowLeftIcon, ArrowRightIcon, CheckIcon } from "@heroicons/react/24/solid";
+import { ArrowLeftIcon, ArrowRightIcon, CheckIcon } from "@heroicons/react/24/solid";
+
+// Define the default inventory with 14 predefined items and 2 user-editable slots
+const defaultInventory = [
+  { name: "Ліжко", quantity: "", purpose: "" },
+  { name: "Матрац", quantity: "", purpose: "" },
+  { name: "Подушка", quantity: "", purpose: "" },
+  { name: "Ковдра", quantity: "", purpose: "" },
+  { name: "Стільці", quantity: "", purpose: "" },
+  { name: "Стіл", quantity: "", purpose: "" },
+  { name: "Шафа", quantity: "", purpose: "" },
+  { name: "Тумбочка", quantity: "", purpose: "" },
+  { name: "Лампа", quantity: "", purpose: "" },
+  { name: "Вішалка", quantity: "", purpose: "" },
+  { name: "Дзеркало", quantity: "", purpose: "" },
+  { name: "Поличка", quantity: "", purpose: "" },
+  { name: "Килимок", quantity: "", purpose: "" },
+  { name: "Штори", quantity: "", purpose: "" },
+  { name: "", quantity: "", purpose: "" },
+  { name: "", quantity: "", purpose: "" },
+];
 
 const SettlementApplicationPage = () => {
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
@@ -55,25 +75,33 @@ const SettlementApplicationPage = () => {
       mechanizatorCalledName: "",
       dormManagerName: "",
       residentName: "",
-      inventory: Array(5).fill({ name: "", quantity: "", purpose: "" }),
+      inventory: defaultInventory,
       premisesConditions: Array(5).fill({ description: "" }),
-      electricalAppliances: Array(5).fill({
+      electricalAppliances: Array(7).fill({
         name: "",
         brand: "",
         year: "",
         quantity: "",
         note: "",
       }),
+      dormManagerSignature: "",
+      residentSignature: "",
+      premisesNumber: "",
+      premisesArea: "",
+      dormManagerNameSignature: "",
+      residentNameSignature: "",
     };
     return savedData ? { ...defaultFormData, ...JSON.parse(savedData) } : defaultFormData;
   });
   const [errors, setErrors] = useState({});
+  const [showErrors, setShowErrors] = useState(false);
+  const [currentErrorIndex, setCurrentErrorIndex] = useState(0);
   const { sharedData, updateSharedData } = useFormSync();
   const [isSimplified, setIsSimplified] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [focusedField, setFocusedField] = useState(null);
 
   const taxIdRefs = useRef([]);
+  const inputRefs = useRef({});
   const startDayRef = useRef(null);
   const startMonthRef = useRef(null);
   const startYearSuffixRef = useRef(null);
@@ -82,8 +110,30 @@ const SettlementApplicationPage = () => {
   const endYearSuffixRef = useRef(null);
   const dayRef = useRef(null);
   const monthRef = useRef(null);
+  const yearRef = useRef(null);
   const yearSuffixRef = useRef(null);
 
+
+  const handleFocus = (fieldName) => {
+    console.log(`Field ${fieldName} gained focus`);
+    setErrors((prev) => {
+      const newErrors = { ...prev };
+      delete newErrors[fieldName];
+      return newErrors;
+    });
+  };
+
+  const handleBlur = async (fieldName) => {
+    console.log(`Field ${fieldName} lost focus`);
+    const schema = isSimplified ? simplifiedSchema : fullSchema;
+    const { errors } = await validateForm({ ...formData }, schema);
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      [fieldName]: errors[fieldName] || null,
+    }));
+    setShowErrors(Object.keys(errors).length > 0);
+  };
+  
   useEffect(() => {
     localStorage.setItem("settlementFormData", JSON.stringify(formData));
     calculateProgress();
@@ -92,6 +142,27 @@ const SettlementApplicationPage = () => {
   useEffect(() => {
     setFormData((prev) => ({ ...prev, ...sharedData }));
   }, [sharedData]);
+
+  // Cycle through errors every 5 seconds in the error panel
+  useEffect(() => {
+    if (showErrors && Object.keys(errors).length > 0) {
+      const interval = setInterval(() => {
+        setCurrentErrorIndex((prev) => (prev + 1) % Object.keys(errors).length);
+      }, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [showErrors, errors]);
+
+  // Validate form on every change to show errors under inputs
+  useEffect(() => {
+    const validate = async () => {
+      const schema = isSimplified ? simplifiedSchema : fullSchema;
+      const { isValid, errors } = await validateForm(formData, schema);
+      setErrors(errors);
+      setShowErrors(!isValid);
+    };
+    validate();
+  }, [formData, isSimplified]);
 
   const calculateProgress = () => {
     const totalFields = countFields(formData);
@@ -140,54 +211,185 @@ const SettlementApplicationPage = () => {
     return count;
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    let newFormData = { ...formData };
+  const handleChange = (e, fieldName, index, subField) => {
+    let value = e.target.value;
+    console.log(`handleChange: field=${fieldName}, index=${index}, subField=${subField}, value=${value}`);
 
-    if (name.includes("[")) {
-      const match = name.match(/(\w+)\[(\d+)\]\.(\w+)/);
-      if (match) {
-        const [, field, indexStr, subField] = match;
-        const index = parseInt(indexStr, 10);
-        if (!newFormData[field][index]) {
-          newFormData[field][index] = {};
-        }
-        newFormData[field][index][subField] = value;
+    if (["contractDay", "proxyDay", "startDay", "endDay", "day"].includes(fieldName)) {
+      value = value.replace(/\D/g, "").slice(0, 2);
+    } else if (["contractMonth", "proxyMonth", "startMonth", "endMonth", "month"].includes(fieldName)) {
+      value = value.replace(/\D/g, "").slice(0, 2);
+    } else if (["contractYear", "proxyYear", "startYear", "endYear", "year"].includes(fieldName)) {
+      value = value.replace(/\D/g, "").slice(0, 4);
+      if (value.length === 2) value = `20${value}`;
+    } else if (fieldName === "taxId" && typeof index === "number") {
+      value = value.replace(/\D/g, "").slice(0, 1);
+      setFormData((prev) => {
+        const newTaxId = [...prev.taxId];
+        newTaxId[index] = value;
+        return { ...prev, taxId: newTaxId };
+      });
+      if (value && index < 9) {
+        taxIdRefs.current[index + 1]?.focus();
       }
-    } else {
-      newFormData[name] = value;
+      return;
+    } else if (fieldName === "residentPhone" || fieldName === "motherPhone" || fieldName === "fatherPhone") {
+      value = value.replace(/\D/g, "");
+      if (value.startsWith("380")) {
+        value = `+${value.slice(0, 12)}`;
+      } else if (value.startsWith("0")) {
+        value = `+38${value.slice(0, 12)}`;
+      } else {
+        value = `+380${value.slice(0, 9)}`;
+      }
+    } else if (fieldName === "course") {
+      value = value.replace(/\D/g, "");
+      if (value === "") value = "";
+      else value = Math.min(parseInt(value) || 1, 6).toString();
+    } else if (["dormNumber", "roomNumber"].includes(fieldName)) {
+      value = value.replace(/\D/g, "");
+    } else if (fieldName === "residentPostalCode") {
+      value = value.replace(/\D/g, "").slice(0, 5);
+    } else if (fieldName === "passportNumber") {
+      value = value.replace(/\D/g, "").slice(0, 6);
+    } else if (fieldName === "passportSeries") {
+      value = value.replace(/[^А-Я]/g, "").slice(0, 2).toUpperCase();
     }
 
-    setFormData(newFormData);
+    if (typeof index === "number" && subField) {
+      setFormData((prev) => {
+        const newArray = [...prev[fieldName]];
+        newArray[index] = { ...newArray[index], [subField]: value };
+        return { ...prev, [fieldName]: newArray };
+      });
+    } else {
+      setFormData((prev) => ({ ...prev, [fieldName]: value }));
+    }
 
     const syncFields = ["residentFullName", "residentPhone", "dormNumber", "roomNumber", "address"];
-    if (syncFields.includes(name)) {
-      updateSharedData({ [name]: value });
+    if (fieldName && syncFields.includes(fieldName)) {
+      updateSharedData({ [fieldName]: value });
     }
   };
 
   const handleYearChange = (e, field) => {
-    const value = e.target.value;
-    if (/^\d{0,2}$/.test(value)) {
-      const fullYear = value ? `20${value.padStart(2, '0')}` : '';
-      setFormData((prev) => ({ ...prev, [field]: fullYear }));
-    }
+    const value = e.target.value.replace(/\D/g, "").slice(0, 2);
+    const fullYear = value ? `20${value.padStart(2, "0")}` : "";
+    setFormData((prev) => ({ ...prev, [field]: fullYear }));
   };
 
   const handleTaxIdChange = (index, value) => {
-    if (/^\d*$/.test(value)) {
+    if (/^\d?$/.test(value)) {
       const newTaxId = [...formData.taxId];
       newTaxId[index] = value;
       setFormData({ ...formData, taxId: newTaxId });
       if (value.length === 1 && index < 9) {
-        taxIdRefs.current[index + 1].focus();
+        taxIdRefs.current[index + 1]?.focus();
       }
     }
   };
 
   const handleTaxIdKeyDown = (index, e) => {
     if (e.key === "Backspace" && e.target.value === "" && index > 0) {
-      taxIdRefs.current[index - 1].focus();
+      taxIdRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const formatErrorMessage = (path) => {
+    const match = path.match(/\[(\d+)\]\.(\w+)/);
+    if (match) {
+      const index = parseInt(match[1]) + 1;
+      const field = match[2];
+      const table = path.includes("inventory")
+        ? "інвентарю"
+        : path.includes("electricalAppliances")
+        ? "електроприладів"
+        : "стану приміщень";
+      const fieldNames = {
+        name: "Назва",
+        quantity: "Кількість",
+        purpose: "Призначення",
+        brand: "Марка",
+        year: "Рік випуску",
+        note: "Примітка",
+        description: "Опис",
+      };
+      return `${fieldNames[field] || field} в рядку ${index} ${table}`;
+    }
+    const fieldNames = {
+      fullName: "П.І.Б.",
+      passportSeries: "Серія паспорта",
+      passportNumber: "Номер паспорта",
+      passportIssued: "Ким виданий паспорт",
+      taxId: "Ідентифікаційний номер",
+      dormStreet: "Вулиця гуртожитку",
+      dormBuilding: "Будівля гуртожитку",
+      dormNumber: "Номер гуртожитку",
+      roomNumber: "Номер кімнати",
+      residentFullName: "П.І.Б. мешканця",
+      residentRegion: "Область",
+      residentDistrict: "Район",
+      residentCity: "Населений пункт",
+      residentPostalCode: "Поштовий індекс",
+      residentPhone: "Контактний телефон",
+      motherPhone: "Телефон мами",
+      fatherPhone: "Телефон тата",
+      parentFullName: "П.І.Б. одного з батьків",
+      address: "Адреса",
+      mechanizatorReceivedName: "П.І.Б. завідувача (отримано)",
+      mechanizatorCalledName: "П.І.Б. мешканця (викликано)",
+      dormManagerName: "П.І.Б. завідувача",
+      residentName: "П.І.Б. мешканця",
+      group: "Група",
+      faculty: "Факультет",
+      proxyNumber: "Номер довіреності",
+      contractDay: "День договору",
+      contractMonth: "Місяць договору",
+      contractYear: "Рік договору",
+      proxyDay: "День довіреності",
+      proxyMonth: "Місяць довіреності",
+      proxyYear: "Рік довіреності",
+      startDay: "День початку",
+      startMonth: "Місяць початку",
+      startYear: "Рік початку",
+      endDay: "День закінчення",
+      endMonth: "Місяць закінчення",
+      endYear: "Рік закінчення",
+      day: "День додатка",
+      month: "Місяць додатка",
+      year: "Рік додатка",
+      course: "Курс",
+      dormManagerSignature: "Підпис завідувача",
+      residentSignature: "Підпис мешканця",
+      premisesNumber: "Номер приміщення",
+      premisesArea: "Площа приміщення",
+      dormManagerNameSignature: "П.І.Б. завідувача (підпис)",
+      residentNameSignature: "П.І.Б. мешканця (підпис)",
+    };
+    return fieldNames[path] || path;
+  };
+
+  const scrollToErrorField = (path) => {
+    const match = path.match(/\[(\d+)\]\.(\w+)/);
+    if (match) {
+      const index = match[1];
+      const table = path.includes("inventory")
+        ? "inventory"
+        : path.includes("electricalAppliances")
+        ? "electricalAppliances"
+        : "premisesConditions";
+      const field = match[2];
+      const element = document.querySelector(`[data-error-table="${table}-${index}-${field}"]`);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "center" });
+        element.focus();
+      }
+    } else {
+      const element = document.querySelector(`[data-error-field="${path}"]`);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "center" });
+        element.focus();
+      }
     }
   };
 
@@ -195,6 +397,8 @@ const SettlementApplicationPage = () => {
     const schema = isSimplified ? simplifiedSchema : fullSchema;
     const { isValid, errors } = await validateForm(formData, schema);
     setErrors(errors);
+    setShowErrors(true);
+    setCurrentErrorIndex(0); // Reset to first error on submit
 
     if (isValid) {
       try {
@@ -245,15 +449,21 @@ const SettlementApplicationPage = () => {
           mechanizatorCalledName: "",
           dormManagerName: "",
           residentName: "",
-          inventory: Array(5).fill({ name: "", quantity: "", purpose: "" }),
+          inventory: defaultInventory,
           premisesConditions: Array(5).fill({ description: "" }),
-          electricalAppliances: Array(5).fill({
+          electricalAppliances: Array(7).fill({
             name: "",
             brand: "",
             year: "",
             quantity: "",
             note: "",
           }),
+          dormManagerSignature: "",
+          residentSignature: "",
+          premisesNumber: "",
+          premisesArea: "",
+          dormManagerNameSignature: "",
+          residentNameSignature: "",
         });
       } catch (error) {
         console.error("Помилка при подачі заявки:", error);
@@ -261,73 +471,8 @@ const SettlementApplicationPage = () => {
       }
     } else {
       alert("Будь ласка, виправте помилки у формі.");
+      scrollToErrorField(Object.keys(errors)[0]);
     }
-  };
-
-  const handleFileChange = (e) => {
-    console.log("Завантажені файли:", e.target.files);
-  };
-
-  const handleFocus = (fieldName) => {
-    setFocusedField(fieldName);
-  };
-
-  const handleBlur = () => {
-    setFocusedField(null);
-  };
-
-  const hints = {
-    contractDay: "Введіть день укладання договору, наприклад: 15",
-    contractMonth: "Введіть місяць укладання договору, наприклад: 09",
-    contractYear: "Введіть останні дві цифри року укладання договору, наприклад: 23",
-    proxyNumber: "Введіть номер довіреності, наприклад: 123/АБ",
-    proxyDay: "Введіть день довіреності, наприклад: 01",
-    proxyMonth: "Введіть місяць довіреності, наприклад: 09",
-    proxyYear: "Введіть останні дві цифри року довіреності, наприклад: 23",
-    course: "Вкажіть номер курсу, наприклад: 1",
-    group: "Вкажіть групу, наприклад: БІО-11",
-    faculty: "Вкажіть факультет, наприклад: Біологічний",
-    fullName: "Введіть повне ім'я, наприклад: Іванов Іван Іванович",
-    passportSeries: "Введіть серію паспорта, наприклад: АА",
-    passportNumber: "Введіть номер паспорта, наприклад: 123456",
-    passportIssued: "Вкажіть, ким виданий паспорт, наприклад: Шевченківським РВ УМВС",
-    taxId: "Введіть 10 цифр ідентифікаційного номера",
-    dormStreet: "Вкажіть вулицю гуртожитку, наприклад: Героїв Оборони",
-    dormBuilding: "Вкажіть номер будинку, наприклад: 15",
-    startDay: "Вкажіть день початку, наприклад: 01",
-    startMonth: "Вкажіть місяць початку, наприклад: 09",
-    startYear: "Введіть останні дві цифри року початку, наприклад: 23",
-    endDay: "Вкажіть день закінчення, наприклад: 31",
-    endMonth: "Вкажіть місяць закінчення, наприклад: 08",
-    endYear: "Введіть останні дві цифри року закінчення, наприклад: 24",
-    residentFullName: "Введіть повне ім'я мешканця, наприклад: Іванов Іван Іванович",
-    residentRegion: "Вкажіть область, наприклад: Київська",
-    residentDistrict: "Вкажіть район, наприклад: Голосіївський",
-    residentCity: "Вкажіть населений пункт, наприклад: Київ",
-    residentPostalCode: "Вкажіть поштовий індекс, наприклад: 03041",
-    residentPhone: "Введіть телефон у форматі +380XXXXXXXXX, наприклад: +380931234567",
-    motherPhone: "Введіть телефон мами у форматі +380XXXXXXXXX",
-    fatherPhone: "Введіть телефон тата у форматі +380XXXXXXXXX",
-    parentFullName: "Введіть П.І.Б. одного з батьків, наприклад: Іванова Марія Петрівна",
-    day: "Вкажіть день, наприклад: 01",
-    month: "Вкажіть місяць, наприклад: 09",
-    year: "Введіть останні дві цифри року, наприклад: 23",
-    dormNumber: "Вкажіть номер гуртожитку, наприклад: 5",
-    roomNumber: "Вкажіть номер кімнати, наприклад: 101",
-    address: "Вкажіть повну адресу, наприклад: вул. Героїв Оборони, 15, Київ",
-    mechanizatorReceivedName: "Введіть П.І.Б. завідувача, наприклад: Петров Петро Петрович",
-    mechanizatorCalledName: "Введіть П.І.Б. мешканця, наприклад: Іванов Іван Іванович",
-    dormManagerName: "Введіть П.І.Б. завідувача, наприклад: Сидоров Сидір Сидорович",
-    residentName: "Введіть П.І.Б. мешканця, наприклад: Іванов Іван Іванович",
-    "inventory[0].name": "Вкажіть назву предмета, наприклад: Стіл",
-    "inventory[0].quantity": "Вкажіть кількість, наприклад: 1",
-    "inventory[0].purpose": "Вкажіть призначення, наприклад: Для навчання",
-    "premisesConditions[0].description": "Опишіть стан стін, наприклад: Пофарбовані, чисті",
-    "electricalAppliances[0].name": "Вкажіть назву приладу, наприклад: Холодильник",
-    "electricalAppliances[0].brand": "Вкажіть марку, наприклад: Samsung",
-    "electricalAppliances[0].year": "Вкажіть рік випуску, наприклад: 2020",
-    "electricalAppliances[0].quantity": "Вкажіть кількість, наприклад: 1",
-    "electricalAppliances[0].note": "Додайте примітку, наприклад: Енергоефективний",
   };
 
   const page1Content = () => {
@@ -347,8 +492,9 @@ const SettlementApplicationPage = () => {
               onBlur={handleBlur}
               maxLength="2"
               placeholder="__"
-              className={styles.inlineInputDate}
+              className={`${styles.inlineInputDate} ${errors.contractDay ? styles.errorInput : ''}`}
               required
+              ref={(el) => (inputRefs.current.contractDay = el)}
             />{" "}
             »{" "}
             <input
@@ -360,8 +506,9 @@ const SettlementApplicationPage = () => {
               onBlur={handleBlur}
               maxLength="2"
               placeholder="__"
-              className={styles.inlineInputDate}
+              className={`${styles.inlineInputDate} ${errors.contractMonth ? styles.errorInput : ''}`}
               required
+              ref={(el) => (inputRefs.current.contractMonth = el)}
             />{" "}
             <span>20</span>
             <input
@@ -372,12 +519,16 @@ const SettlementApplicationPage = () => {
               onBlur={handleBlur}
               maxLength="2"
               placeholder="__"
-              className={styles.inlineInputDate}
+              className={`${styles.inlineInputDate} ${errors.contractYear ? styles.errorInput : ''}`}
               required
+              ref={(el) => (inputRefs.current.contractYear = el)}
             />{" "}
             р.
           </span>
         </p>
+        {errors.contractDay && <p className={styles.error}>{errors.contractDay}</p>}
+        {errors.contractMonth && <p className={styles.error}>{errors.contractMonth}</p>}
+        {errors.contractYear && <p className={styles.error}>{errors.contractYear}</p>}
         <p className={styles.justifiedText}>
           між Національним університетом біоресурсів і природокористування України, в особі директора студентського містечка Стецюка Сергія Васильовича,<br />
           що діє на підставі довіреності №{" "}
@@ -388,8 +539,9 @@ const SettlementApplicationPage = () => {
             onChange={handleChange}
             onFocus={() => handleFocus("proxyNumber")}
             onBlur={handleBlur}
-            className={styles.inlineInput}
+            className={`${styles.inlineInput} ${errors.proxyNumber ? styles.errorInput : ''}`}
             required
+            ref={(el) => (inputRefs.current.proxyNumber = el)}
           />{" "}
           від{" "}
           <input
@@ -401,8 +553,9 @@ const SettlementApplicationPage = () => {
             onBlur={handleBlur}
             maxLength="2"
             placeholder="__"
-            className={styles.inlineInputDate}
+            className={`${styles.inlineInputDate} ${errors.proxyDay ? styles.errorInput : ''}`}
             required
+            ref={(el) => (inputRefs.current.proxyDay = el)}
           />{" "}
           <input
             type="text"
@@ -413,8 +566,9 @@ const SettlementApplicationPage = () => {
             onBlur={handleBlur}
             maxLength="2"
             placeholder="__"
-            className={styles.inlineInputDate}
+            className={`${styles.inlineInputDate} ${errors.proxyMonth ? styles.errorInput : ''}`}
             required
+            ref={(el) => (inputRefs.current.proxyMonth = el)}
           />{" "}
           <span>20</span>
           <input
@@ -425,11 +579,16 @@ const SettlementApplicationPage = () => {
             onBlur={handleBlur}
             maxLength="2"
             placeholder="__"
-            className={styles.inlineInputDate}
+            className={`${styles.inlineInputDate} ${errors.proxyYear ? styles.errorInput : ''}`}
             required
+            ref={(el) => (inputRefs.current.proxyYear = el)}
           />{" "}
           р., з одного боку і студент (аспірант, докторант)
         </p>
+        {errors.proxyNumber && <p className={styles.error}>{errors.proxyNumber}</p>}
+        {errors.proxyDay && <p className={styles.error}>{errors.proxyDay}</p>}
+        {errors.proxyMonth && <p className={styles.error}>{errors.proxyMonth}</p>}
+        {errors.proxyYear && <p className={styles.error}>{errors.proxyYear}</p>}
         <p className={styles.justifiedText}>
           <input
             type="number"
@@ -438,8 +597,9 @@ const SettlementApplicationPage = () => {
             onChange={handleChange}
             onFocus={() => handleFocus("course")}
             onBlur={handleBlur}
-            className={styles.inlineInput}
+            className={`${styles.inlineInput} ${errors.course ? styles.errorInput : ''}`}
             required
+            ref={(el) => (inputRefs.current.course = el)}
           />{" "}
           курсу{" "}
           <input
@@ -449,8 +609,9 @@ const SettlementApplicationPage = () => {
             onChange={handleChange}
             onFocus={() => handleFocus("group")}
             onBlur={handleBlur}
-            className={styles.inlineInput}
+            className={`${styles.inlineInput} ${errors.group ? styles.errorInput : ''}`}
             required
+            ref={(el) => (inputRefs.current.group = el)}
           />{" "}
           групи,{" "}
           <input
@@ -460,11 +621,15 @@ const SettlementApplicationPage = () => {
             onChange={handleChange}
             onFocus={() => handleFocus("faculty")}
             onBlur={handleBlur}
-            className={styles.inlineInput}
+            className={`${styles.inlineInput} ${errors.faculty ? styles.errorInput : ''}`}
             required
+            ref={(el) => (inputRefs.current.faculty = el)}
           />{" "}
           ННІ/факультету
         </p>
+        {errors.course && <p className={styles.error}>{errors.course}</p>}
+        {errors.group && <p className={styles.error}>{errors.group}</p>}
+        {errors.faculty && <p className={styles.error}>{errors.faculty}</p>}
         <div className={styles.fullNameWrapper}>
           <input
             type="text"
@@ -473,11 +638,13 @@ const SettlementApplicationPage = () => {
             onChange={handleChange}
             onFocus={() => handleFocus("fullName")}
             onBlur={handleBlur}
-            className={styles.fullWidthInput}
+            className={`${styles.fullWidthInput} ${errors.fullName ? styles.errorInput : ''}`}
             required
+            ref={(el) => (inputRefs.current.fullName = el)}
           />
           <span className={styles.inputLabel}>(П.І.Б.)</span>
         </div>
+        {errors.fullName && <p className={styles.error}>{errors.fullName}</p>}
         <p className={styles.justifiedText}>
           Паспорт серії{" "}
           <input
@@ -487,8 +654,9 @@ const SettlementApplicationPage = () => {
             onChange={handleChange}
             onFocus={() => handleFocus("passportSeries")}
             onBlur={handleBlur}
-            className={styles.inlineInput}
+            className={`${styles.inlineInput} ${errors.passportSeries ? styles.errorInput : ''}`}
             required
+            ref={(el) => (inputRefs.current.passportSeries = el)}
           />{" "}
           №{" "}
           <input
@@ -498,8 +666,9 @@ const SettlementApplicationPage = () => {
             onChange={handleChange}
             onFocus={() => handleFocus("passportNumber")}
             onBlur={handleBlur}
-            className={styles.inlineInput}
+            className={`${styles.inlineInput} ${errors.passportNumber ? styles.errorInput : ''}`}
             required
+            ref={(el) => (inputRefs.current.passportNumber = el)}
           />{" "}
           виданий{" "}
           <input
@@ -509,10 +678,14 @@ const SettlementApplicationPage = () => {
             onChange={handleChange}
             onFocus={() => handleFocus("passportIssued")}
             onBlur={handleBlur}
-            className={styles.inlineInput}
+            className={`${styles.inlineInput} ${errors.passportIssued ? styles.errorInput : ''}`}
             required
+            ref={(el) => (inputRefs.current.passportIssued = el)}
           />
         </p>
+        {errors.passportSeries && <p className={styles.error}>{errors.passportSeries}</p>}
+        {errors.passportNumber && <p className={styles.error}>{errors.passportNumber}</p>}
+        {errors.passportIssued && <p className={styles.error}>{errors.passportIssued}</p>}
         <div className={styles.taxIdWrapper}>
           <table className={styles.taxIdTable}>
             <tbody>
@@ -529,14 +702,18 @@ const SettlementApplicationPage = () => {
                       onFocus={() => handleFocus("taxId")}
                       onBlur={handleBlur}
                       maxLength="1"
-                      className={styles.taxIdInput}
-                      ref={(el) => (taxIdRefs.current[index] = el)}
+                      className={`${styles.taxIdInput} ${errors.taxId ? styles.errorInput : ''}`}
+                      ref={(el) => {
+                        taxIdRefs.current[index] = el;
+                        inputRefs.current[`taxId[${index}]`] = el;
+                      }}
                     />
                   ))}
                 </td>
               </tr>
             </tbody>
           </table>
+          {errors.taxId && <p className={styles.error}>{errors.taxId}</p>}
         </div>
         <p className={styles.justifiedText}>Договір Укладено згідно з вимогами чинного законодавства України</p>
         <p className={styles.justifiedText}>
@@ -559,8 +736,9 @@ const SettlementApplicationPage = () => {
             onChange={handleChange}
             onFocus={() => handleFocus("dormStreet")}
             onBlur={handleBlur}
-            className={styles.inlineInput}
+            className={`${styles.inlineInput} ${errors.dormStreet ? styles.errorInput : ''}`}
             required
+            ref={(el) => (inputRefs.current.dormStreet = el)}
           />{" "}
           буд.{" "}
           <input
@@ -570,8 +748,9 @@ const SettlementApplicationPage = () => {
             onChange={handleChange}
             onFocus={() => handleFocus("dormBuilding")}
             onBlur={handleBlur}
-            className={styles.inlineInput}
+            className={`${styles.inlineInput} ${errors.dormBuilding ? styles.errorInput : ''}`}
             required
+            ref={(el) => (inputRefs.current.dormBuilding = el)}
           />{" "}
           гуртожиток №{" "}
           <input
@@ -581,8 +760,9 @@ const SettlementApplicationPage = () => {
             onChange={handleChange}
             onFocus={() => handleFocus("dormNumber")}
             onBlur={handleBlur}
-            className={styles.inlineInput}
+            className={`${styles.inlineInput} ${errors.dormNumber ? styles.errorInput : ''}`}
             required
+            ref={(el) => (inputRefs.current.dormNumber = el)}
           />{" "}
           кімната №{" "}
           <input
@@ -592,10 +772,15 @@ const SettlementApplicationPage = () => {
             onChange={handleChange}
             onFocus={() => handleFocus("roomNumber")}
             onBlur={handleBlur}
-            className={styles.inlineInput}
+            className={`${styles.inlineInput} ${errors.roomNumber ? styles.errorInput : ''}`}
             required
+            ref={(el) => (inputRefs.current.roomNumber = el)}
           />
         </p>
+        {errors.dormStreet && <p className={styles.error}>{errors.dormStreet}</p>}
+        {errors.dormBuilding && <p className={styles.error}>{errors.dormBuilding}</p>}
+        {errors.dormNumber && <p className={styles.error}>{errors.dormNumber}</p>}
+        {errors.roomNumber && <p className={styles.error}>{errors.roomNumber}</p>}
         <p className={styles.justifiedText}>
           Строк користування житловим приміщенням за цим договором становить з «{" "}
           <input
@@ -610,8 +795,11 @@ const SettlementApplicationPage = () => {
             onBlur={handleBlur}
             maxLength="2"
             placeholder="__"
-            className={styles.inlineInputDate}
-            ref={startDayRef}
+            className={`${styles.inlineInputDate} ${errors.startDay ? styles.errorInput : ''}`}
+            ref={(el) => {
+              startDayRef.current = el;
+              inputRefs.current.startDay = el;
+            }}
             required
           />{" "}
           »{" "}
@@ -627,8 +815,11 @@ const SettlementApplicationPage = () => {
             onBlur={handleBlur}
             maxLength="2"
             placeholder="__"
-            className={styles.inlineInputDate}
-            ref={startMonthRef}
+            className={`${styles.inlineInputDate} ${errors.startMonth ? styles.errorInput : ''}`}
+            ref={(el) => {
+              startMonthRef.current = el;
+              inputRefs.current.startMonth = el;
+            }}
             required
           />{" "}
           <span>20</span>
@@ -640,8 +831,11 @@ const SettlementApplicationPage = () => {
             onBlur={handleBlur}
             maxLength="2"
             placeholder="__"
-            className={styles.inlineInputDate}
-            ref={startYearSuffixRef}
+            className={`${styles.inlineInputDate} ${errors.startYear ? styles.errorInput : ''}`}
+            ref={(el) => {
+              startYearSuffixRef.current = el;
+              inputRefs.current.startYear = el;
+            }}
             required
           />{" "}
           р. по «{" "}
@@ -657,8 +851,11 @@ const SettlementApplicationPage = () => {
             onBlur={handleBlur}
             maxLength="2"
             placeholder="__"
-            className={styles.inlineInputDate}
-            ref={endDayRef}
+            className={`${styles.inlineInputDate} ${errors.endDay ? styles.errorInput : ''}`}
+            ref={(el) => {
+              endDayRef.current = el;
+              inputRefs.current.endDay = el;
+            }}
             required
           />{" "}
           »{" "}
@@ -674,8 +871,11 @@ const SettlementApplicationPage = () => {
             onBlur={handleBlur}
             maxLength="2"
             placeholder="__"
-            className={styles.inlineInputDate}
-            ref={endMonthRef}
+            className={`${styles.inlineInputDate} ${errors.endMonth ? styles.errorInput : ''}`}
+            ref={(el) => {
+              endMonthRef.current = el;
+              inputRefs.current.endMonth = el;
+            }}
             required
           />{" "}
           <span>20</span>
@@ -687,12 +887,21 @@ const SettlementApplicationPage = () => {
             onBlur={handleBlur}
             maxLength="2"
             placeholder="__"
-            className={styles.inlineInputDate}
-            ref={endYearSuffixRef}
+            className={`${styles.inlineInputDate} ${errors.endYear ? styles.errorInput : ''}`}
+            ref={(el) => {
+              endYearSuffixRef.current = el;
+              inputRefs.current.endYear = el;
+            }}
             required
           />{" "}
           р.
         </p>
+        {errors.startDay && <p className={styles.error}>{errors.startDay}</p>}
+        {errors.startMonth && <p className={styles.error}>{errors.startMonth}</p>}
+        {errors.startYear && <p className={styles.error}>{errors.startYear}</p>}
+        {errors.endDay && <p className={styles.error}>{errors.endDay}</p>}
+        {errors.endMonth && <p className={styles.error}>{errors.endMonth}</p>}
+        {errors.endYear && <p className={styles.error}>{errors.endYear}</p>}
       </div>
     );
   };
@@ -832,7 +1041,7 @@ const SettlementApplicationPage = () => {
     return (
       <div className={styles.contractText}>
         <p className={styles.justifiedText}>
-          3.2.5. Своєчасно сп Brasileveldt.com – один із найпопулярніших сайтів із пошуку авіаквитків, який пропонує зручний інтерфейс та порівняння цін від різних авіакомпаній.
+          3.2.5. Своєчасно сплачувати за проживання у гуртожитку.
         </p>
         <p className={styles.justifiedText}>
           3.2.6. Здійснювати вхід до гуртожитку за пред'явленням перепустки встановленого Університетом зразка.
@@ -993,8 +1202,11 @@ const SettlementApplicationPage = () => {
             onBlur={handleBlur}
             maxLength="2"
             placeholder="__"
-            className={styles.inlineInputDate}
-            ref={endDayRef}
+            className={`${styles.inlineInputDate} ${errors.endDay ? styles.errorInput : ''}`}
+            ref={(el) => {
+              endDayRef.current = el;
+              inputRefs.current.endDay = el;
+            }}
             required
           />{" "}
           »{" "}
@@ -1010,8 +1222,11 @@ const SettlementApplicationPage = () => {
             onBlur={handleBlur}
             maxLength="2"
             placeholder="__"
-            className={styles.inlineInputDate}
-            ref={endMonthRef}
+            className={`${styles.inlineInputDate} ${errors.endMonth ? styles.errorInput : ''}`}
+            ref={(el) => {
+              endMonthRef.current = el;
+              inputRefs.current.endMonth = el;
+            }}
             required
           />{" "}
           <span>20</span>
@@ -1023,12 +1238,18 @@ const SettlementApplicationPage = () => {
             onBlur={handleBlur}
             maxLength="2"
             placeholder="__"
-            className={styles.inlineInputDate}
-            ref={endYearSuffixRef}
+            className={`${styles.inlineInputDate} ${errors.endYear ? styles.errorInput : ''}`}
+            ref={(el) => {
+              endYearSuffixRef.current = el;
+              inputRefs.current.endYear = el;
+            }}
             required
           />{" "}
           р.
         </p>
+        {errors.endDay && <p className={styles.error}>{errors.endDay}</p>}
+        {errors.endMonth && <p className={styles.error}>{errors.endMonth}</p>}
+        {errors.endYear && <p className={styles.error}>{errors.endYear}</p>}
         <p className={styles.justifiedText}>
           7.2. Закінчення строку цього Договору не звільняє Сторони від відповідальності за його порушення, яке мало місце під час дії цього Договору.
         </p>
@@ -1129,11 +1350,13 @@ const SettlementApplicationPage = () => {
                 onChange={handleChange}
                 onFocus={() => handleFocus("residentFullName")}
                 onBlur={handleBlur}
-                className={styles.fullWidthInput}
+                className={`${styles.fullWidthInput} ${errors.residentFullName ? styles.errorInput : ''}`}
                 required
+                ref={(el) => (inputRefs.current.residentFullName = el)}
               />
               <span className={styles.inputLabel}>(П.І.Б.)</span>
             </div>
+            {errors.residentFullName && <p className={styles.error}>{errors.residentFullName}</p>}
             <p className={styles.justifiedText}>Поштова адреса:</p>
             <div className={styles.inputRow}>
               <label className={styles.label}>Область:</label>
@@ -1144,10 +1367,12 @@ const SettlementApplicationPage = () => {
                 onChange={handleChange}
                 onFocus={() => handleFocus("residentRegion")}
                 onBlur={handleBlur}
-                className={styles.stretchedInput}
+                className={`${styles.stretchedInput} ${errors.residentRegion ? styles.errorInput : ''}`}
                 required
+                ref={(el) => (inputRefs.current.residentRegion = el)}
               />
             </div>
+            {errors.residentRegion && <p className={styles.error}>{errors.residentRegion}</p>}
             <div className={styles.inputRow}>
               <label className={styles.label}>Район:</label>
               <input
@@ -1157,10 +1382,12 @@ const SettlementApplicationPage = () => {
                 onChange={handleChange}
                 onFocus={() => handleFocus("residentDistrict")}
                 onBlur={handleBlur}
-                className={styles.stretchedInput}
+                className={`${styles.stretchedInput} ${errors.residentDistrict ? styles.errorInput : ''}`}
                 required
+                ref={(el) => (inputRefs.current.residentDistrict = el)}
               />
             </div>
+            {errors.residentDistrict && <p className={styles.error}>{errors.residentDistrict}</p>}
             <div className={styles.inputRow}>
               <label className={styles.label}>Населений пункт:</label>
               <input
@@ -1170,10 +1397,12 @@ const SettlementApplicationPage = () => {
                 onChange={handleChange}
                 onFocus={() => handleFocus("residentCity")}
                 onBlur={handleBlur}
-                className={styles.stretchedInput}
+                className={`${styles.stretchedInput} ${errors.residentCity ? styles.errorInput : ''}`}
                 required
+                ref={(el) => (inputRefs.current.residentCity = el)}
               />
             </div>
+            {errors.residentCity && <p className={styles.error}>{errors.residentCity}</p>}
             <div className={styles.inputRow}>
               <label className={styles.label}>Поштовий індекс:</label>
               <input
@@ -1183,10 +1412,12 @@ const SettlementApplicationPage = () => {
                 onChange={handleChange}
                 onFocus={() => handleFocus("residentPostalCode")}
                 onBlur={handleBlur}
-                className={styles.stretchedInput}
+                className={`${styles.stretchedInput} ${errors.residentPostalCode ? styles.errorInput : ''}`}
                 required
+                ref={(el) => (inputRefs.current.residentPostalCode = el)}
               />
             </div>
+            {errors.residentPostalCode && <p className={styles.error}>{errors.residentPostalCode}</p>}
             <div className={styles.inputRow}>
               <label className={styles.label}>Контактний тел.:</label>
               <input
@@ -1196,10 +1427,12 @@ const SettlementApplicationPage = () => {
                 onChange={handleChange}
                 onFocus={() => handleFocus("residentPhone")}
                 onBlur={handleBlur}
-                className={styles.stretchedInput}
+                className={`${styles.stretchedInput} ${errors.residentPhone ? styles.errorInput : ''}`}
                 required
+                ref={(el) => (inputRefs.current.residentPhone = el)}
               />
             </div>
+            {errors.residentPhone && <p className={styles.error}>{errors.residentPhone}</p>}
             <p className={styles.justifiedText}>Телефон батьків:</p>
             <div className={styles.inputRow}>
               <label className={styles.label}>Мама:</label>
@@ -1210,10 +1443,12 @@ const SettlementApplicationPage = () => {
                 onChange={handleChange}
                 onFocus={() => handleFocus("motherPhone")}
                 onBlur={handleBlur}
-                className={styles.stretchedInput}
+                className={`${styles.stretchedInput} ${errors.motherPhone ? styles.errorInput : ''}`}
                 required
+                ref={(el) => (inputRefs.current.motherPhone = el)}
               />
             </div>
+            {errors.motherPhone && <p className={styles.error}>{errors.motherPhone}</p>}
             <div className={styles.inputRow}>
               <label className={styles.label}>Тато:</label>
               <input
@@ -1223,10 +1458,12 @@ const SettlementApplicationPage = () => {
                 onChange={handleChange}
                 onFocus={() => handleFocus("fatherPhone")}
                 onBlur={handleBlur}
-                className={styles.stretchedInput}
+                className={`${styles.stretchedInput} ${errors.fatherPhone ? styles.errorInput : ''}`}
                 required
+                ref={(el) => (inputRefs.current.fatherPhone = el)}
               />
             </div>
+            {errors.fatherPhone && <p className={styles.error}>{errors.fatherPhone}</p>}
             <div className={styles.fullNameWrapper}>
               <input
                 type="text"
@@ -1235,11 +1472,13 @@ const SettlementApplicationPage = () => {
                 onChange={handleChange}
                 onFocus={() => handleFocus("parentFullName")}
                 onBlur={handleBlur}
-                className={styles.fullWidthInput}
+                className={`${styles.fullWidthInput} ${errors.parentFullName ? styles.errorInput : ''}`}
                 required
+                ref={(el) => (inputRefs.current.parentFullName = el)}
               />
               <span className={styles.inputLabel}>(П.І.Б. одного з батьків)</span>
             </div>
+            {errors.parentFullName && <p className={styles.error}>{errors.parentFullName}</p>}
           </div>
         </div>
       </div>
@@ -1249,65 +1488,104 @@ const SettlementApplicationPage = () => {
   const page11Content = () => {
     return (
       <div className={styles.contractText}>
-        <p className={styles.rightText}>Додаток №1</p>
+        <p className={styles.rightText}>Додаток № 1</p>
         <h3 className={styles.centeredTitle}>ПЕРЕЛІК</h3>
         <p className={styles.centeredText}>меблів і м’якого інвентарю</p>
-        <div className={styles.rightText}>
+        <div className={styles.dateRight}>
+          <span>«</span>
           <input
             type="text"
-            name="endDay"
-            value={formData.endDay}
-            onChange={handleChange}
-            onFocus={() => handleFocus("endDay")}
+            name="day"
+            value={formData.day}
+            onChange={(e) => handleChange(e, "day")}
+            onFocus={() => handleFocus("day")}
             onBlur={handleBlur}
             maxLength="2"
             placeholder="__"
-            className={styles.inlineInputDate}
-            ref={endDayRef}
+            className={`${styles.inlineInputDate} ${errors.day ? styles.errorInput : ''}`}
             required
-          />{" "}
+            ref={(el) => (inputRefs.current.day = el)}
+          />
+          <span>»</span>
           <input
             type="text"
-            name="endMonth"
-            value={formData.endMonth}
-            onChange={handleChange}
-            onFocus={() => handleFocus("endMonth")}
+            name="month"
+            value={formData.month}
+            onChange={(e) => handleChange(e, "month")}
+            onFocus={() => handleFocus("month")}
             onBlur={handleBlur}
             maxLength="2"
             placeholder="__"
-            className={styles.inlineInputDate}
-            ref={endMonthRef}
+            className={`${styles.inlineInputDate} ${errors.month ? styles.errorInput : ''}`}
             required
-          />{" "}
+            ref={(el) => (inputRefs.current.month = el)}
+          />
           <span>20</span>
           <input
             type="text"
-            value={formData.endYear.slice(2)}
-            onChange={(e) => handleYearChange(e, "endYear")}
-            onFocus={() => handleFocus("endYear")}
+            value={formData.year.slice(2)}
+            onChange={(e) => handleYearChange(e, "year")}
+            onFocus={() => handleFocus("year")}
             onBlur={handleBlur}
             maxLength="2"
             placeholder="__"
-            className={styles.inlineInputDate}
-            ref={endYearSuffixRef}
+            className={`${styles.inlineInputDate} ${errors.year ? styles.errorInput : ''}`}
             required
-          />{" "}
-          р.
+            ref={(el) => (inputRefs.current.year = el)}
+          />
+          <span>р.</span>
         </div>
-        <p className={styles.centereddText}>
-          Кімната № <input type="text" name="roomNumber" value={formData.roomNumber} onChange={handleChange} onFocus={() => handleFocus("roomNumber")} onBlur={handleBlur} className={styles.inlineInput} required />{" "}
-          гуртожиток № <input type="text" name="dormNumber" value={formData.dormNumber} onChange={handleChange} onFocus={() => handleFocus("dormNumber")} onBlur={handleBlur} className={styles.inlineInput} required />
-        </p>
-        <p className={styles.centereddText}>
-          за адресою: <input type="text" name="address" value={formData.address} onChange={handleChange} onFocus={() => handleFocus("address")} onBlur={handleBlur} className={styles.centeredInput70} required />
-        </p>
+        <div className={styles.infoRow}>
+          <span>за адресою</span>
+          <input
+            type="text"
+            name="address"
+            value={formData.address}
+            onChange={(e) => handleChange(e, "address")}
+            onFocus={() => handleFocus("address")}
+            onBlur={handleBlur}
+            className={`${styles.longInput} ${errors.address ? styles.errorInput : ''}`}
+            required
+            ref={(el) => (inputRefs.current.address = el)}
+          />
+          <span>кімнати №</span>
+          <input
+            type="text"
+            name="roomNumber"
+            value={formData.roomNumber}
+            onChange={(e) => handleChange(e, "roomNumber")}
+            onFocus={() => handleFocus("roomNumber")}
+            onBlur={handleBlur}
+            className={`${styles.shortInput} ${errors.roomNumber ? styles.errorInput : ''}`}
+            required
+            ref={(el) => (inputRefs.current.roomNumber = el)}
+          />
+          <span>гуртожитку №</span>
+          <input
+            type="text"
+            name="dormNumber"
+            value={formData.dormNumber}
+            onChange={(e) => handleChange(e, "dormNumber")}
+            onFocus={() => handleFocus("dormNumber")}
+            onBlur={handleBlur}
+            className={`${styles.shortInput} ${errors.dormNumber ? styles.errorInput : ''}`}
+            required
+            ref={(el) => (inputRefs.current.dormNumber = el)}
+          />
+        </div>
+        {errors.day && <p className={styles.error}>{errors.day}</p>}
+        {errors.month && <p className={styles.error}>{errors.month}</p>}
+        {errors.year && <p className={styles.error}>{errors.year}</p>}
+        {errors.address && <p className={styles.error}>{errors.address}</p>}
+        {errors.roomNumber && <p className={styles.error}>{errors.roomNumber}</p>}
+        {errors.dormNumber && <p className={styles.error}>{errors.dormNumber}</p>}
         <table className={styles.inventoryTable}>
           <thead>
             <tr>
-              <th>№</th>
-              <th>Найменування</th>
+              <th>№ з/п</th>
+              <th>Назва предметів</th>
               <th>Кількість</th>
-              <th>Призначення</th>
+              <th>Примітка</th>
             </tr>
           </thead>
           <tbody>
@@ -1315,39 +1593,112 @@ const SettlementApplicationPage = () => {
               <tr key={index}>
                 <td>{index + 1}</td>
                 <td>
-                  <input type="text" name={`inventory[${index}].name`} value={item.name} onChange={handleChange} onFocus={() => handleFocus(`inventory[${index}].name`)} onBlur={handleBlur} className={styles.tableInput} required />
-                  {errors[`inventory[${index}].name`] && <p className={styles.error}>{errors[`inventory[${index}].name`]}</p>}
+                  {index < 14 ? (
+                    <span>{formData.inventory[index].name}</span>
+                  ) : (
+                    <input
+                      type="text"
+                      name={`inventory[${index}].name`}
+                      value={formData.inventory[index].name}
+                      onChange={(e) => handleChange(e, "inventory", index, "name")}
+                      onFocus={() => handleFocus(`inventory[${index}].name`)}
+                      onBlur={handleBlur}
+                      className={`${styles.tableInput} ${errors[`inventory[${index}].name`] ? styles.errorInput : ''}`}
+                      data-error-table={`inventory-${index}-name`}
+                    />
+                  )}
                 </td>
                 <td>
-                  <input type="number" name={`inventory[${index}].quantity`} value={item.quantity} onChange={handleChange} onFocus={() => handleFocus(`inventory[${index}].quantity`)} onBlur={handleBlur} className={styles.tableInput} min="0" required />
-                  {errors[`inventory[${index}].quantity`] && <p className={styles.error}>{errors[`inventory[${index}].quantity`]}</p>}
+                  <input
+                    type="number"
+                    name={`inventory[${index}].quantity`}
+                    value={formData.inventory[index].quantity}
+                    onChange={(e) => handleChange(e, "inventory", index, "quantity")}
+                    onFocus={() => handleFocus(`inventory[${index}].quantity`)}
+                    onBlur={handleBlur}
+                    className={`${styles.tableInput} ${errors[`inventory[${index}].quantity`] ? styles.errorInput : ''}`}
+                    min="0"
+                    data-error-table={`inventory-${index}-quantity`}
+                  />
                 </td>
                 <td>
-                  <input type="text" name={`inventory[${index}].purpose`} value={item.purpose} onChange={handleChange} onFocus={() => handleFocus(`inventory[${index}].purpose`)} onBlur={handleBlur} className={styles.tableInput} required />
-                  {errors[`inventory[${index}].purpose`] && <p className={styles.error}>{errors[`inventory[${index}].purpose`]}</p>}
+                  <input
+                    type="text"
+                    name={`inventory[${index}].purpose`}
+                    value={formData.inventory[index].purpose}
+                    onChange={(e) => handleChange(e, "inventory", index, "purpose")}
+                    onFocus={() => handleFocus(`inventory[${index}].purpose`)}
+                    onBlur={handleBlur}
+                    className={`${styles.tableInput} ${errors[`inventory[${index}].purpose`] ? styles.errorInput : ''}`}
+                    data-error-table={`inventory-${index}-purpose`}
+                  />
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
-        <div className={styles.verticalSignatureSection}>
+        <div className={styles.signatureSection}>
           <div className={styles.signatureBlock}>
-            <div className={styles.inputRow}>
-              <span className={styles.label}>Здав: Завідувач гуртожитку</span>
-              <input type="text" name="mechanizatorReceivedName" value={formData.mechanizatorReceivedName} onChange={handleChange} onFocus={() => handleFocus("mechanizatorReceivedName")} onBlur={handleBlur} className={styles.stretchedInput} required />
-              {errors.mechanizatorReceivedName && <p className={styles.error}>{errors.mechanizatorReceivedName}</p>}
+            <p>Здав: Завідувач гуртожитку</p>
+            <div className={styles.signatureInputs}>
+              <input
+                type="text"
+                name="dormManagerName"
+                value={formData.dormManagerName}
+                onChange={(e) => handleChange(e, "dormManagerName")}
+                onFocus={() => handleFocus("dormManagerName")}
+                onBlur={handleBlur}
+                className={`${styles.signatureInput} ${errors.dormManagerName ? styles.errorInput : ''}`}
+                placeholder="П.І.Б."
+                data-error-field="dormManagerName"
+              />
+              <span>/</span>
+              <input
+                type="text"
+                name="dormManagerSignature"
+                value={formData.dormManagerSignature}
+                onChange={(e) => handleChange(e, "dormManagerSignature")}
+                onFocus={() => handleFocus("dormManagerSignature")}
+                onBlur={handleBlur}
+                className={`${styles.signatureInput} ${errors.dormManagerSignature ? styles.errorInput : ''}`}
+                placeholder="Підпис"
+                data-error-field="dormManagerSignature"
+              />
             </div>
-            <div className={styles.fullNameWrapper}><span className={styles.inputLabel}>(П.І.Б.)</span></div>
           </div>
           <div className={styles.signatureBlock}>
-            <div className={styles.inputRow}>
-              <span className={styles.label}>Прийняв: Мешканець</span>
-              <input type="text" name="mechanizatorCalledName" value={formData.mechanizatorCalledName} onChange={handleChange} onFocus={() => handleFocus("mechanizatorCalledName")} onBlur={handleBlur} className={styles.stretchedInput} required />
-              {errors.mechanizatorCalledName && <p className={styles.error}>{errors.mechanizatorCalledName}</p>}
+            <p>Прийняв: Мешканець</p>
+            <div className={styles.signatureInputs}>
+              <input
+                type="text"
+                name="residentName"
+                value={formData.residentName}
+                onChange={(e) => handleChange(e, "residentName")}
+                onFocus={() => handleFocus("residentName")}
+                onBlur={handleBlur}
+                className={`${styles.signatureInput} ${errors.residentName ? styles.errorInput : ''}`}
+                placeholder="П.І.Б."
+                data-error-field="residentName"
+              />
+              <span>/</span>
+              <input
+                type="text"
+                name="residentSignature"
+                value={formData.residentSignature}
+                onChange={(e) => handleChange(e, "residentSignature")}
+                onFocus={() => handleFocus("residentSignature")}
+                onBlur={handleBlur}
+                className={`${styles.signatureInput} ${errors.residentSignature ? styles.errorInput : ''}`}
+                placeholder="Підпис"
+                data-error-field="residentSignature"
+              />
             </div>
-            <div className={styles.fullNameWrapper}><span className={styles.inputLabel}>(П.І.Б.)</span></div>
           </div>
         </div>
+        {errors.dormManagerName && <p className={styles.error}>{errors.dormManagerName}</p>}
+        {errors.dormManagerSignature && <p className={styles.error}>{errors.dormManagerSignature}</p>}
+        {errors.residentName && <p className={styles.error}>{errors.residentName}</p>}
+        {errors.residentSignature && <p className={styles.error}>{errors.residentSignature}</p>}
       </div>
     );
   };
@@ -1355,36 +1706,299 @@ const SettlementApplicationPage = () => {
   const page12Content = () => {
     return (
       <div className={styles.contractText}>
-        <p className={styles.rightText}>Додаток №2</p>
-        <h2 className={styles.centeredTitle}>АКТ</h2>
-        <p className={styles.centeredText}>прийому–передачі житлового приміщення</p>
-        <div className={styles.rightText}>
-          «{" "}
+      <p className={styles.rightText}>Додаток №2</p>
+      <h2 className={styles.centeredTitle}>АКТ</h2>
+      <p className={styles.centeredText}>прийому–передачі житлового приміщення</p>
+      <div className={styles.dateRight}>
+        <span>«</span>
+        <input
+          type="text"
+          name="day"
+          value={formData.day}
+          onChange={(e) => {
+            handleChange(e);
+            if (e.target.value.length === 2) monthRef.current.focus();
+          }}
+          onFocus={() => handleFocus("day")}
+          onBlur={handleBlur}
+          maxLength="2"
+          placeholder="_"
+          className={styles.inlineInputDate}
+          ref={dayRef}
+          required
+        />
+        <span>»</span>
+        <input
+          type="text"
+          name="month"
+          value={formData.month}
+          onChange={(e) => {
+            handleChange(e);
+            if (e.target.value.length === 2) yearSuffixRef.current.focus();
+          }}
+          onFocus={() => handleFocus("month")}
+          onBlur={handleBlur}
+          maxLength="2"
+          placeholder="__"
+          className={styles.inlineInput}
+          ref={monthRef}
+          required
+        />
+        <span>20</span>
+        <input
+          type="text"
+          name="year"
+          value={formData.year.slice(2)}
+          onChange={(e) => handleYearChange(e, "year")}
+          onFocus={() => handleFocus("year")}
+          onBlur={handleBlur}
+          maxLength="2"
+          placeholder="__"
+          className={styles.inlineInputYear}
+          ref={yearSuffixRef}
+          required
+        />
+        <span>р.</span>
+      </div>
+      <p className={styles.justifiedText}>
+        Цей акт складено завідувачем гуртожитку №{" "}
+        <input
+          type="text"
+          name="dormNumber"
+          value={formData.dormNumber}
+          onChange={handleChange}
+          onFocus={() => handleFocus("dormNumber")}
+          onBlur={handleBlur}
+          className={styles.inlineInput}
+          required
+        />
+      </p>
+      <div className={styles.fullNameWrapper}>
+        <input
+          type="text"
+          name="dormManagerName"
+          value={formData.dormManagerName}
+          onChange={handleChange}
+          onFocus={() => handleFocus("dormManagerName")}
+          onBlur={handleBlur}
+          className={styles.fullWidthInput}
+          required
+        />
+        <span className={styles.inputLabel}>(П.І.Б. завідувача гуртожитку)</span>
+      </div>
+      <p className={styles.justifiedText}>з одного боку</p>
+      <p className={styles.justifiedText}>
+        та Мешканцем кімнати №{" "}
+        <input
+          type="text"
+          name="roomNumber"
+          value={formData.roomNumber}
+          onChange={handleChange}
+          onFocus={() => handleFocus("roomNumber")}
+          onBlur={handleBlur}
+          className={styles.inlineInput}
+          required
+        />{" "}
+        гуртожитку №{" "}
+        <input
+          type="text"
+          name="dormNumber"
+          value={formData.dormNumber}
+          onChange={handleChange}
+          onFocus={() => handleFocus("dormNumber")}
+          onBlur={handleBlur}
+          className={styles.inlineInput}
+          required
+        />
+        , розташованого за адресою:{" "}
+        <input
+          type="text"
+          name="address"
+          value={formData.address}
+          onChange={handleChange}
+          onFocus={() => handleFocus("address")}
+          onBlur={handleBlur}
+          className={styles.fullWidthInput}
+          required
+        />
+      </p>
+      <div className={styles.fullNameWrapper}>
+        <input
+          type="text"
+          name="residentName"
+          value={formData.residentName}
+          onChange={handleChange}
+          onFocus={() => handleFocus("residentName")}
+          onBlur={handleBlur}
+          className={styles.fullWidthInput}
+          required
+        />
+        <span className={styles.inputLabel}>(П.І.Б. Мешканця)</span>
+      </div>
+      <p className={styles.justifiedText}>з другого боку</p>
+      <p className={styles.justifiedText}>
+        в тому, що завідувач гуртожитку передав, а Мешканець прийняв житлове приміщення №{" "}
+        <input
+          type="text"
+          name="premisesNumber"
+          value={formData.premisesNumber}
+          onChange={handleChange}
+          onFocus={() => handleFocus("premisesNumber")}
+          onBlur={handleBlur}
+          className={styles.inlineInput}
+          required
+        />{" "}
+        площею{" "}
+        <input
+          type="text"
+          name="premisesArea"
+          value={formData.premisesArea}
+          onChange={handleChange}
+          onFocus={() => handleFocus("premisesArea")}
+          onBlur={handleBlur}
+          className={styles.inlineInput}
+          required
+        />{" "}
+        м² у наступному стані:
+      </p>
+      <ol className={styles.numberedList}>
+        <li>
+          Стіни, підлога, стеля (штукатурка, побілка, фарбування, тощо):{" "}
           <input
+            type="text"
+            name="premisesConditions[0].description"
+            value={formData.premisesConditions[0]?.description || ""}
+            onChange={handleChange}
+            onFocus={() => handleFocus("premisesConditions[0].description")}
+            onBlur={handleBlur}
+            className={styles.inlineInput}
+          />
+        </li>
+        <li>
+          Двері і вікна (фарбування, замки):{" "}
+          <input
+            type="text"
+            name="premisesConditions[1].description"
+            value={formData.premisesConditions[1]?.description || ""}
+            onChange={handleChange}
+            onFocus={() => handleFocus("premisesConditions[1].description")}
+            onBlur={handleBlur}
+            className={styles.inlineInput}
+          />
+        </li>
+        <li>
+          Електромережа (стан проводки, розеток, вимикачів):{" "}
+          <input
+            type="text"
+            name="premisesConditions[2].description"
+            value={formData.premisesConditions[2]?.description || ""}
+            onChange={handleChange}
+            onFocus={() => handleFocus("premisesConditions[2].description")}
+            onBlur={handleBlur}
+            className={styles.inlineInput}
+          />
+        </li>
+        <li>
+          Сантехнічне обладнання:{" "}
+          <input
+            type="text"
+            name="premisesConditions[3].description"
+            value={formData.premisesConditions[3]?.description || ""}
+            onChange={handleChange}
+            onFocus={() => handleFocus("premisesConditions[3].description")}
+            onBlur={handleBlur}
+            className={styles.inlineInput}
+          />
+        </li>
+      </ol>
+      <div className={styles.signatureSection}>
+        <div className={styles.signatureBlock}>
+          <p>Здав: Завідувач гуртожитку</p>
+          <div className={styles.signatureInputs}>
+            <input
+              type="text"
+              name="dormManagerNameSignature"
+              value={formData.dormManagerNameSignature}
+              onChange={handleChange}
+              onFocus={() => handleFocus("dormManagerNameSignature")}
+              onBlur={handleBlur}
+              className={styles.signatureInput}
+              placeholder="П.І.Б."
+            />
+            <span>/</span>
+            <input
+              type="text"
+              name="dormManagerSignature"
+              value={formData.dormManagerSignature}
+              onChange={handleChange}
+              onFocus={() => handleFocus("dormManagerSignature")}
+              onBlur={handleBlur}
+              className={styles.signatureInput}
+              placeholder="Підпис"
+            />
+          </div>
+          <div className={styles.inputLabel}>(П.І.Б.)</div>
+          <div className={styles.inputLabel}>(підпис)</div>
+        </div>
+        <div className={styles.signatureBlock}>
+          <p>Прийняв: Мешканець</p>
+          <div className={styles.signatureInputs}>
+            <input
+              type="text"
+              name="residentNameSignature"
+              value={formData.residentNameSignature}
+              onChange={handleChange}
+              onFocus={() => handleFocus("residentNameSignature")}
+              onBlur={handleBlur}
+              className={styles.signatureInput}
+              placeholder="П.І.Б."
+            />
+            <span>/</span>
+            <input
+              type="text"
+              name="residentSignature"
+              value={formData.residentSignature}
+              onChange={handleChange}
+              onFocus={() => handleFocus("residentSignature")}
+              onBlur={handleBlur}
+              className={styles.signatureInput}
+              placeholder="Підпис"
+            />
+          </div>
+          <div className={styles.inputLabel}>(П.І.Б.)</div>
+          <div className={styles.inputLabel}>(підпис)</div>
+        </div>
+      </div>
+    </div>
+    );
+  };
+
+  const page13Content = () => {
+    return (
+      <div className={styles.contractText}>
+        <p className={styles.rightText}>Додаток № 3</p>
+        <h3 className={styles.centeredTitle}>ПЕРЕЛІК</h3>
+        <p className={styles.centeredText}>власних приладів, що споживають електроенергію, оплата за яку здійснюється Мешканцем</p>
+        <p className={styles.centeredText}>додатково</p>
+        <div className={styles.dateInput}>
+          « <input
             type="text"
             name="day"
             value={formData.day}
-            onChange={(e) => {
-              handleChange(e);
-              if (e.target.value.length === 2) monthRef.current.focus();
-            }}
+            onChange={handleChange}
             onFocus={() => handleFocus("day")}
             onBlur={handleBlur}
             maxLength="2"
-            placeholder="_"
+            placeholder="__"
             className={styles.inlineInputDate}
             ref={dayRef}
             required
-          />{" "}
-          »{" "}
+          /> »{" "}
           <input
             type="text"
             name="month"
             value={formData.month}
-            onChange={(e) => {
-              handleChange(e);
-              if (e.target.value.length === 2) yearSuffixRef.current.focus();
-            }}
+            onChange={handleChange}
             onFocus={() => handleFocus("month")}
             onBlur={handleBlur}
             maxLength="2"
@@ -1393,8 +2007,7 @@ const SettlementApplicationPage = () => {
             ref={monthRef}
             required
           />{" "}
-          20{" "}
-          <input
+          20 <input
             type="text"
             name="year"
             value={formData.year.slice(2)}
@@ -1404,173 +2017,9 @@ const SettlementApplicationPage = () => {
             maxLength="2"
             placeholder="__"
             className={styles.inlineInputYear}
-            ref={yearSuffixRef}
+            ref={yearRef}
             required
-          />{" "}
-          р.
-        </div>
-        <p className={styles.justifiedText}>
-          Цей акт складено завідувачем гуртожитку №{" "}
-          <input
-            type="text"
-            name="dormNumber"
-            value={formData.dormNumber}
-            onChange={handleChange}
-            onFocus={() => handleFocus("dormNumber")}
-            onBlur={handleBlur}
-            className={styles.inlineInput}
-            required
-          />
-        </p>
-        <p className={styles.justifiedText}>з одного боку</p>
-        <p className={styles.justifiedText}>
-          та Мешканцем кімнати №{" "}
-          <input
-            type="text"
-            name="roomNumber"
-            value={formData.roomNumber}
-            onChange={handleChange}
-            onFocus={() => handleFocus("roomNumber")}
-            onBlur={handleBlur}
-            className={styles.inlineInput}
-            required
-          />{" "}
-          гуртожитку №{" "}
-          <input
-            type="text"
-            name="dormNumber"
-            value={formData.dormNumber}
-            onChange={handleChange}
-            onFocus={() => handleFocus("dormNumber")}
-            onBlur={handleBlur}
-            className={styles.inlineInput}
-            required
-          />
-          , розташованого за адресою:{" "}
-          <input
-            type="text"
-            name="address"
-            value={formData.address}
-            onChange={handleChange}
-            onFocus={() => handleFocus("address")}
-            onBlur={handleBlur}
-            className={styles.fullWidthInput}
-            required
-          />
-        </p>
-        <p className={styles.justifiedText}>з другого боку</p>
-        <h4>Стан приміщення:</h4>
-        <ol>
-          <li>
-            Стіни, підлога, стеля (штукатурка, побілка, фарбування, тощо):{" "}
-            <input
-              type="text"
-              name="premisesConditions[0].description"
-              value={formData.premisesConditions[0]?.description || ""}
-              onChange={handleChange}
-              onFocus={() => handleFocus("premisesConditions[0].description")}
-              onBlur={handleBlur}
-              className={styles.inlineInput}
-            />
-          </li>
-          <li>
-            Двері і вікна (фарбування, замки):{" "}
-            <input
-              type="text"
-              name="premisesConditions[1].description"
-              value={formData.premisesConditions[1]?.description || ""}
-              onChange={handleChange}
-              onFocus={() => handleFocus("premisesConditions[1].description")}
-              onBlur={handleBlur}
-              className={styles.inlineInput}
-            />
-          </li>
-          <li>
-            Електромережа (стан проводки, розеток, вимикачів):{" "}
-            <input
-              type="text"
-              name="premisesConditions[2].description"
-              value={formData.premisesConditions[2]?.description || ""}
-              onChange={handleChange}
-              onFocus={() => handleFocus("premisesConditions[2].description")}
-              onBlur={handleBlur}
-              className={styles.inlineInput}
-            />
-          </li>
-          <li>
-            Сантехнічне обладнання:{" "}
-            <input
-              type="text"
-              name="premisesConditions[3].description"
-              value={formData.premisesConditions[3]?.description || ""}
-              onChange={handleChange}
-              onFocus={() => handleFocus("premisesConditions[3].description")}
-              onBlur={handleBlur}
-              className={styles.inlineInput}
-            />
-          </li>
-          <li>
-            Інше:{" "}
-            <input
-              type="text"
-              name="premisesConditions[4].description"
-              value={formData.premisesConditions[4]?.description || ""}
-              onChange={handleChange}
-              onFocus={() => handleFocus("premisesConditions[4].description")}
-              onBlur={handleBlur}
-              className={styles.inlineInput}
-            />
-          </li>
-        </ol>
-        <div className={styles.signatureSection}>
-          <div className={styles.signatureBlock}>
-            <p className={styles.justifiedText}>Здав: Завідувач гуртожитку</p>
-            <div className={styles.fullNameWrapper}>
-              <input
-                type="text"
-                name="dormManagerName"
-                value={formData.dormManagerName}
-                onChange={handleChange}
-                onFocus={() => handleFocus("dormManagerName")}
-                onBlur={handleBlur}
-                className={styles.fullWidthInput}
-                required
-              />
-              <span className={styles.inputLabel}>(П.І.Б.)</span>
-            </div>
-            <p>Підпис _______________</p>
-          </div>
-          <div className={styles.signatureBlock}>
-            <p className={styles.justifiedText}>Прийняв: Мешканець</p>
-            <div className={styles.fullNameWrapper}>
-              <input
-                type="text"
-                name="residentName"
-                value={formData.residentName}
-                onChange={handleChange}
-                onFocus={() => handleFocus("residentName")}
-                onBlur={handleBlur}
-                className={styles.fullWidthInput}
-                required
-              />
-              <span className={styles.inputLabel}>(П.І.Б.)</span>
-            </div>
-            <p>Підпис _______________</p>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const page13Content = () => {
-    return (
-      <div className={styles.contractText}>
-        <p className={styles.rightText}>Додаток № 3</p>
-        <h3 className={styles.centeredTitle}>ПЕРЕЛІК власних приладів, що споживають електроенергію, оплата за яку здійснюється Мешканцем додатково</h3>
-        <div className={styles.dateInput}>
-          « <input type="text" name="day" value={formData.day} onChange={handleChange} onFocus={() => handleFocus("day")} onBlur={handleBlur} maxLength="2" placeholder="__" className={styles.inlineInputDate} ref={dayRef} required /> »{" "}
-          <input type="text" name="month" value={formData.month} onChange={handleChange} onFocus={() => handleFocus("month")} onBlur={handleBlur} maxLength="2" placeholder="___________" className={styles.inlineInput} ref={monthRef} required />{" "}
-          20 <input type="text" name="year" value={formData.year} onChange={handleChange} onFocus={() => handleFocus("year")} onBlur={handleBlur} maxLength="2" placeholder="__" className={styles.inlineInputYear} ref={yearRef} required /> р.
+          /> р.
         </div>
         <table className={styles.inventoryTable}>
           <thead>
@@ -1584,27 +2033,76 @@ const SettlementApplicationPage = () => {
             </tr>
           </thead>
           <tbody>
-            {formData.electricalAppliances.map((item, index) => (
+            {formData.electricalAppliances.map((_, index) => (
               <tr key={index}>
                 <td>{index + 1}</td>
                 <td>
-                  <input type="text" name={`electricalAppliances[${index}].name`} value={item.name} onChange={handleChange} onFocus={() => handleFocus(`electricalAppliances[${index}].name`)} onBlur={handleBlur} className={styles.tableInput} required />
-                  {errors[`electricalAppliances[${index}].name`] && <p className={styles.error}>{errors[`electricalAppliances[${index}].name`]}</p>}
+                  <input
+                    type="text"
+                    name={`electricalAppliances[${index}].name`}
+                    value={formData.electricalAppliances[index].name}
+                    onChange={handleChange}
+                    onFocus={() => handleFocus(`electricalAppliances[${index}].name`)}
+                    onBlur={handleBlur}
+                    className={styles.tableInput}
+                  />
+                  {errors[`electricalAppliances[${index}].name`] && (
+                    <p className={styles.error}>{errors[`electricalAppliances[${index}].name`]}</p>
+                  )}
                 </td>
                 <td>
-                  <input type="text" name={`electricalAppliances[${index}].brand`} value={item.brand} onChange={handleChange} onFocus={() => handleFocus(`electricalAppliances[${index}].brand`)} onBlur={handleBlur} className={styles.tableInput} required />
-                  {errors[`electricalAppliances[${index}].brand`] && <p className={styles.error}>{errors[`electricalAppliances[${index}].brand`]}</p>}
+                  <input
+                    type="text"
+                    name={`electricalAppliances[${index}].brand`}
+                    value={formData.electricalAppliances[index].brand}
+                    onChange={handleChange}
+                    onFocus={() => handleFocus(`electricalAppliances[${index}].brand`)}
+                    onBlur={handleBlur}
+                    className={styles.tableInput}
+                  />
+                  {errors[`electricalAppliances[${index}].brand`] && (
+                    <p className={styles.error}>{errors[`electricalAppliances[${index}].brand`]}</p>
+                  )}
                 </td>
                 <td>
-                  <input type="text" name={`electricalAppliances[${index}].year`} value={item.year} onChange={handleChange} onFocus={() => handleFocus(`electricalAppliances[${index}].year`)} onBlur={handleBlur} className={styles.tableInput} required />
-                  {errors[`electricalAppliances[${index}].year`] && <p className={styles.error}>{errors[`electricalAppliances[${index}].year`]}</p>}
+                  <input
+                    type="number"
+                    name={`electricalAppliances[${index}].year`}
+                    value={formData.electricalAppliances[index].year}
+                    onChange={handleChange}
+                    onFocus={() => handleFocus(`electricalAppliances[${index}].year`)}
+                    onBlur={handleBlur}
+                    className={styles.tableInput}
+                  />
+                  {errors[`electricalAppliances[${index}].year`] && (
+                    <p className={styles.error}>{errors[`electricalAppliances[${index}].year`]}</p>
+                  )}
                 </td>
                 <td>
-                  <input type="number" name={`electricalAppliances[${index}].quantity`} value={item.quantity} onChange={handleChange} onFocus={() => handleFocus(`electricalAppliances[${index}].quantity`)} onBlur={handleBlur} className={styles.tableInput} min="0" required />
-                  {errors[`electricalAppliances[${index}].quantity`] && <p className={styles.error}>{errors[`electricalAppliances[${index}].quantity`]}</p>}
+                  <input
+                    type="number"
+                    name={`electricalAppliances[${index}].quantity`}
+                    value={formData.electricalAppliances[index].quantity}
+                    onChange={handleChange}
+                    onFocus={() => handleFocus(`electricalAppliances[${index}].quantity`)}
+                    onBlur={handleBlur}
+                    className={styles.tableInput}
+                    min="0"
+                  />
+                  {errors[`electricalAppliances[${index}].quantity`] && (
+                    <p className={styles.error}>{errors[`electricalAppliances[${index}].quantity`]}</p>
+                  )}
                 </td>
                 <td>
-                  <input type="text" name={`electricalAppliances[${index}].note`} value={item.note} onChange={handleChange} onFocus={() => handleFocus(`electricalAppliances[${index}].note`)} onBlur={handleBlur} className={styles.tableInput} />
+                  <input
+                    type="text"
+                    name={`electricalAppliances[${index}].note`}
+                    value={formData.electricalAppliances[index].note}
+                    onChange={handleChange}
+                    onFocus={() => handleFocus(`electricalAppliances[${index}].note`)}
+                    onBlur={handleBlur}
+                    className={styles.tableInput}
+                  />
                 </td>
               </tr>
             ))}
@@ -1620,23 +2118,89 @@ const SettlementApplicationPage = () => {
   const page14Content = () => {
     return (
       <div className={styles.contractText}>
-        <h3 className={styles.centeredTitle}>Корисна інформація</h3>
-        <p className={styles.justifiedText}>Для успішного поселення в гуртожиток, будь ласка, підготуйте наступні документи:</p>
-        <ul>
-          <li>Копія паспорта з двох сторін</li>
-          <li>Фотокартки розміром 3х4 (3 шт.)</li>
-          <li>Довідка про проходження флюорографії</li>
-          <li>Довідка про стан санітарно-епідеміологічного оточення</li>
-          <li>Квитанція про оплату за проживання в гуртожитку</li>
-        </ul>
-        <p className={styles.justifiedText}>Ви можете прикріпити скан-копії цих документів нижче:</p>
-        <input type="file" multiple onChange={handleFileChange} />
+      <h3 className={styles.centeredTitle}>Завершення та Наступні Кроки</h3>
+
+      <div className={styles.infoSection}>
+        <h4 className={styles.sectionTitle}>Перевірка даних</h4>
+        <p className={styles.justifiedText}>
+          Перед натисканням кнопки "Подати заявку" уважно перевірте всі введені дані: ПІБ, паспортні дані, ідентифікаційний номер, контактну інформацію, номер гуртожитку та кімнати.
+        </p>
+        <p className={`${styles.warningText} ${styles.justifiedText}`}>
+          <strong>Важливо:</strong> Ви несете відповідальність за правильність інформації. Помилки можуть призвести до відмови в поселенні.
+        </p>
       </div>
+
+      <div className={styles.infoSection}>
+        <h4 className={styles.sectionTitle}>Подальші дії для поселення на 2025/2026 н.р.</h4>
+        <p className={styles.justifiedText}>
+          Після успішної відправки електронного Договору виконайте наступні кроки для завершення процедури поселення:
+        </p>
+        <ol className={styles.orderedList}>
+          <li>
+            <strong>Написати заяву на поселення</strong> за зразком, доступним на сайті НУБіП або в деканаті вашого факультету/ННІ.
+          </li>
+          <li>
+            <strong>Здійснити оплату</strong> за проживання згідно з тарифами, вказаними на офіційному сайті НУБіП. Абітурієнти оплачують після розподілу по гуртожитках.
+          </li>
+          <li>
+            <strong>Подати заяву та копію квитанції про оплату</strong> через Google Форму, посилання на яку надасть деканат або буде опубліковано на сайті НУБіП. Наприклад: <a href="https://forms.gle/nV5373yTzkJcyFpMA" target="_blank" rel="noopener noreferrer">forms.gle/nV5373yTzkJcyFpMA</a> (<em>використовуйте актуальне посилання!</em>).
+          </li>
+        </ol>
+        <p className={styles.justifiedText}>
+          <strong>Важливі терміни:</strong>
+        </p>
+        <ul className={styles.unorderedList}>
+          <li>Подання заяви: <strong>до середини травня</strong> (уточнюйте в деканаті).</li>
+          <li>Подання копії квитанції: <strong>до середини липня</strong> (уточнюйте в деканаті).</li>
+        </ul>
+        <p className={`${styles.warningText} ${styles.justifiedText}`}>
+          Неподання документів у встановлені терміни може призвести до відмови від місця в гуртожитку.
+        </p>
+        <p className={styles.justifiedText}>
+          <strong>Для пільгових категорій:</strong> Оплату не здійснюйте. Подайте заяву на пільгу та підтверджуючі документи до деканату. Перелік документів доступний на сайті НУБіП або в деканаті.
+        </p>
+      </div>
+
+      <div className={styles.infoSection}>
+        <h4 className={styles.sectionTitle}>Підтвердження подання Договору</h4>
+        <p className={styles.justifiedText}>
+          Після натискання кнопки "Подати заявку" ви побачите повідомлення про успішне відправлення. Якщо підтвердження не з’явилося, зверніться до деканату або служби підтримки.
+        </p>
+        <p className={styles.justifiedText}>
+          <strong>Порада:</strong> Зробіть скріншот або збережіть дані після відправки для власної зручності.
+        </p>
+      </div>
+
+      <div className={styles.infoSection}>
+        <h4 className={styles.sectionTitle}>Виникли проблеми у гуртожитку?</h4>
+        <p className={styles.justifiedText}>
+          Якщо у вас є проблеми з проживанням, повідомте про них (за потреби анонімно) через форму зворотного зв’язку, якщо така доступна (посилання уточнюйте в деканаті).
+        </p>
+      </div>
+
+      <div className={styles.infoSection}>
+        <h4 className={styles.sectionTitle}>Контактна інформація</h4>
+        <p className={styles.justifiedText}>
+          З питань поселення, оплати чи подання документів звертайтесь до деканату вашого факультету/ННІ або адміністрації Студентського містечка НУБіП України:
+        </p>
+        <ul className={styles.unorderedList}>
+          <li>
+            Офіційний сайт НУБіП: <a href="https://nubip.edu.ua" target="_blank" rel="noopener noreferrer">nubip.edu.ua</a>
+          </li>
+        </ul>
+      </div>
+
+      <div className={styles.submitSection}>
+        <p className={styles.centeredText}>
+          Дякуємо за уважне заповнення Договору!
+        </p>
+      </div>
+    </div>
     );
   };
 
   const allPages = isSimplified
-    ? [simplifiedPage1Content]
+    ? [page1Content]
     : [
         page1Content,
         page2Content,
@@ -1681,54 +2245,64 @@ const SettlementApplicationPage = () => {
           <div className={styles.book}>{spreadContent()}</div>
         </div>
         <div className={styles.controlsWrapper}>
-          {currentSpread > 0 && (
-            <button
-              className={`${styles.navButton} ${styles.backButton}`}
-              onClick={() => setCurrentSpread((prev) => prev - 1)}
-            >
-              <ArrowLeftIcon className={styles.buttonIcon} aria-label="Назад" />
-              <span>Назад</span>
-            </button>
-          )}
-
-          {focusedField && hints[focusedField] && (
-            <div className={styles.hint}>
-              <InformationCircleIcon className={styles.hintIcon} />
-              <p>{hints[focusedField]}</p>
+          {showErrors && Object.keys(errors).length > 0 && (
+            <div className={styles.errorPanel}>
+              <h3>Помилка у формі:</h3>
+              <div className={styles.errorContainer}>
+                <div
+                  className={styles.errorItem}
+                  onClick={() => scrollToErrorField(Object.keys(errors)[currentErrorIndex])}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) =>
+                    e.key === "Enter" && scrollToErrorField(Object.keys(errors)[currentErrorIndex])
+                  }
+                >
+                  {formatErrorMessage(Object.keys(errors)[currentErrorIndex])}: {errors[Object.keys(errors)[currentErrorIndex]]}
+                </div>
+                {Object.keys(errors).length > 1 && (
+                  <button
+                    className={styles.nextErrorButton}
+                    onClick={() => setCurrentErrorIndex((prev) => (prev + 1) % Object.keys(errors).length)}
+                  >
+                    Наступна помилка
+                  </button>
+                )}
+              </div>
             </div>
           )}
-
-          <div className={styles.progressBar}>
-            <progress value={progress} max="100" />
-            <span>{Math.round(progress)}%</span>
+          <div className={styles.controls}>
+            {currentSpread > 0 && (
+              <button
+                className={`${styles.navButton} ${styles.backButton}`}
+                onClick={() => setCurrentSpread((prev) => prev - 1)}
+              >
+                <ArrowLeftIcon className={styles.buttonIcon} aria-label="Назад" />
+                <span>Назад</span>
+              </button>
+            )}
+            <div className={styles.progressBar}>
+              <progress value={progress} max="100" />
+              <span>{Math.round(progress)}%</span>
+            </div>
+            {currentSpread < totalSpreads - 1 ? (
+              <button
+                className={`${styles.navButton} ${styles.nextButton}`}
+                onClick={() => setCurrentSpread((prev) => prev + 1)}
+              >
+                <span>Далі</span>
+                <ArrowRightIcon className={styles.buttonIcon} aria-label="Далі" />
+              </button>
+            ) : (
+              <button
+                className={`${styles.navButton} ${styles.nextButton}`}
+                onClick={handleSubmit}
+              >
+                <span>Подати заявку</span>
+                <CheckIcon className={styles.buttonIcon} aria-label="Подати заявку" />
+              </button>
+            )}
           </div>
-
-          {currentSpread < totalSpreads - 1 ? (
-            <button
-              className={`${styles.navButton} ${styles.nextButton}`}
-              onClick={() => setCurrentSpread((prev) => prev + 1)}
-            >
-              <span>Далі</span>
-              <ArrowRightIcon className={styles.buttonIcon} aria-label="Далі" />
-            </button>
-          ) : (
-            <button
-              className={`${styles.navButton} ${styles.nextButton}`}
-              onClick={handleSubmit}
-            >
-              <span>Подати заявку</span>
-              <CheckIcon className={styles.buttonIcon} aria-label="Подати заявку" />
-            </button>
-          )}
-
-          <label className={styles.simplifiedForm}>
-            <input
-              type="checkbox"
-              checked={isSimplified}
-              onChange={() => setIsSimplified(!isSimplified)}
-            />
-            <span>Спрощена форма</span>
-          </label>
         </div>
       </div>
     </div>
