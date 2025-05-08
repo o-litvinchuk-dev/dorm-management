@@ -13,6 +13,8 @@ import path from "path";
 import { fileURLToPath } from "url";
 import servicesRoutes from "./src/routes/v1/servicesRoutes.js";
 import { getEnforcer, checkPermission } from "./src/config/permissions.js";
+import adminAccommodationRoutes from "./src/routes/v1/adminAccommodationRoutes.js";
+import { authenticate } from "./src/middlewares/auth.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -74,8 +76,9 @@ app.use((req, res, next) => {
 // Підключення маршрутів
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/secure", secureRoutes);
-app.use("/api/v1/admin", adminRoutes);
+app.use("/api/v1/admin", authenticate, adminRoutes); // Застосовано authenticate middleware
 app.use("/api/v1/services", servicesRoutes);
+app.use("/api/v1/admin/accommodation-applications", adminAccommodationRoutes);
 
 // Обробка помилок
 app.use(errorHandler);

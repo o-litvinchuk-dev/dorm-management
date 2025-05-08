@@ -7,7 +7,7 @@ import {
   createNotification,
 } from "../../controllers/notificationController.js";
 import { getProfile, updateProfile } from "../../controllers/authController.js";
-import { getApplications, getDormitories, getSettlements, getAccommodationApplications } from "../../controllers/secureController.js";
+import { getApplications, getDormitories, getSettlements, getAccommodationApplications, getDashboardData } from "../../controllers/secureController.js";
 import { checkPermission } from "../../config/permissions.js";
 
 const router = Router();
@@ -23,5 +23,6 @@ router.get("/applications", checkPermission("secure"), getApplications);
 router.get("/dormitories", checkPermission("secure"), getDormitories);
 router.get("/settlement", checkPermission("secure"), getSettlements);
 router.get("/accommodation-applications", checkPermission("secure"), getAccommodationApplications);
+router.get("/dashboard", authenticate, authorize("GET", "/api/v1/secure/dashboard"), getDashboardData);
 
 export { router as secureRoutes };

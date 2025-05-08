@@ -1,5 +1,5 @@
 import axios from "axios";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 
 const api = axios.create({
   baseURL: "http://localhost:5000/api/v1",
@@ -7,31 +7,38 @@ const api = axios.create({
   timeout: 10000,
 });
 
-// Request interceptor: додаємо токен до заголовків
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("accessToken");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    console.debug("[API Request]", config.method.toUpperCase(), config.url, config.params, config.data);
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    console.error("[API Request Error]", error);
+    return Promise.reject(error);
+  }
 );
 
-// Response interceptor для обробки помилок
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+    console.error("[API Response Error]", error.response?.status, error.response?.data, originalRequest);
 
     if (error.response?.status === 429) {
       toast.error("Забагато запитів. Спробуйте через 15 хвилин");
       return Promise.reject(error);
     }
 
+    if (error.response?.status === 500) {
+      toast.error("Внутрішня помилка сервера. Спробуйте пізніше");
+      return Promise.reject(error);
+    }
+
     if (error.response?.status === 401 && !originalRequest._retry) {
-      // Якщо прапорець _noAuth встановлено, просто відхиляємо запит
       if (originalRequest._noAuth) {
         return Promise.reject(error);
       }
@@ -53,6 +60,7 @@ api.interceptors.response.use(
         originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
         return api(originalRequest);
       } catch (refreshError) {
+        console.error("[API Refresh Token Error]", refreshError);
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
         localStorage.removeItem("user");
@@ -70,7 +78,6 @@ api.interceptors.response.use(
   }
 );
 
-// Додатковий екземпляр для публічних запитів (без токенів)
 api.public = axios.create({
   baseURL: "http://localhost:5000/api/v1",
   timeout: 10000,

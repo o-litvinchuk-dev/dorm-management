@@ -14,6 +14,12 @@ p, admin, /api/v1/admin/applications/:id, DELETE
 p, admin, /api/v1/applications, GET
 p, admin, /api/v1/dormitories, GET
 p, admin, /api/v1/settlement, GET
+p, admin, /api/v1/admin/accommodation-applications, GET
+p, admin, /api/v1/admin/accommodation-applications/:id, GET
+p, admin, /api/v1/admin/accommodation-applications/:id/status, PUT
+p, admin, /api/v1/admin/accommodation-applications/:id/comments, POST
+p, admin, /api/v1/admin/accommodation-applications/:id/comments, GET
+p, admin, /api/v1/admin/applications-overview, GET
 p, student, /api/v1/secure/dashboard, GET
 p, student, /api/v1/secure/profile, GET
 p, student, /api/v1/secure/profile, PATCH
@@ -35,4 +41,10 @@ p, dorm_admin, /api/v1/services/settlement, POST
 p, dorm_admin, /api/v1/applications, GET
 p, dorm_admin, /api/v1/dormitories, GET
 p, dorm_admin, /api/v1/settlement, GET
+p, dorm_admin, /api/v1/admin/accommodation-applications, GET
+p, dorm_admin, /api/v1/admin/accommodation-applications/:id, GET
+p, dorm_admin, /api/v1/admin/accommodation-applications/:id/status, PUT
+p, dorm_admin, /api/v1/admin/accommodation-applications/:id/comments, POST
+p, dorm_admin, /api/v1/admin/accommodation-applications/:id/comments, GET
+p, dorm_admin, /api/v1/admin/applications-overview, GET
 g, dorm_admin, admin

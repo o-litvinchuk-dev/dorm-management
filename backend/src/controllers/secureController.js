@@ -2,6 +2,7 @@ import pool from "../config/db.js";
 import DormApplication from "../models/DormApplication.js";
 import Dormitory from "../models/Dormitory.js";
 import Settlement from "../models/Settlement.js";
+import AccommodationApplication from "../models/AccommodationApplication.js";
 
 export const getDashboardData = async (req, res) => {
   try {
@@ -57,6 +58,31 @@ export const getSettlements = async (req, res) => {
     res.json(settlements);
   } catch (error) {
     console.error("[SecureController] Помилка отримання розкладу поселення:", error);
+    res.status(500).json({ error: "Помилка сервера" });
+  }
+};
+
+export const getAccommodationApplications = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { page = 1, limit = 10, search = '', status = '' } = req.query;
+
+    const result = await AccommodationApplication.findAll({
+      page: parseInt(page),
+      limit: parseInt(limit),
+      search,
+      status,
+      userId
+    });
+
+    res.json({
+      applications: result.applications.filter(app => app.user_id === userId),
+      total: result.total,
+      page: result.page,
+      limit: result.limit
+    });
+  } catch (error) {
+    console.error("[SecureController] Помилка отримання заявок на проживання:", error);
     res.status(500).json({ error: "Помилка сервера" });
   }
 };
