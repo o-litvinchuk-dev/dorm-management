@@ -1,0 +1,587 @@
+.layout {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  background-color: #f8fafc;
+  font-family: "Times New Roman", serif;
+}
+
+.mainContent {
+  flex: 1;
+  padding: 90px 20px 20px 40px;
+  transition: margin-left 0.3s ease;
+  box-sizing: border-box;
+  margin-left: 250px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.mainContent.sidebarCollapsed {
+  margin-left: 80px;
+}
+
+.container {
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  padding: 24px;
+  margin-top: 12px;
+  width: 100%;
+  box-sizing: border-box;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.book {
+  display: flex;
+  justify-content: center;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  width: 794px;
+  max-width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  overflow-y: auto;
+  margin: 0 auto;
+}
+
+.pageLeft {
+  width: 100%;
+  padding: 20px;
+  background: #fff;
+  box-sizing: border-box;
+}
+
+.controlsWrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  margin-top: 12px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.backButtonWrapper {
+  flex: 1;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.progressBarWrapper {
+  flex: 2;
+  display: flex;
+  justify-content: center;
+  max-width: 400px;
+}
+
+.nextButtonWrapper {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.errorPanel {
+  background: #ffe6e6;
+  padding: 15px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  width: 100%;
+  max-width: 1200px;
+}
+
+.errorPanel h3 {
+  margin: 0 0 10px;
+  font-size: 18px;
+  color: #ef4444;
+}
+
+.errorContainer {
+  max-height: 100px;
+  overflow-y: auto;
+}
+
+.errorItem {
+  padding: 5px;
+  cursor: pointer;
+  color: #d32f2f;
+  font-size: 14px;
+}
+
+.errorItem:hover {
+  color: #006aff;
+  text-decoration: underline;
+}
+
+.activeError {
+  font-weight: 500;
+  color: #d32f2f;
+}
+
+.errorInput {
+  border-bottom: 2px solid #ef4444 !important;
+  background-color: #fff1f1;
+}
+
+.errorInput:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.3);
+}
+
+.focusedInput {
+  border-bottom: 2px solid #006aff !important;
+}
+
+.hint {
+  background-color: #eff6ff;
+  border: 1px solid #3b82f6;
+  border-radius: 8px;
+  padding: 8px;
+  max-height: 100px;
+  overflow-y: auto;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-family: "Roboto", sans-serif;
+  font-size: 12px;
+  color: #374151;
+  animation: slideIn 0.3s ease-out;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 1;
+  min-width: 150px;
+}
+
+.hint h3 {
+  font-size: 14px;
+  font-weight: bold;
+  color: #3b82f6;
+  margin-bottom: 4px;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.progressBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.progressBar progress {
+  flex-grow: 1;
+  height: 6px;
+  border-radius: 3px;
+  background-color: #e5e7eb;
+  border: none;
+}
+
+.progressBar progress::-webkit-progress-bar {
+  background-color: #e5e7eb;
+  border-radius: 3px;
+}
+
+.progressBar progress::-webkit-progress-value {
+  background-color: #006aff;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.progressBar progress::-moz-progress-bar {
+  background-color: #006aff;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.progressBar span {
+  font-family: "Roboto", sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: #333;
+  min-width: 25px;
+  text-align: right;
+}
+
+.navButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 16px;
+  background-color: #006aff;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: "Roboto", sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  min-width: 100px;
+}
+
+.navButton:hover {
+  background-color: #0056d2;
+  transform: translateY(-1px);
+}
+
+.navButton:active {
+  transform: translateY(0);
+}
+
+.navButton:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.buttonIcon {
+  width: 16px;
+  height: 16px;
+  color: #ffffff;
+  stroke-width: 2;
+}
+
+.backButton,
+.nextButton {
+  min-width: 100px;
+}
+
+.contractText {
+  font-family: "Times New Roman", serif;
+  font-size: 15px;
+  line-height: 1.5;
+  color: #000;
+  text-align: justify;
+  margin: 0 20px;
+  padding: 15px;
+}
+
+.topHeader {
+  text-align: center;
+  margin-bottom: 16px;
+  font-weight: 600;
+}
+
+.topHeader p {
+  margin: 4px 0;
+  font-family: "Times New Roman", serif;
+  font-size: 15px;
+}
+
+.redText {
+  color: #ff0000;
+}
+
+.recipientBlock {
+  text-align: right;
+  margin-bottom: 16px;
+}
+
+.rightText {
+  text-align: right;
+  font-size: 14px;
+  /* font-weight: 600; */
+  color: #000;
+  margin: 2px 0;
+}
+
+.centeredTitle {
+  font-family: "Times New Roman", serif;
+  font-size: 20px;
+  font-weight: bold;
+  text-align: center;
+  margin: 8px 0 0 0;
+  color: #000;
+}
+
+.justifiedText {
+  text-align: justify;
+  font-family: "Times New Roman", serif;
+  font-size: 15px;
+  line-height: 1.5;
+  color: #000;
+  margin-bottom: 2px;
+}
+
+.signatureSection {
+  display: flex;
+  gap: 15px;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.signatureBlock {
+  width: 45%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.dateInputGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fullNameWrapper {
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.inputLabel {
+  display: block;
+  font-size: 12px;
+  color: #666;
+  margin-top: 4px;
+  text-align: center;
+}
+
+.inlineInput {
+  display: inline-block;
+  width: 150px;
+  padding: 4px 8px;
+  margin: 0 4px;
+  border: none;
+  border-bottom: 1px solid #333;
+  background: none;
+  font-family: "Times New Roman", serif;
+  font-size: 14px;
+  color: #333;
+  vertical-align: middle;
+  transition: border-color 0.2s ease;
+}
+
+.shortInlineInput {
+  display: inline-block;
+  width: 50px;
+  padding: 4px 8px;
+  margin: 0 4px;
+  border: none;
+  border-bottom: 1px solid #333;
+  background: none;
+  font-family: "Times New Roman", serif;
+  font-size: 14px;
+  color: #333;
+  vertical-align: middle;
+  transition: border-color 0.2s ease;
+}
+
+.inlineInputDate {
+  width: 30px;
+  text-align: center;
+  padding: 4px;
+  border: none;
+  border-bottom: 1px solid #333;
+  font-family: "Times New Roman", serif;
+  font-size: 14px;
+}
+
+.fullWidthInput {
+  display: block;
+  width: 100%;
+  padding: 4px 8px;
+  margin: 0 auto;
+  border: none;
+  border-bottom: 1px solid #333;
+  background: none;
+  font-family: "Times New Roman", serif;
+  font-size: 14px;
+  color: #333;
+}
+
+.inlineInput:focus,
+.shortInlineInput:focus,
+.inlineInputDate:focus,
+.fullWidthInput:focus {
+  border-bottom: 2px solid #006aff;
+  outline: none;
+}
+
+.error {
+  color: #ef4444;
+  font-size: 12px;
+  margin-top: 4px;
+  text-align: left;
+  font-family: "Roboto", sans-serif;
+  font-weight: 500;
+}
+
+@media (max-width: 1024px) {
+  .book {
+    width: 650px;
+    max-width: 100%;
+    height: auto;
+    overflow-y: auto;
+    margin: 0 auto;
+  }
+  .pageLeft {
+    width: 100%;
+    border: none;
+    border-bottom: 1px solid #d1d5db;
+    padding: 15px;
+  }
+  .controlsWrapper {
+    flex-direction: row;
+    gap: 8px;
+    padding: 8px;
+  }
+  .errorPanel,
+  .hint {
+    min-width: 120px;
+    font-size: 11px;
+    max-height: 80px;
+  }
+  .errorPanel h3,
+  .hint h3 {
+    font-size: 12px;
+  }
+  .navButton {
+    padding: 6px 12px;
+    font-size: 12px;
+    min-width: 80px;
+  }
+  .progressBar {
+    min-width: 80px;
+  }
+  .contractText {
+    margin: 0 15px;
+    padding: 15px;
+    font-size: 15px;
+  }
+  .inlineInput,
+  .shortInlineInput {
+    width: 120px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 768px) {
+  .mainContent {
+    padding: 70px 15px 15px 15px;
+    margin-left: 80px;
+  }
+  .book {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto;
+  }
+  .controlsWrapper {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    padding: 6px;
+  }
+  .errorPanel,
+  .hint {
+    min-width: 100%;
+    font-size: 10px;
+    max-height: 70px;
+  }
+  .errorPanel h3,
+  .hint h3 {
+    font-size: 11px;
+  }
+  .navButton {
+    padding: 6px 10px;
+    font-size: 11px;
+    min-width: 100%;
+  }
+  .progressBar {
+    min-width: 100%;
+  }
+  .progressBar span {
+    font-size: 10px;
+    min-width: 20px;
+  }
+  .contractText {
+    margin: 0 10px;
+    padding: 15px;
+    font-size: 15px;
+  }
+  .inlineInput,
+  .shortInlineInput {
+    width: 100px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .mainContent {
+    padding: 60px 10px 10px 10px;
+    margin-left: 0;
+  }
+  .container {
+    padding: 12px;
+  }
+  .book {
+    width: 100%;
+    max-width: 100%;
+    padding: 10px;
+    margin: 0 auto;
+  }
+  .controlsWrapper {
+    flex-direction: column;
+    gap: 4px;
+    padding: 4px;
+  }
+  .errorPanel,
+  .hint {
+    min-width: 100%;
+    font-size: 9px;
+    max-height: 60px;
+  }
+  .errorPanel h3,
+  .hint h3 {
+    font-size: 10px;
+  }
+  .navButton {
+    padding: 5px 8px;
+    font-size: 10px;
+    min-width: 100%;
+  }
+  .progressBar {
+    min-width: 100%;
+  }
+  .progressBar span {
+    font-size: 9px;
+  }
+  .contractText {
+    margin: 0 5px;
+    padding: 10px;
+    font-size: 14px;
+  }
+  .centeredTitle {
+    font-size: 18px;
+  }
+  .justifiedText {
+    font-size: 14px;
+  }
+  .inlineInput,
+  .shortInlineInput {
+    width: 80px;
+    font-size: 12px;
+  }
+}

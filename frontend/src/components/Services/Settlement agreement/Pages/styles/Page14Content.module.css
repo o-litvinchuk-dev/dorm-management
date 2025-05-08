@@ -1,0 +1,292 @@
+.page14ContractText {
+    font-family: "Roboto", sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    color: #1f2937;
+    text-align: justify;
+    /* margin: 0 16px; */
+    padding: 16px;
+    background: #ffffff;
+    border-radius: 6px;
+  }
+  
+  .page14CenteredTitle {
+    font-family: "Roboto", sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    text-align: center;
+    /* margin: 12px 0; */
+    color: #1f2937;
+  }
+  
+  .page14SectionTitle {
+    font-family: "Roboto", sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+    /* margin: 12px 0 8px; */
+    color: #1f2937;
+  }
+  
+  .page14JustifiedText {
+    font-family: "Roboto", sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    color: #1f2937;
+    text-align: justify;
+    margin-bottom: 6px;
+  }
+  
+  .page14OrderedList {
+    margin: 8px 0;
+    padding-left: 28px;
+    list-style-type: decimal;
+    list-style-position: outside;
+    font-family: "Roboto", sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    color: #1f2937;
+  }
+  
+  .page14OrderedList li {
+    margin-bottom: 8px;
+    position: relative;
+  }
+  
+  .page14InfoSection {
+    background: #ffffff;
+    padding: 6px;
+    margin-bottom: 16px;
+    border-bottom: 0.5px solid #e5e7eb;
+  }
+  
+  .page14CheckboxGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 8px;
+    padding: 8px;
+    background: #ffffff;
+    border-radius: 4px;
+  }
+  
+  .page14CheckboxLabel {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-family: "Roboto", sans-serif;
+    font-size: 14px;
+    color: #1f2937;
+    cursor: pointer;
+    transition: color 0.2s ease;
+  }
+  
+  .page14CheckboxLabel:hover {
+    color: #006aff;
+  }
+  
+  .page14CheckboxInput {
+    width: 16px;
+    height: 16px;
+    accent-color: #006aff;
+    cursor: pointer;
+    margin-top: 2px;
+    transition: box-shadow 0.2s ease;
+  }
+  
+  .page14CheckboxInput:focus {
+    box-shadow: 0 0 0 2px rgba(0, 106, 255, 0.1);
+    outline: none;
+  }
+  
+  .page14CheckboxInput.page14ErrorInput {
+    accent-color: #ef4444;
+    border: 0.5px solid #ef4444;
+  }
+  
+  .page14SignatureSection {
+    display: flex;
+    gap: 16px;
+    justify-content: space-between;
+    margin-top: 16px;
+    padding: 12px;
+    background: #ffffff;
+    border-radius: 4px;
+    border-bottom: 0.5px solid #e5e7eb;
+  }
+  
+  .page14SignatureBlock {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    min-width: 160px;
+    max-width: 320px;
+  }
+  
+  .page14SignatureInputs {
+    display: flex;
+    align-items: center;
+    width: 100%;
+  }
+  
+  .page14SignatureLabel {
+    font-family: "Roboto", sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: #1f2937;
+    margin-bottom: 6px;
+  }
+  
+  .page14SignatureInput {
+    border: 0.5px solid #d1d5db;
+    border-radius: 4px;
+    background: #ffffff;
+    padding: 8px 10px;
+    font-family: "Roboto", sans-serif;
+    font-size: 13px;
+    color: #1f2937;
+    width: 100%;
+    min-width: 160px;
+    transition: border-color 0.2s ease;
+  }
+  
+  .page14SignatureInput:focus {
+    border-color: #006aff;
+    box-shadow: 0 0 0 2px rgba(0, 106, 255, 0.1);
+    outline: none;
+  }
+  
+  .page14SignatureInput.page14ErrorInput {
+    border-color: #ef4444;
+    background-color: #fff1f1;
+  }
+  
+  .page14SignatureInput.page14ErrorInput:focus {
+    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+  }
+  
+  .page14SubmitSection {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 16px;
+    padding: 12px;
+    background: #e6f0ff;
+    border-radius: 4px;
+  }
+  
+  .page14CenteredText {
+    text-align: center;
+    font-family: "Roboto", sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    color: #1f2937;
+    margin: 0;
+  }
+  
+  .page14Error {
+    color: #ef4444;
+    font-size: 11px;
+    margin-top: 2px;
+    text-align: left;
+    font-family: "Roboto", sans-serif;
+    font-weight: 500;
+  }
+  
+  @media (max-width: 1024px) {
+    .page14SignatureSection {
+      flex-direction: column;
+      gap: 12px;
+    }
+    .page14SignatureInput {
+      width: 100%;
+    }
+    .page14InfoSection {
+      padding: 10px;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .page14ContractText {
+      margin: 0 10px;
+      padding: 12px;
+      font-size: 14px;
+    }
+    .page14CenteredTitle {
+      font-size: 20px;
+      margin: 10px 0;
+    }
+    .page14SectionTitle {
+      font-size: 16px;
+      margin: 10px 0 6px;
+    }
+    .page14JustifiedText {
+      font-size: 14px;
+    }
+    .page14OrderedList {
+      font-size: 14px;
+      padding-left: 24px;
+    }
+    .page14CheckboxLabel {
+      font-size: 13px;
+    }
+    .page14CheckboxInput {
+      width: 14px;
+      height: 14px;
+    }
+    .page14SignatureInput {
+      font-size: 12px;
+    }
+    .page14SubmitSection {
+      padding: 10px;
+    }
+    .page14CenteredText {
+      font-size: 15px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .page14ContractText {
+      margin: 0 8px;
+      padding: 10px;
+      font-size: 13px;
+    }
+    .page14CenteredTitle {
+      font-size: 18px;
+      margin: 8px 0;
+    }
+    .page14SectionTitle {
+      font-size: 15px;
+      margin: 8px 0 4px;
+    }
+    .page14JustifiedText {
+      font-size: 13px;
+    }
+    .page14OrderedList {
+      font-size: 13px;
+      padding-left: 20px;
+    }
+    .page14CheckboxLabel {
+      font-size: 12px;
+    }
+    .page14CheckboxInput {
+      width: 13px;
+      height: 13px;
+    }
+    .page14SignatureInput {
+      font-size: 11px;
+      padding: 6px 8px;
+    }
+    .page14InfoSection {
+      padding: 8px;
+    }
+    .page14SubmitSection {
+      padding: 8px;
+    }
+    .page14CenteredText {
+      font-size: 14px;
+    }
+    .page14Error {
+      font-size: 10px;
+    }
+  }

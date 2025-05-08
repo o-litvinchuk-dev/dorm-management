@@ -1,0 +1,1035 @@
+.layout {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    background-color: #f8fafc;
+    font-family: "Times New Roman", serif;
+  }
+  
+  .mainContent {
+    flex: 1;
+    padding: 90px 20px 20px 40px;
+    transition: margin-left 0.3s ease;
+    box-sizing: border-box;
+    margin-left: 250px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .mainContent.sidebarCollapsed {
+    margin-left: 80px;
+  }
+  
+  .container {
+    background: #fff;
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+    padding: 24px;
+    margin-top: 12px;
+    width: 100%;
+    box-sizing: border-box;
+    flex: 1;
+    overflow-y: auto;
+  }
+  
+  .book {
+    display: flex;
+    justify-content: center;
+    background: #fff;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    overflow-y: auto;
+  }
+  
+  .pageLeft,
+  .pageRight {
+    width: 50%;
+    padding: 20px;
+    background: #fff;
+    box-sizing: border-box;
+  }
+  
+  .pageLeft {
+    border-right: 1px solid #d1d5db;
+  }
+  
+  .pageRight {
+    border-left: none;
+  }
+  
+  .controlsWrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    margin-top: 12px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+  }
+  
+  .backButtonWrapper {
+    flex: 1;
+    display: flex;
+    justify-content: flex-start;
+  }
+  
+  .progressBarWrapper {
+    flex: 2;
+    display: flex;
+    justify-content: center;
+    max-width: 400px;
+  }
+  
+  .nextButtonWrapper {
+    flex: 1;
+    display: flex;
+    justify-content: flex-end;
+  }
+  
+  .errorPanel {
+    background: #ffe6e6;
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    width: 100%;
+    max-width: 1200px;
+  }
+  
+  .errorPanel h3 {
+    margin: 0 0 10px;
+    font-size: 18px;
+    color: #ef4444;
+  }
+  
+  .errorContainer {
+    max-height: 100px;
+    overflow-y: auto;
+  }
+  
+  .errorItem {
+    padding: 5px;
+    cursor: pointer;
+    color: #d32f2f;
+    font-size: 14px;
+  }
+  
+  .errorItem:hover {
+    color: #006aff;
+    text-decoration: underline;
+  }
+  
+  .nextErrorButton {
+    margin-top: 10px;
+    padding: 5px 10px;
+    background: #d32f2f;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .error-highlight {
+    border-bottom: 2px solid #d32f2f !important;
+    transition: border-bottom 0.3s ease;
+  }
+  
+  .focusedInput {
+    border-color: #006aff;
+  }
+  .hint {
+    background-color: #eff6ff;
+    border: 1px solid #3b82f6;
+    border-radius: 8px;
+    padding: 8px;
+    max-height: 100px;
+    overflow-y: auto;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    font-family: "Roboto", sans-serif;
+    font-size: 12px;
+    color: #374151;
+    animation: slideIn 0.3s ease-out;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex: 1;
+    min-width: 150px;
+  }
+  
+  .hint h3 {
+    font-size: 14px;
+    font-weight: bold;
+    color: #3b82f6;
+    margin-bottom: 4px;
+  }
+  
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .progressBar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+  }
+  
+  .progressBar progress {
+    flex-grow: 1;
+    height: 6px;
+    border-radius: 3px;
+    background-color: #e5e7eb;
+    border: none;
+  }
+  
+  .progressBar progress::-webkit-progress-bar {
+    background-color: #e5e7eb;
+    border-radius: 3px;
+  }
+  
+  .progressBar progress::-webkit-progress-value {
+    background-color: #006aff;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+  }
+  
+  .progressBar progress::-moz-progress-bar {
+    background-color: #006aff;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+  }
+  
+  .progressBar span {
+    font-family: "Roboto", sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    color: #333;
+    min-width: 25px;
+    text-align: right;
+  }
+  
+  .navButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 8px 16px;
+    background-color: #006aff;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: "Roboto", sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    text-align: center;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    min-width: 100px;
+  }
+  
+  .navButton:hover {
+    background-color: #0056d2;
+    transform: translateY(-1px);
+  }
+  
+  .navButton:active {
+    transform: translateY(0);
+  }
+  
+  .navButton:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+    transform: none;
+  }
+  
+  .buttonIcon {
+    width: 16px;
+    height: 16px;
+    color: #ffffff;
+    stroke-width: 2;
+  }
+  
+  .backButton,
+  .nextButton {
+    min-width: 100px;
+  }
+  
+  .simplifiedForm {
+    display: none;
+  }
+  
+  .contractText {
+    font-family: "Times New Roman", serif;
+    font-size: 15px;
+    line-height: 1.5;
+    color: #000;
+    text-align: justify;
+    margin: 0 20px;
+    padding: 15px;
+  }
+  
+  .centeredTitle {
+    font-family: "Times New Roman", serif;
+    font-size: 20px;
+    font-weight: bold;
+    text-align: center;
+    margin: 8px 0 0 0;
+    color: #000;
+  }
+  
+  .sectionTitle {
+    font-family: "Times New Roman", serif;
+    font-size: 18px;
+    font-weight: bold;
+    margin: 12px 0 8px;
+    color: #000;
+  }
+  
+  .centeredText {
+    text-align: center;
+    font-family: "Times New Roman", serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: #000;
+    margin: 12px 0;
+  }
+  
+  .rightText {
+    text-align: right;
+    font-size: 14px;
+    font-weight: 600;
+    color: #000;
+    margin: 2px 0;
+  }
+  
+  .dateRight {
+    display: flex;
+    justify-content: flex-end;
+    gap: 4px;
+    margin-bottom: 8px;
+  }
+  
+  .justifiedText {
+    text-align: justify;
+    font-family: "Times New Roman", serif;
+    font-size: 15px;
+    line-height: 1.5;
+    color: #000;
+    margin-bottom: 2px;
+  }
+  
+  .warningText {
+    color: #dc7609;
+    font-weight: 600;
+    background-color: #fffce0;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #fbeeb1;
+  }
+  
+  
+  .inlineInput {
+    display: inline-block;
+    width: 150px;
+    padding: 4px 8px;
+    margin: 0 4px;
+    border: none;
+    border-bottom: 1px solid #333;
+    background: none;
+    font-family: "Times New Roman", serif;
+    font-size: 14px;
+    color: #333;
+    vertical-align: middle;
+    transition: border-color 0.2s ease;
+  }
+  
+  .shortInlineInput {
+    display: inline-block;
+    width: 50px;
+    padding: 4px 8px;
+    margin: 0 4px;
+    border: none;
+    border-bottom: 1px solid #333;
+    background: none;
+    font-family: "Times New Roman", serif;
+    font-size: 14px;
+    color: #333;
+    vertical-align: middle;
+    transition: border-color 0.2s ease;
+  }
+  
+  .descriptionInput {
+    display: inline-block;
+    width: 400px; /* Для описів у пунктах 5 і 6 */
+    padding: 4px 8px;
+    margin: 0 4px;
+    border: none;
+    border-bottom: 1px solid #333;
+    background: none;
+    font-family: "Times New Roman", serif;
+    font-size: 14px;
+    color: #333;
+    vertical-align: middle;
+    transition: border-color 0.2s ease;
+  }
+  
+  .inlineInput:focus,
+  .shortInlineInput:focus,
+  .descriptionInput:focus {
+    border-bottom: 2px solid #006aff;
+    outline: none;
+  }
+  
+  .inlineInputDate {
+    width: 30px;
+    text-align: center;
+    padding: 4px;
+    border: none;
+    border-bottom: 1px solid #333;
+    font-family: "Times New Roman", serif;
+    font-size: 14px;
+  }
+  
+  .inlineInputDate:focus {
+    border-bottom: 2px solid #006aff;
+    outline: none;
+  }
+  
+  .inlineInputYear {
+    width: 30px;
+    text-align: center;
+    padding: 4px;
+    border: none;
+    border-bottom: 1px solid #333;
+    font-family: "Times New Roman", serif;
+    font-size: 14px;
+  }
+  
+  .inlineInputYear:focus {
+    border-bottom: 2px solid #006aff;
+    outline: none;
+  }
+  
+  .fullNameWrapper {
+    text-align: center;
+    margin-bottom: 8px;
+  }
+  
+  .fullWidthInput {
+    display: block;
+    width: 100%;
+    padding: 4px 8px;
+    margin: 0 auto;
+    border: none;
+    border-bottom: 1px solid #333;
+    background: none;
+    font-family: "Times New Roman", serif;
+    font-size: 14px;
+    color: #333;
+  }
+  
+  .fullWidthInput:focus {
+    border-bottom: 2px solid #006aff;
+    outline: none;
+  }
+  
+  .inputLabel {
+    display: block;
+    font-size: 12px;
+    color: #666;
+    margin-top: 4px;
+    text-align: center;
+  }
+  
+  .taxIdWrapper {
+    display: flex;
+    justify-content: flex-start;
+    margin-bottom: 15px;
+    margin-top: 15px;
+  }
+  
+  .taxIdTable {
+    width: auto;
+  }
+  
+  .taxIdLabel {
+    text-align: left;
+    padding-right: 10px;
+    white-space: nowrap;
+  }
+  
+  .taxIdInputs {
+    display: flex;
+    gap: 5px;
+  }
+  
+  .taxIdInput {
+    width: 20px;
+    text-align: center;
+    border: 1px solid #333;
+    font-family: "Times New Roman", serif;
+    font-size: 14px;
+    padding: 2px;
+  }
+  
+  .taxIdInput:focus {
+    border: 2px solid #006aff;
+    outline: none;
+  }
+  
+  .twoColumnLayout {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+  }
+  
+  .leftColumn,
+  .rightColumn {
+    width: 50%;
+    border: 1px solid #000;
+    padding: 10px;
+    box-sizing: border-box;
+  }
+  
+  .leftColumn h4,
+  .rightColumn h4 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    text-align: center;
+  }
+  
+  .rightColumn p {
+    margin-bottom: 8px;
+  }
+  
+  .signatureSection {
+    display: flex;
+    gap: 15px;
+    justify-content: space-between;
+  }
+  
+  .signatureBlock {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    min-width: 200px;
+    max-width: 400px;
+  }
+  
+  .signatureInputs {
+    display: flex;
+    align-items: center;
+  }
+  
+  .signatureInput {
+    border: none;
+    border-bottom: 1px solid #333;
+    background: none;
+    padding: 2px 5px;
+    font-family: "Times New Roman", serif;
+    font-size: 14px;
+    color: #333;
+    width: 300px;
+    min-width: 200px;
+    transition: width 0.3s ease, border-bottom 0.2s ease;
+  }
+  
+  .signatureInput:focus {
+    border-bottom: 2px solid #006aff;
+    outline: none;
+    width: 350px;
+  }
+  
+  .signatureInput.errorInput {
+    border: none;
+    border-bottom: 1px solid #f71e1e4d;
+    background: none;
+    padding: 2px 5px;
+    font-family: "Times New Roman", serif;
+    font-size: 14px;
+    color: #333;
+    width: 300px;
+    min-width: 200px;
+    transition: width 0.3s ease, border-bottom 0.2s ease;
+  }
+  
+  .signatureInput.errorInput:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px #ef44444d;
+  }
+  
+  .conditionSelect {
+    width: 200px;
+    padding: 4px 8px;
+    border: none;
+    border-bottom: 1px solid #333;
+    background: none;
+    font-family: "Times New Roman", serif;
+    font-size: 14px;
+    color: #333;
+    vertical-align: middle;
+    transition: border-bottom 0.2s ease;
+  }
+  
+  .conditionSelect:focus {
+    border-bottom: 2px solid #006aff;
+    outline: none;
+  }
+  
+  .conditionSelect.errorInput {
+    border: 1px solid #ef4444 !important;
+    background-color: #fff1f1;
+  }
+  
+  .conditionSelect.errorInput:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.3);
+  }
+  
+  .conditionWrapper {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  
+  .conditionItem {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  
+  .conditionItem label {
+    margin-right: 10px;
+    font-family: "Times New Roman", serif;
+    font-size: 14px;
+  }
+  
+  .inputRow {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  
+  .label {
+    width: 150px;
+    text-align: left;
+    font-family: "Times New Roman", serif;
+    font-size: 14px;
+    color: #333;
+  }
+  
+  .stretchedInput {
+    flex: 1;
+    border: none;
+    border-bottom: 1px solid #333;
+    background: none;
+    padding: 2px 5px;
+    font-family: "Times New Roman", serif;
+    font-size: 14px;
+    color: #333;
+  }
+  
+  .stretchedInput:focus {
+    border-bottom: 2px solid #006aff;
+    outline: none;
+  }
+  
+  .inventoryTable {
+    font-family: "Times New Roman", serif;
+    font-size: 14px;
+    width: 100%;
+    border-collapse: collapse;
+    margin: 15px 0;
+  }
+  
+  .inventoryTable th,
+  .inventoryTable td {
+    border: 1px solid #000;
+    padding: 5px;
+    text-align: center;
+  }
+  
+  .inventoryTable th {
+    background-color: #f0f0f0;
+    font-weight: bold;
+    font-size: 12px;
+  }
+  
+  .tableInput {
+    width: 100%;
+    border: none;
+    outline: none;
+    text-align: left;
+    padding: 1px;
+    font-size: 12px;
+    box-sizing: border-box;
+    height: 20px;
+  }
+  
+  .tableInput:focus {
+    border-bottom: 2px solid #006aff;
+  }
+  
+  .inventoryTable th:nth-child(1),
+  .inventoryTable td:nth-child(1) {
+    width: 5%;
+  }
+  
+  .inventoryTable th:nth-child(2),
+  .inventoryTable td:nth-child(2) {
+    width: 25%;
+    text-align: left; /* Вирівнювання по лівому краю для "Назва приладів" */
+  }
+  
+  .inventoryTable th:nth-child(3),
+  .inventoryTable td:nth-child(3) {
+    width: 20%;
+  }
+  
+  .inventoryTable th:nth-child(4),
+  .inventoryTable td:nth-child(4) {
+    width: 10%; /* Менша ширина для "Рік випуску" */
+  }
+  
+  .inventoryTable th:nth-child(5),
+  .inventoryTable td:nth-child(5) {
+    width: 15%;
+  }
+  
+  .inventoryTable th:nth-child(6),
+  .inventoryTable td:nth-child(6) {
+    width: 25%; /* Більша ширина для "Примітка" */
+  }
+  
+  .inventoryItem {
+    text-align: left;
+    padding-left: 5px;
+  }
+  
+  .inventoryItem span {
+    display: block;
+  }
+  
+  .infoRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+  }
+  
+  .longInput {
+    flex: 1;
+    border: none;
+    border-bottom: 1px solid #333;
+    background: none;
+    padding: 2px 5px;
+    font-family: "Times New Roman", serif;
+    font-size: 14px;
+    color: #333;
+  }
+  
+  .longInput:focus {
+    border-bottom: 2px solid #006aff;
+    outline: none;
+  }
+  
+  .shortInput {
+    width: 50px;
+    border: none;
+    border-bottom: 1px solid #333;
+    background: none;
+    padding: 2px 5px;
+    font-family: "Times New Roman", serif;
+    font-size: 14px;
+    color: #333;
+  }
+  
+  .shortInput:focus {
+    border-bottom: 2px solid #006aff;
+    outline: none;
+  }
+  
+  .verticalSignatureSection {
+    display: flex;
+    flex-direction: column;
+    width: 60%;
+  }
+  
+  .centereddText {
+    text-align: center;
+    font-size: 14px;
+    font-weight: 300;
+    color: #000;
+    margin: 2px 0;
+  }
+  
+  .centeredInput70 {
+    width: 70%;
+    border: none;
+    border-bottom: 1px solid #333;
+    font-family: "Times New Roman", serif;
+    font-size: 14px;
+    text-align: center;
+  }
+  
+  .centeredInput70:focus {
+    border-bottom: 2px solid #006aff;
+    outline: none;
+  }
+  
+  .dateInput {
+    text-align: center;
+    margin-bottom: 15px;
+  }
+  
+  .footnote {
+    font-size: 12px;
+    text-align: left;
+    margin-top: 8px;
+  }
+  
+  .error {
+    color: #ef4444;
+    font-size: 12px;
+    margin-top: 4px;
+    text-align: left;
+    font-family: "Roboto", sans-serif;
+    font-weight: 500;
+  }
+  
+  
+  .orderedList {
+    margin: 12px 0;
+    padding-left: 30px;
+    list-style-type: decimal;
+    list-style-position: outside;
+    font-family: "Times New Roman", serif;
+    font-size: 16px;
+    line-height: 1.5;
+    color: #000;
+  }
+  
+  .orderedList li {
+    margin-bottom: 10px;
+    position: relative;
+  }
+  
+  .orderedList li input {
+    flex: 1;
+    margin-left: 10px;
+  }
+  
+  .unorderedList {
+    margin: 12px 0;
+    padding-left: 30px;
+    list-style-type: disc;
+    list-style-position: outside;
+    font-family: "Times New Roman", serif;
+    font-size: 16px;
+    line-height: 1.5;
+    color: #000;
+  }
+  
+  .unorderedList li {
+    margin-bottom: 8px;
+  }
+  
+  .submitSection {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 25px;
+    gap: 12px;
+  }
+  
+  @media (max-width: 1024px) {
+    .book {
+      flex-direction: column;
+      height: auto;
+      overflow-y: auto;
+    }
+    .pageLeft,
+    .pageRight {
+      width: 100%;
+      border: none;
+      border-bottom: 1px solid #d1d5db;
+      padding: 15px;
+    }
+    .pageLeft {
+      border-right: none;
+    }
+    .controlsWrapper {
+      flex-direction: row;
+      gap: 8px;
+      padding: 8px;
+    }
+    .errorPanel,
+    .hint {
+      min-width: 120px;
+      font-size: 11px;
+      max-height: 80px;
+    }
+    .errorPanel h3,
+    .hint h3 {
+      font-size: 12px;
+    }
+    .navButton {
+      padding: 6px 12px;
+      font-size: 12px;
+      min-width: 80px;
+    }
+    .progressBar {
+      min-width: 80px;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .mainContent {
+      padding: 70px 15px 15px 15px;
+      margin-left: 80px;
+    }
+    .controlsWrapper {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 6px;
+      padding: 6px;
+    }
+    .errorPanel,
+    .hint {
+      min-width: 100%;
+      font-size: 10px;
+      max-height: 70px;
+    }
+    .errorPanel h3,
+    .hint h3 {
+      font-size: 11px;
+    }
+    .navButton {
+      padding: 6px 10px;
+      font-size: 11px;
+      min-width: 100%;
+    }
+    .progressBar {
+      min-width: 100%;
+    }
+    .progressBar span {
+      font-size: 10px;
+      min-width: 20px;
+    }
+    .contractText {
+      margin: 0 10px;
+      padding: 15px;
+      font-size: 15px;
+    }
+    .centeredTitle {
+      font-size: 20px;
+    }
+    .sectionTitle {
+      font-size: 17px;
+    }
+    .inlineInput,
+    .shortInlineInput,
+    .descriptionInput,
+    .conditionSelect,
+    .signatureInput {
+      width: 120px;
+      font-size: 13px;
+    }
+    .descriptionInput {
+      width: 300px; /* Зменшено для адаптивності */
+    }
+    .conditionItem {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .mainContent {
+      padding: 60px 10px 10px 10px;
+      margin-left: 0;
+    }
+    .container {
+      padding: 12px;
+    }
+    .controlsWrapper {
+      flex-direction: column;
+      gap: 4px;
+      padding: 4px;
+    }
+    .errorPanel,
+    .hint {
+      min-width: 100%;
+      font-size: 9px;
+      max-height: 60px;
+    }
+    .errorPanel h3,
+    .hint h3 {
+      font-size: 10px;
+    }
+    .navButton {
+      padding: 5px 8px;
+      font-size: 10px;
+      min-width: 100%;
+    }
+    .progressBar {
+      min-width: 100%;
+    }
+    .progressBar span {
+      font-size: 9px;
+    }
+    .contractText {
+      margin: 0 5px;
+      padding: 10px;
+      font-size: 14px;
+    }
+    .centeredTitle {
+      font-size: 18px;
+      margin: 15px 0;
+    }
+    .sectionTitle {
+      font-size: 16px;
+    }
+    .justifiedText {
+      font-size: 14px;
+    }
+    .inlineInput,
+    .shortInlineInput,
+    .descriptionInput,
+    .conditionSelect,
+    .signatureInput {
+      width: 100px;
+      font-size: 12px;
+    }
+    .descriptionInput {
+      width: 200px; /* Зменшено для малих екранів */
+    }
+    .conditionItem label {
+      font-size: 13px;
+    }
+  }

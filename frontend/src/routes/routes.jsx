@@ -5,8 +5,9 @@ import ResetPasswordPage from "../pages/Auth/ResetPasswordPage";
 import NewPasswordPage from "../pages/Auth/NewPasswordPage";
 import DashboardPage from "../pages/Dashboard/DashboardPage";
 import ServicesPage from "../pages/Services/ServicesPage";
-import ContractApplicationPage from "../pages/Services/ContractApplicationPage";
-import SettlementApplicationPage from "../pages/Services/SettlementApplicationPage";
+import ContractApplicationPage from "../pages/Services/ContractApplicationPage/ContractApplicationPage";
+import SettlementApplicationPage from "../pages/Services/Settlement agreement/SettlementApplicationPage"; // Виправлено шлях імпорту
+import AccommodationApplicationPage from "../pages/Services/AccommodationApplicationPage/AccommodationApplicationPage"; // Виправлено шлях імпорту
 import ProfilePage from "../pages/Profile/ProfilePage";
 import SettingsPage from "../pages/Settings/SettingsPage";
 import ErrorPage from "../pages/Shared/ErrorPage";
@@ -40,7 +41,7 @@ const ProtectedRoute = ({ element }) => {
   }, []);
 
   if (isValid === null) {
-    return <div>Перевірка автентифікації...</div>; // Показуємо завантаження, поки перевіряємо токен
+    return <div>Перевірка автентифікації...</div>;
   }
 
   return isValid ? element : <Navigate to="/login" replace />;
@@ -85,8 +86,9 @@ const routes = [
   { path: "/register", element: <RegistrationPage /> },
   { path: "/dashboard", element: <ProtectedRoute element={<DashboardPage />} /> },
   { path: "/services", element: <ProtectedRoute element={<ServicesPage />} /> },
-  { path: "/services/settlement", element: <ProtectedRoute element={<SettlementApplicationPage />} /> },
-  { path: "/services/contract", element: <ProtectedRoute element={<ContractApplicationPage />} /> },
+  { path: "/services/accommodation-application", element: <ProtectedRoute element={<AccommodationApplicationPage />} /> }, // Узгоджено маршрут
+  { path: "/services/dormitory-settlement", element: <ProtectedRoute element={<SettlementApplicationPage />} /> }, // Узгоджено маршрут
+  { path: "/services/contract-creation", element: <ProtectedRoute element={<ContractApplicationPage />} /> }, // Узгоджено маршрут
   { path: "/settings", element: <ProtectedRoute element={<SettingsPage />} /> },
   { path: "/profile", element: <ProtectedRoute element={<ProfilePage />} /> },
   { path: "/applications", element: <ProtectedRoute element={<ApplicationsPage />} /> },

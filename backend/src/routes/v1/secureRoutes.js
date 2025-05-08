@@ -7,13 +7,12 @@ import {
   createNotification,
 } from "../../controllers/notificationController.js";
 import { getProfile, updateProfile } from "../../controllers/authController.js";
-import { getApplications, getDormitories, getSettlements } from "../../controllers/secureController.js";
+import { getApplications, getDormitories, getSettlements, getAccommodationApplications } from "../../controllers/secureController.js";
 import { checkPermission } from "../../config/permissions.js";
 
 const router = Router();
 
 // Захищені маршрути з авторизацією
-// router.get("/dashboard", authenticate, authorize("GET", "/api/v1/secure/dashboard"), getDashboardData); // Закоментовано
 router.get("/profile", authenticate, authorize("GET", "/api/v1/secure/profile"), getProfile);
 router.patch("/profile", authenticate, authorize("PATCH", "/api/v1/secure/profile"), updateProfile);
 router.get("/notifications", authenticate, authorize("GET", "/api/v1/secure/notifications"), getNotifications);
@@ -23,5 +22,6 @@ router.post("/notifications", authenticate, authorize("POST", "/api/v1/secure/no
 router.get("/applications", checkPermission("secure"), getApplications);
 router.get("/dormitories", checkPermission("secure"), getDormitories);
 router.get("/settlement", checkPermission("secure"), getSettlements);
+router.get("/accommodation-applications", checkPermission("secure"), getAccommodationApplications);
 
 export { router as secureRoutes };
