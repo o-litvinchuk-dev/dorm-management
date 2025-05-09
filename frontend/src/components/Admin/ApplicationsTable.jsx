@@ -1,93 +1,97 @@
-import React from 'react';
+import React from "react";
+import { ArrowUpIcon, ArrowDownIcon } from "@heroicons/react/24/outline";
+import styles from "./styles/ApplicationsTable.module.css";
 
-const ApplicationsTable = ({ category, applications, sortBy, sortOrder, onSortChange, onViewDetails }) => {
-  // Define columns based on category
-  const columns = category === 'accommodation' ? [
-    { key: 'id', label: 'ID' },
-    { key: 'full_name', label: 'Full Name' },
-    { key: 'email', label: 'Email' },
-    { key: 'dorm_number', label: 'Dorm Number' },
-    { key: 'status', label: 'Status' },
-    { key: 'created_at', label: 'Created At' },
-    { key: 'actions', label: 'Actions' },
-  ] : [
-    { key: 'id', label: 'ID' },
-    { key: 'name', label: 'Name' },
-    { key: 'surname', label: 'Surname' },
-    { key: 'email', label: 'Email' },
-    { key: 'faculty', label: 'Faculty' },
-    { key: 'course', label: 'Course' },
-    { key: 'created_at', label: 'Created At' },
-    { key: 'actions', label: 'Actions' },
-  ];
-
-  // Format date
-  const formatDate = (dateStr) => {
-    return new Date(dateStr).toLocaleDateString();
+const ApplicationsTable = ({ category, applications, onViewDetails, sort, onSortChange }) => {
+  const getColumns = () => {
+    if (category === "accommodation") {
+      return [
+        { key: "id", label: "ID" },
+        { key: "applicant_full_name", label: "ПІБ Заявника" },
+        { key: "user_email", label: "Email" },
+        { key: "dorm_number", label: "Номер гуртожитку" },
+        { key: "status", label: "Статус" },
+        { key: "application_date", label: "Дата подачі" },
+        { key: "actions", label: "Дії" },
+      ];
+    }
+    // Default columns for other categories
+    return [
+      { key: "id", label: "ID" },
+      { key: "name", label: "Ім'я" },
+      { key: "surname", label: "Прізвище" },
+      { key: "faculty", label: "Факультет" },
+      { key: "course", label: "Курс" },
+      { key: "created_at", label: "Дата створення" },
+      { key: "actions", label: "Дії" },
+    ];
   };
 
-  // Format status
-  const formatStatus = (status) => {
-    return status.charAt(0).toUpperCase() + status.slice(1);
+  const columns = getColumns();
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "Н/Д";
+    return new Date(dateString).toLocaleDateString("uk-UA");
+  };
+
+  const handleSort = (key) => {
+    if (!["id", "applicant_full_name", "user_email", "dorm_number", "status", "application_date", "created_at"].includes(key)) return;
+    const newSortOrder =
+      sort.sortBy === key && sort.sortOrder === "asc" ? "desc" : "asc";
+    onSortChange(key, newSortOrder);
   };
 
   return (
-    <div className="bg-white rounded shadow overflow-x-auto">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
-          <tr>
-            {columns.map((column) => (
-              <th
-                key={column.key}
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+    <table className={styles.table}>
+      <thead>
+        <tr>
+          {columns.map((column) => (
+            <th key={column.key}>
+              <div
+                className={styles.header}
+                onClick={() => handleSort(column.key)}
+                style={column.key !== "actions" ? { cursor: "pointer" } : {}}
               >
-                {column.key !== 'actions' ? (
-                  <button
-                    onClick={() => onSortChange(column.key)}
-                    className="flex items-center space-x-1"
-                  >
-                    <span>{column.label}</span>
-                    {sortBy === column.key && (
-                      <span>{sortOrder === 'asc' ? '↑' : '↓'}</span>
-                    )}
-                  </button>
-                ) : (
-                  column.label
+                {column.label}
+                {sort.sortBy === column.key && (
+                  sort.sortOrder === "asc" ? (
+                    <ArrowUpIcon className={styles.sortIcon} />
+                  ) : (
+                    <ArrowDownIcon className={styles.sortIcon} />
+                  )
                 )}
-              </th>
+              </div>
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {applications.map((app) => (
+          <tr key={app.id}>
+            {columns.map((column) => (
+              <td key={column.key}>
+                {column.key === "actions" ? (
+                  <button
+                    className={styles.actionButton}
+                    onClick={() => onViewDetails(app)}
+                  >
+                    Деталі
+                  </button>
+                ) : column.key === "application_date" || column.key === "created_at" ? (
+                  formatDate(app[column.key])
+                ) : column.key === "status" ? (
+                  app[column.key] === "pending" ? "Очікує" :
+                  app[column.key] === "approved" ? "Підтверджено" :
+                  app[column.key] === "rejected" ? "Відхилено" : app[column.key]
+                ) : (
+                  app[column.key] || "Н/Д"
+                )}
+              </td>
             ))}
           </tr>
-        </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
-          {applications.map((app) => (
-            <tr key={app.id}>
-              {columns.map((column) => (
-                <td key={column.key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {column.key === 'created_at' ? (
-                    formatDate(app[column.key])
-                  ) : column.key === 'status' ? (
-                    formatStatus(app[column.key])
-                  ) : column.key === 'actions' ? (
-                    category === 'accommodation' ? (
-                      <button
-                        onClick={() => onViewDetails(app)}
-                        className="text-blue-600 hover:text-blue-800"
-                      >
-                        View Details
-                      </button>
-                    ) : (
-                      '-' // No details for general applications
-                    )
-                  ) : (
-                    app[column.key] || '-'
-                  )}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+        ))}
+      </tbody>
+    </table>
   );
 };
 

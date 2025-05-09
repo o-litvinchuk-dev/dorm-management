@@ -67,6 +67,7 @@ const routes = [
   { path: "/settlement", element: <ProtectedRoute element={<SettlementPage />} /> },
   { path: "/adminApplications", element: <AdminProtectedRoute element={<AdminApplicationsPage />} /> },
   { path: "/admin/accommodation-applications", element: <AdminProtectedRoute element={<AdminAccommodationManagementPage />} /> },
+  { path: "/admin/applications/accommodation", element: <AdminProtectedRoute element={<AdminAccommodationManagementPage />} /> }, // Новий маршрут
   { path: "*", element: <ErrorPage /> },
 ];
 

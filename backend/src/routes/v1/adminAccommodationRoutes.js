@@ -1,48 +1,32 @@
 import express from "express";
-import { authenticate, authorize } from "../../middlewares/auth.js";
 import {
   getAccommodationApplications,
   getAccommodationApplicationById,
   updateApplicationStatus,
   addApplicationComment,
-  getApplicationComments
-} from "../../controllers/adminAccommodationController.js";
+  getApplicationComments,
+} from "../../controllers/adminAccommodationController.js"; // Виправлено шлях імпорту
+import { authenticate } from "../../middlewares/auth.js";
 
 const router = express.Router();
 
-router.get(
-  "/",
-  authenticate,
-  authorize("GET", "/api/v1/admin/accommodation-applications"),
-  getAccommodationApplications
-);
+// Middleware to check admin or dorm_admin role
+const authorizeAdmin = (req, res, next) => {
+  const allowedRoles = ["admin", "dorm_admin"];
+  if (!allowedRoles.includes(req.user.role)) {
+    return res.status(403).json({ error: "Доступ заборонено" });
+  }
+  next();
+};
 
-router.get(
-  "/:id",
-  authenticate,
-  authorize("GET", "/api/v1/admin/accommodation-applications/:id"),
-  getAccommodationApplicationById
-);
+// Apply authentication and authorization to all routes
+router.use(authenticate, authorizeAdmin);
 
-router.put(
-  "/:id/status",
-  authenticate,
-  authorize("PUT", "/api/v1/admin/accommodation-applications/:id/status"),
-  updateApplicationStatus
-);
-
-router.post(
-  "/:id/comments",
-  authenticate,
-  authorize("POST", "/api/v1/admin/accommodation-applications/:id/comments"),
-  addApplicationComment
-);
-
-router.get(
-  "/:id/comments",
-  authenticate,
-  authorize("GET", "/api/v1/admin/accommodation-applications/:id/comments"),
-  getApplicationComments
-);
+// Routes
+router.get("/", getAccommodationApplications);
+router.get("/:id", getAccommodationApplicationById);
+router.put("/:id/status", updateApplicationStatus);
+router.post("/:id/comments", addApplicationComment);
+router.get("/:id/comments", getApplicationComments);
 
 export default router;

@@ -76,7 +76,7 @@ app.use((req, res, next) => {
 // Підключення маршрутів
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/secure", secureRoutes);
-app.use("/api/v1/admin", authenticate, adminRoutes); // Застосовано authenticate middleware
+app.use("/api/v1/admin", authenticate, adminRoutes);
 app.use("/api/v1/services", servicesRoutes);
 app.use("/api/v1/admin/accommodation-applications", adminAccommodationRoutes);
 

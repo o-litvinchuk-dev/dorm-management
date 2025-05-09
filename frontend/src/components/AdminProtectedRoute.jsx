@@ -1,26 +1,46 @@
-// frontend/src/components/AdminProtectedRoute.jsx
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
-import { useUser } from "../contexts/UserContext";
+import api from "../utils/api";
 
-const AdminProtectedRoute = ({ element }) => { // Змінено 'children' на 'element'
-  const { user, loading } = useUser();
-  const adminRoles = import.meta.env.VITE_ADMIN_ROLES.split(",");
+const AdminProtectedRoute = ({ element }) => {
+  const [isValid, setIsValid] = useState(null);
+  const [isAuthorized, setIsAuthorized] = useState(null);
 
-  if (loading) {
-    return <div>Перевірка прав доступу...</div>;
+  useEffect(() => {
+    const validateToken = async () => {
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        setIsValid(false);
+        return;
+      }
+
+      try {
+        const response = await api.get("/auth/validate-token");
+        const userRole = response.data.user.role;
+        const allowedRoles = ["admin", "dorm_admin"];
+        setIsValid(true);
+        setIsAuthorized(allowedRoles.includes(userRole));
+      } catch (error) {
+        setIsValid(false);
+      }
+    };
+
+    validateToken();
+  }, []);
+
+  if (isValid === null || isAuthorized === null) {
+    return <div>Перевірка авторизації...</div>;
   }
 
-  if (!user || !adminRoles.includes(user.role)) {
-    console.warn(
-      `[AdminProtectedRoute] Доступ заборонено. Роль користувача: ${
-        user?.role
-      }. Дозволені ролі: ${adminRoles.join(", ")}`
-    );
+  if (!isValid) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (!isAuthorized) {
     return <Navigate to="/dashboard" replace />;
   }
 
-  return element; // Змінено 'children' на 'element'
+  return element;
 };
 
 export default AdminProtectedRoute;

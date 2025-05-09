@@ -1,138 +1,115 @@
-.overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-  }
-  
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 80vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+.closeButton {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #ff4d4f;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  cursor: pointer;
+}
+
+.closeButton:hover {
+  background: #d9363e;
+}
+
+.content {
+  margin-top: 20px;
+}
+
+.content h3 {
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+
+.statusUpdate {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.statusUpdate select,
+.statusUpdate button,
+.commentInput,
+.content button {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.statusUpdate button,
+.content button {
+  background: #006aff;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.statusUpdate button:hover,
+.content button:hover {
+  background: #0051cc;
+}
+
+.statusUpdate button:disabled,
+.content button:disabled {
+  background: #cccccc;
+  cursor: not-allowed;
+}
+
+.commentList {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px 0;
+}
+
+.comment {
+  border-bottom: 1px solid #eee;
+  padding: 10px 0;
+}
+
+.comment p {
+  margin: 5px 0;
+}
+
+.commentInput {
+  width: 100%;
+  min-height: 100px;
+  margin-bottom: 10px;
+  resize: vertical;
+}
+
+@media (max-width: 600px) {
   .modal {
-    background: #fff;
-    border-radius: 8px;
-    max-width: 600px;
-    width: 90%;
-    max-height: 80vh;
-    overflow-y: auto;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    width: 95%;
+    padding: 15px;
   }
-  
-  .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px 20px;
-    border-bottom: 1px solid #e0e0e0;
+
+  .statusUpdate {
+    flex-direction: column;
   }
-  
-  .closeButton {
-    background: none;
-    border: none;
-    cursor: pointer;
-  }
-  
-  .icon {
-    width: 24px;
-    height: 24px;
-  }
-  
-  .content {
-    padding: 20px;
-  }
-  
-  .section {
-    margin-bottom: 20px;
-  }
-  
-  .section h3 {
-    font-size: 18px;
-    font-weight: 600;
-    margin-bottom: 10px;
-  }
-  
-  .section p {
-    margin: 5px 0;
-  }
-  
-  .avatar {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    margin-top: 10px;
-  }
-  
-  .buttons {
-    display: flex;
-    gap: 10px;
-  }
-  
-  .button {
-    padding: 8px 16px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-  }
-  
-  .pending {
-    background: #ffeeba;
-    color: #856404;
-  }
-  
-  .approved {
-    background: #c3e6cb;
-    color: #155724;
-  }
-  
-  .rejected {
-    background: #f5c6cb;
-    color: #721c24;
-  }
-  
-  .comments {
-    max-height: 200px;
-    overflow-y: auto;
-    margin-bottom: 15px;
-  }
-  
-  .comment {
-    border-bottom: 1px solid #e0e0e0;
-    padding: 10px 0;
-  }
-  
-  .comment p {
-    margin: 5px 0;
-  }
-  
-  .textarea {
-    width: 100%;
-    min-height: 80px;
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    resize: vertical;
-    margin-bottom: 10px;
-  }
-  
-  .textarea:focus {
-    outline: none;
-    border-color: #006aff;
-  }
-  
-  .submitButton {
-    padding: 8px 16px;
-    background: #006aff;
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-  
-  .submitButton:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
+}
