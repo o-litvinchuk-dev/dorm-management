@@ -1,4 +1,3 @@
-// backend/src/models/Dormitory.js
 import pool from "../config/db.js";
 
 const Dormitory = {

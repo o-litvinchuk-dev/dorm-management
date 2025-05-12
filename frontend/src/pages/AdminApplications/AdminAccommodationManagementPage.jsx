@@ -7,9 +7,11 @@ import Pagination from "../../components/Admin/Pagination";
 import ApplicationDetailModal from "../../components/Admin/ApplicationDetailModal";
 import api from "../../utils/api";
 import { ToastService } from "../../utils/toastConfig";
-import styles from "./styles/AdminApplicationsPage.module.css";
+import styles from "./styles/AdminAccommodationManagementPage.module.css";
+import { useUser } from "../../contexts/UserContext";
 
 const AdminAccommodationManagementPage = () => {
+  const { user } = useUser();
   const [applications, setApplications] = useState([]);
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [filters, setFilters] = useState({
@@ -28,6 +30,9 @@ const AdminAccommodationManagementPage = () => {
     return savedState !== null ? JSON.parse(savedState) : true;
   });
 
+  const canUpdateStatus = ["admin", "superadmin", "faculty_dean_office", "dorm_manager"].includes(user?.role);
+  const canAddComment = ["admin", "superadmin", "faculty_dean_office", "dorm_manager", "student_council_head"].includes(user?.role);
+
   useEffect(() => {
     localStorage.setItem("sidebarOpen", JSON.stringify(isSidebarExpanded));
   }, [isSidebarExpanded]);
@@ -36,7 +41,6 @@ const AdminAccommodationManagementPage = () => {
     setIsLoading(true);
     setError(null);
     try {
-      // Remove empty filters
       const queryParams = {
         page: pagination.page,
         limit: pagination.limit,
@@ -89,6 +93,10 @@ const AdminAccommodationManagementPage = () => {
   };
 
   const handleStatusUpdate = async (id, status) => {
+    if (!canUpdateStatus) {
+      ToastService.error("Недостатньо прав для зміни статусу");
+      return;
+    }
     try {
       await api.put(`/admin/accommodation-applications/${id}/status`, { status });
       ToastService.success("Статус оновлено");
@@ -102,6 +110,10 @@ const AdminAccommodationManagementPage = () => {
   };
 
   const handleAddComment = async (id, comment) => {
+    if (!canAddComment) {
+      ToastService.error("Недостатньо прав для додавання коментаря");
+      return;
+    }
     try {
       const response = await api.post(`/admin/accommodation-applications/${id}/comments`, {
         comment,
@@ -126,45 +138,53 @@ const AdminAccommodationManagementPage = () => {
           isSidebarExpanded={isSidebarExpanded}
           onMenuToggle={() => setIsSidebarExpanded((prev) => !prev)}
         />
-        <div className={styles.container}>
-          <h2>Керування заявками на поселення</h2>
-          <Filters
-            category="accommodation"
-            filters={filters}
-            onFilterChange={handleFilterChange}
-          />
-          {isLoading ? (
-            <p>Завантаження...</p>
-          ) : error ? (
-            <p>{error}</p>
-          ) : (
-            <>
-              <ApplicationsTable
+        <div className={styles.profileContainer}>
+          <div className={styles.profileBody}>
+            <div className={styles.profileContent}>
+              <h2 className={styles.title}>Керування заявками на поселення</h2>
+              <Filters
                 category="accommodation"
-                applications={applications}
-                onViewDetails={handleViewDetails}
-                sort={sort}
-                onSortChange={handleSortChange}
+                filters={filters}
+                onFilterChange={handleFilterChange}
               />
-              <Pagination
-                page={pagination.page}
-                limit={pagination.limit}
-                total={pagination.total}
-                onPageChange={handlePageChange}
-                onLimitChange={handleLimitChange}
-              />
-            </>
-          )}
-          {selectedApplication && (
-            <ApplicationDetailModal
-              category="accommodation"
-              application={selectedApplication}
-              onClose={() => setSelectedApplication(null)}
-              onStatusUpdate={handleStatusUpdate}
-              onAddComment={handleAddComment}
-            />
-          )}
+              {isLoading ? (
+                <div className={styles.loading}>Завантаження...</div>
+              ) : error ? (
+                <div className={styles.errorMessage}>{error}</div>
+              ) : (
+                <ApplicationsTable
+                  category="accommodation"
+                  applications={applications}
+                  onViewDetails={handleViewDetails}
+                  sort={sort}
+                  onSortChange={handleSortChange}
+                  canUpdateStatus={canUpdateStatus}
+                  canAddComment={canAddComment}
+                />
+              )}
+            </div>
+          </div>
         </div>
+        {!isLoading && !error && (
+          <div className={styles.paginationWrapper}>
+            <Pagination
+              page={pagination.page}
+              limit={pagination.limit}
+              total={pagination.total}
+              onPageChange={handlePageChange}
+              onLimitChange={handleLimitChange}
+            />
+          </div>
+        )}
+        {selectedApplication && (
+          <ApplicationDetailModal
+            category="accommodation"
+            application={selectedApplication}
+            onClose={() => setSelectedApplication(null)}
+            onStatusUpdate={canUpdateStatus ? handleStatusUpdate : null}
+            onAddComment={canAddComment ? handleAddComment : null}
+          />
+        )}
       </div>
     </div>
   );

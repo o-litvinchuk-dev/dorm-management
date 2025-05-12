@@ -1,42 +1,15 @@
-import React, { useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
-import api from "../utils/api";
+import { Navigate, useLocation } from "react-router-dom";
+import { useUser } from "../contexts/UserContext";
 
-const AdminProtectedRoute = ({ element }) => {
-  const [isValid, setIsValid] = useState(null);
-  const [isAuthorized, setIsAuthorized] = useState(null);
+const AdminProtectedRoute = ({ element, allowedRoles }) => {
+  const { user } = useUser();
+  const location = useLocation();
 
-  useEffect(() => {
-    const validateToken = async () => {
-      const token = localStorage.getItem("accessToken");
-      if (!token) {
-        setIsValid(false);
-        return;
-      }
-
-      try {
-        const response = await api.get("/auth/validate-token");
-        const userRole = response.data.user.role;
-        const allowedRoles = ["admin", "dorm_admin"];
-        setIsValid(true);
-        setIsAuthorized(allowedRoles.includes(userRole));
-      } catch (error) {
-        setIsValid(false);
-      }
-    };
-
-    validateToken();
-  }, []);
-
-  if (isValid === null || isAuthorized === null) {
-    return <div>Перевірка авторизації...</div>;
+  if (!user) {
+    return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
-  if (!isValid) {
-    return <Navigate to="/login" replace />;
-  }
-
-  if (!isAuthorized) {
+  if (!allowedRoles.includes(user.role)) {
     return <Navigate to="/dashboard" replace />;
   }
 

@@ -13,6 +13,7 @@ import {
   ChevronRightIcon,
   ChevronLeftIcon,
   ClipboardDocumentListIcon,
+  ShieldCheckIcon,
 } from "@heroicons/react/24/outline";
 import {
   ChartBarIcon as ChartBarSolidIcon,
@@ -23,11 +24,12 @@ import {
   QuestionMarkCircleIcon as QuestionMarkCircleSolidIcon,
   ArrowLeftOnRectangleIcon as ArrowLeftOnRectangleSolidIcon,
   ClipboardDocumentListIcon as ClipboardDocumentListSolidIcon,
-} from "@heroicons/react/24/solid";
+  ShieldCheckIcon as ShieldCheckSolidIcon,
+} from "@heroicons/react/24/outline";
 import api from "../../../utils/api";
 
 const Sidebar = ({ onToggle }) => {
-  const { user } = useUser();
+  const { user, logout } = useUser();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
     const savedState = localStorage.getItem("sidebarOpen");
@@ -39,7 +41,14 @@ const Sidebar = ({ onToggle }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const isAdmin = user && ["admin", "superadmin", "dorm_admin"].includes(user.role);
+  const isAdmin = user && [
+    "admin",
+    "superadmin",
+    "dorm_manager",
+    "student_council_head",
+    "student_council_member",
+    "faculty_dean_office",
+  ].includes(user.role);
 
   useEffect(() => {
     const pathSegments = location.pathname.slice(1).split("/");
@@ -54,12 +63,14 @@ const Sidebar = ({ onToggle }) => {
       "help",
       "logout",
       "adminApplications",
+      "admin/management",
+      "admin/accommodation-applications",
     ];
 
     if (mainTabs.includes(basePath)) {
       setActiveTab(basePath);
-    } else if (pathSegments[0] === "services") {
-      setActiveTab("services");
+    } else if (pathSegments[0] === "services" || pathSegments[0] === "admin") {
+      setActiveTab(pathSegments[1] || basePath);
     }
   }, [location.pathname]);
 
@@ -106,14 +117,15 @@ const Sidebar = ({ onToggle }) => {
     async () => {
       try {
         await api.post("/auth/logout");
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
+        logout();
         navigate("/login");
       } catch (error) {
         console.error("Logout error:", error);
+        logout();
+        navigate("/login");
       }
     },
-    [navigate]
+    [navigate, logout]
   );
 
   const toggleSidebar = useCallback(() => {
@@ -151,6 +163,8 @@ const Sidebar = ({ onToggle }) => {
       help: isActive ? QuestionMarkCircleSolidIcon : QuestionMarkCircleIcon,
       logout: isActive ? ArrowLeftOnRectangleSolidIcon : ArrowLeftOnRectangleIcon,
       adminApplications: isActive ? DocumentTextSolidIcon : DocumentTextIcon,
+      "admin/management": isActive ? ShieldCheckSolidIcon : ShieldCheckIcon,
+      "admin/accommodation-applications": isActive ? ClipboardDocumentListSolidIcon : ClipboardDocumentListIcon,
     };
     const IconComponent = icons[iconName];
     return <IconComponent className={styles.menuIcon} />;
@@ -176,6 +190,29 @@ const Sidebar = ({ onToggle }) => {
       <span className={styles.sectionTitle}>{title}</span>
     </div>
   );
+
+  const menuItems = {
+    main: [
+      { name: "dashboard", label: "Головна" },
+      { name: "applications", label: "Мої заявки" },
+      { name: "dormitories", label: "Гуртожитки" },
+      { name: "services", label: "Послуги" },
+      { name: "settlement", label: "Розклад поселення" },
+    ],
+    admin: [
+      { name: "adminApplications", label: "Усі заявки", roles: ["admin", "superadmin"] },
+      { name: "admin/accommodation-applications", label: "Заявки факультету", roles: ["faculty_dean_office", "student_council_head", "student_council_member"] },
+      { name: "admin/accommodation-applications", label: "Заявки гуртожитку", roles: ["dorm_manager"] },
+      { name: "admin/management", label: "Керування ролями", roles: ["superadmin"] },
+    ],
+    settings: [
+      { name: "settings", label: "Налаштування" },
+    ],
+    bottom: [
+      { name: "help", label: "Допомога" },
+      { name: "logout", label: "Вийти" },
+    ],
+  };
 
   return (
     <div
@@ -208,30 +245,27 @@ const Sidebar = ({ onToggle }) => {
           <div className={styles.sidebarMain}>
             <div className={styles.sidebarSection}>
               {renderSectionHeader("Основне")}
-              {renderMenuItem("dashboard", "Головна")}
-              {renderMenuItem("applications", "Мої заявки")}
-              {renderMenuItem("dormitories", "Гуртожитки")}
-              {renderMenuItem("services", "Послуги")}
-              {renderMenuItem("settlement", "Розклад поселення")}
+              {menuItems.main.map((item) => renderMenuItem(item.name, item.label))}
             </div>
 
             {isAdmin && (
               <div className={styles.sidebarSection}>
                 {renderSectionHeader("Управління")}
-                {renderMenuItem("adminApplications", "Усі заявки")}
+                {menuItems.admin
+                  .filter((item) => item.roles.includes(user.role))
+                  .map((item) => renderMenuItem(item.name, item.label))}
               </div>
             )}
 
             <div className={styles.sidebarSection}>
               {renderSectionHeader("Налашт.")}
-              {renderMenuItem("settings", "Налаштування")}
+              {menuItems.settings.map((item) => renderMenuItem(item.name, item.label))}
             </div>
           </div>
         </div>
 
         <div className={styles.bottomSection}>
-          {renderMenuItem("help", "Допомога")}
-          {renderMenuItem("logout", "Вийти")}
+          {menuItems.bottom.map((item) => renderMenuItem(item.name, item.label))}
         </div>
       </div>
 

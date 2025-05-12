@@ -9,8 +9,11 @@ import redisClient from "../config/redis.js";
 import pool from "../config/db.js";
 import { OAuth2Client } from "google-auth-library";
 import Joi from "joi";
+import Dormitory from "../models/Dormitory.js";
+import Faculties from "../models/Faculties.js";
+import UserProfile from "../models/UserProfile.js";
 
-// Валідація пароля
+// Password validation
 const validatePassword = (password) => {
     if (!password) return false;
     const minLength = 8;
@@ -19,7 +22,7 @@ const validatePassword = (password) => {
     return password.length >= minLength && hasUpperCase && hasNumber;
 };
 
-// Валідація email
+// Email validation
 const validateEmail = (email) => {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return email && re.test(String(email).toLowerCase());
@@ -40,73 +43,7 @@ async function verifyGoogleToken(token) {
     }
 }
 
-// Google Sign-In
-export const googleSignIn = async (req, res) => {
-    try {
-        const { token } = req.body;
-        if (!token) {
-            return res.status(400).json({ error: "Токен відсутній" });
-        }
-
-        const payload = await verifyGoogleToken(token); // Функція для верифікації токена Google
-        if (!payload.email) {
-            return res.status(400).json({ error: "Не вдалося отримати email" });
-        }
-
-        let user = await User.findByEmail(payload.email);
-        if (user) {
-            if (user.provider !== "google") {
-                return res.status(409).json({
-                    error: "Конфлікт акаунтів",
-                    code: "ACCOUNT_CONFLICT",
-                });
-            }
-            // Оновлюємо token_version при вході
-            await User.incrementTokenVersion(user.id);
-            user = await User.findById(user.id);
-        } else {
-            const hashedPassword = await bcrypt.hash(payload.email + process.env.JWT_SECRET, 12);
-            user = await User.create({
-                email: payload.email,
-                password: hashedPassword,
-                name: payload.name, // Передаємо ім’я з Google
-                avatar: payload.picture,
-                provider: "google",
-                google_id: payload.sub,
-                isVerified: true,
-                role: "student",
-                token_version: 0,
-            });
-            // Create an entry in user_profiles
-            await pool.execute(
-                `INSERT INTO user_profiles (user_id) VALUES (?)`,
-                [user.id]
-            );
-        }
-
-        const accessToken = jwt.sign(
-            {
-                userId: user.id,
-                role: user.role,
-                tokenVersion: user.token_version,
-            },
-            process.env.JWT_SECRET,
-            { expiresIn: "1d" } // Змінено з "15m" на "1d"
-        );
-
-        const refreshToken = jwt.sign(
-            { userId: user.id },
-            process.env.JWT_SECRET,
-            { expiresIn: "7d" }
-        );
-
-        res.json({ accessToken, refreshToken });
-    } catch (error) {
-        console.error("Помилка Google Sign-In:", error);
-        res.status(500).json({ error: "Внутрішня помилка сервера" });
-    }
-};
-
+// Handle Google user (provided but redundant; kept for compatibility)
 const handleGoogleUser = async (payload) => {
     const { sub: googleId, email, name, picture } = payload;
     let connection;
@@ -158,6 +95,114 @@ const handleGoogleUser = async (payload) => {
     }
 };
 
+// Google Sign-In
+export const googleSignIn = async (req, res) => {
+    try {
+        const { token } = req.body;
+        if (!token) {
+            return res.status(400).json({ error: "Токен відсутній" });
+        }
+
+        const payload = await verifyGoogleToken(token);
+        if (!payload.email) {
+            return res.status(400).json({ error: "Не вдалося отримати email" });
+        }
+
+        let user = await User.findByEmail(payload.email);
+        if (user) {
+            if (user.provider !== "google") {
+                return res.status(409).json({
+                    error: "Конфлікт акаунтів",
+                    code: "ACCOUNT_CONFLICT",
+                });
+            }
+            await User.incrementTokenVersion(user.id);
+            user = await User.findById(user.id);
+        } else {
+            const hashedPassword = await bcrypt.hash(payload.email + process.env.JWT_SECRET, 12);
+            user = await User.create({
+                email: payload.email,
+                password: hashedPassword,
+                name: payload.name,
+                avatar: payload.picture,
+                provider: "google",
+                google_id: payload.sub,
+                isVerified: true,
+                role: "student",
+                token_version: 0,
+            });
+            await pool.execute(
+                `INSERT INTO user_profiles (user_id) VALUES (?)`,
+                [user.id]
+            );
+        }
+
+        const accessToken = jwt.sign(
+            {
+                userId: user.id,
+                role: user.role,
+                tokenVersion: user.token_version,
+            },
+            process.env.JWT_SECRET,
+            { expiresIn: "1d" }
+        );
+
+        const refreshToken = jwt.sign(
+            { userId: user.id },
+            process.env.JWT_SECRET,
+            { expiresIn: "7d" }
+        );
+
+        // Додавання деталей гуртожитку та факультету для відповідних ролей
+        let additionalFields = {};
+        if (user.role === "dorm_manager" && user.dormitory_id) {
+            const dormitory = await Dormitory.findById(user.dormitory_id);
+            additionalFields.dormitory_id = user.dormitory_id;
+            additionalFields.dormitory_name = dormitory?.name || null;
+        }
+        if (
+            ["student_council_head", "student_council_member"].includes(user.role) &&
+            user.faculty_id
+        ) {
+            const faculty = await Faculties.findById(user.faculty_id);
+            additionalFields.faculty_id = user.faculty_id;
+            additionalFields.faculty_name = faculty?.name || null;
+        }
+        if (user.role === "faculty_dean_office" && user.faculty_id) {
+            const faculty = await Faculties.findById(user.faculty_id);
+            additionalFields.faculty_id = user.faculty_id;
+            additionalFields.faculty_name = faculty?.name || null;
+        }
+
+        // Перевірка завершеності профілю
+        const isComplete = await isProfileComplete(user.id, user.role);
+
+        // Оновлення is_profile_complete, якщо значення відрізняється
+        if (user.is_profile_complete !== (isComplete ? 1 : 0)) {
+            await pool.execute(
+                `UPDATE users SET is_profile_complete = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+                [isComplete ? 1 : 0, user.id]
+            );
+        }
+
+        res.json({
+            accessToken,
+            refreshToken,
+            user: {
+                id: user.id,
+                email: user.email,
+                role: user.role,
+                is_profile_complete: isComplete,
+                ...additionalFields,
+            },
+        });
+    } catch (error) {
+        console.error("Помилка Google Sign-In:", error);
+        res.status(500).json({ error: "Внутрішня помилка сервера" });
+    }
+};
+
+// Register
 export const register = async (req, res) => {
     console.log("[Register] Початок обробки запиту.");
 
@@ -176,7 +221,6 @@ export const register = async (req, res) => {
             });
         }
 
-        // Перевірка наявності користувача
         console.log("[Register] Перевірка наявності користувача...");
         const existingUser = await User.findByEmail(email);
         if (existingUser) {
@@ -186,13 +230,10 @@ export const register = async (req, res) => {
             });
         }
 
-        // Хешування пароля
         console.log("[Register] Хешування паролю...");
         const hashedPassword = await bcrypt.hash(password, 12);
         console.log("[Register] Пароль успішно захешований");
 
-        // Створення користувача
-        console.log("[Register] Спробуємо створити користувача...");
         const role = req.body.role || "student";
         const user = await User.create({
             email,
@@ -201,14 +242,10 @@ export const register = async (req, res) => {
             role,
             name: name || null,
         });
-        // Create an entry in user_profiles
-        await pool.execute(
-            `INSERT INTO user_profiles (user_id) VALUES (?)`,
-            [user.id]
-        );
+
+        await pool.execute(`INSERT INTO user_profiles (user_id) VALUES (?)`, [user.id]);
         console.log("[Register] Користувач створений. ID:", user.id);
 
-        // Перевірка JWT_SECRET
         if (!process.env.JWT_SECRET) {
             console.error("[Register] Відсутній JWT_SECRET");
             return res.status(500).json({
@@ -216,18 +253,12 @@ export const register = async (req, res) => {
             });
         }
 
-        // Генерація JWT токена
         console.log("[Register] Генерація JWT токена...");
         const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
             expiresIn: "1h",
         });
-        console.log(
-            "[Register] Токен згенеровано:",
-            token.substring(0, 15) + "..."
-        );
+        console.log("[Register] Токен згенеровано:", token.substring(0, 15) + "...");
 
-        // Перевірка поштових налаштувань
-        console.log("[Register] Перевірка поштових налаштувань...");
         if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
             console.error("[Register] Відсутні поштові налаштування");
             return res.status(500).json({
@@ -235,7 +266,6 @@ export const register = async (req, res) => {
             });
         }
 
-        // Відправка email
         try {
             console.log("[Register] Спроба відправки листа...");
             await sendVerificationEmail(email, token);
@@ -251,10 +281,17 @@ export const register = async (req, res) => {
             });
         }
 
-        // Успішна відповідь
-        return res
-            .status(201)
-            .json({ message: "Лист з підтвердженням успішно відправлено" });
+        const isComplete = await isProfileComplete(user.id, user.role);
+
+        return res.status(201).json({
+            message: "Лист з підтвердженням успішно відправлено",
+            user: {
+                id: user.id,
+                email: user.email,
+                role: user.role,
+                is_profile_complete: isComplete,
+            },
+        });
     } catch (error) {
         console.error("[Register] Критична помилка:", error);
         return res.status(500).json({
@@ -266,6 +303,7 @@ export const register = async (req, res) => {
     }
 };
 
+// Verify Email
 export const verifyEmail = async (req, res) => {
     console.log("[VerifyEmail] Початок обробки. Query параметри:", req.query);
 
@@ -328,6 +366,7 @@ export const verifyEmail = async (req, res) => {
     }
 };
 
+// Login
 export const login = async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -350,7 +389,6 @@ export const login = async (req, res) => {
             });
         }
 
-        // Пошук користувача
         console.log("[Login] Пошук користувача за email:", email);
         const user = await User.findByEmail(email);
         if (!user) {
@@ -361,7 +399,6 @@ export const login = async (req, res) => {
             });
         }
 
-        // Перевірка пароля
         console.log("[Login] Перевірка пароля для користувача:", user.id);
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
@@ -372,7 +409,6 @@ export const login = async (req, res) => {
             });
         }
 
-        // Перевірка верифікації email
         if (!user.isVerified) {
             console.log("[Login] Користувач не верифікований:", user.id);
             return res.status(403).json({
@@ -381,7 +417,6 @@ export const login = async (req, res) => {
             });
         }
 
-        // Оновлення токенів
         console.log("[Login] Оновлення токенів для користувача:", user.id);
         const newTokenVersion = await User.incrementTokenVersion(user.id);
 
@@ -392,7 +427,7 @@ export const login = async (req, res) => {
                 tokenVersion: newTokenVersion,
             },
             process.env.JWT_SECRET,
-            { expiresIn: "1d" } // Змінено з "15m" на "1d"
+            { expiresIn: "1d" }
         );
 
         const refreshToken = jwt.sign(
@@ -401,10 +436,41 @@ export const login = async (req, res) => {
             { expiresIn: "7d" }
         );
 
-        // Оновлення Redis
         console.log("[Login] Оновлення Redis для користувача:", user.id);
         await redisClient.del(`refresh:${user.id}`);
         await redisClient.setEx(`refresh:${user.id}`, 604800, refreshToken);
+
+        // Додавання деталей гуртожитку та факультету для відповідних ролей
+        let additionalFields = {};
+        if (user.role === "dorm_manager" && user.dormitory_id) {
+            const dormitory = await Dormitory.findById(user.dormitory_id);
+            additionalFields.dormitory_id = user.dormitory_id;
+            additionalFields.dormitory_name = dormitory?.name || null;
+        }
+        if (
+            ["student_council_head", "student_council_member"].includes(user.role) &&
+            user.faculty_id
+        ) {
+            const faculty = await Faculties.findById(user.faculty_id);
+            additionalFields.faculty_id = user.faculty_id;
+            additionalFields.faculty_name = faculty?.name || null;
+        }
+        if (user.role === "faculty_dean_office" && user.faculty_id) {
+            const faculty = await Faculties.findById(user.faculty_id);
+            additionalFields.faculty_id = user.faculty_id;
+            additionalFields.faculty_name = faculty?.name || null;
+        }
+
+        // Перевірка завершеності профілю
+        const isComplete = await isProfileComplete(user.id, user.role);
+
+        // Оновлення is_profile_complete, якщо значення відрізняється
+        if (user.is_profile_complete !== (isComplete ? 1 : 0)) {
+            await pool.execute(
+                `UPDATE users SET is_profile_complete = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+                [isComplete ? 1 : 0, user.id]
+            );
+        }
 
         console.log("[Login] Успішний вхід для користувача:", user.id);
         res.json({
@@ -414,6 +480,8 @@ export const login = async (req, res) => {
                 id: user.id,
                 email: user.email,
                 role: user.role,
+                is_profile_complete: isComplete,
+                ...additionalFields,
             },
         });
     } catch (error) {
@@ -429,33 +497,22 @@ export const login = async (req, res) => {
     }
 };
 
+// Logout
 export const logout = async (req, res) => {
     try {
-      const userId = req.user.userId;
-      
-      // Видаляємо рефреш токен з Redis
-      await redisClient.del(`refresh:${userId}`);
-      
-      // Інкрементуємо версію токена
-      await User.incrementTokenVersion(userId);
-      
-      res.status(200).json({ success: true });
-    } catch (error) {
-      console.error("Помилка виходу:", error);
-      res.status(500).json({ error: "Internal Server Error" });
-    }
-  };
+        const userId = req.user.userId;
 
-const errorHandler = (error, req, res) => {
-    console.error("[ErrorHandler] Помилка:", error);
-    res.status(500).json({
-        error: "Внутрішня помилка сервера",
-        ...(process.env.NODE_ENV === "development" && {
-            details: error.message,
-        }),
-    });
+        await redisClient.del(`refresh:${userId}`);
+        await User.incrementTokenVersion(userId);
+
+        res.status(200).json({ success: true });
+    } catch (error) {
+        console.error("Помилка виходу:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
 };
 
+// Refresh Token
 export const refreshToken = async (req, res) => {
     try {
         const token =
@@ -471,13 +528,22 @@ export const refreshToken = async (req, res) => {
         if (!storedToken || token !== storedToken) {
             return res
                 .status(401)
-                .json({ error: "Недійсний або протермінований токен" });
+                .json({ error: "Недійсний або прострочений токен" });
+        }
+
+        const user = await User.findById(decoded.userId);
+        if (!user) {
+            return res.status(403).json({ error: "Користувача не знайдено для токена" });
         }
 
         const newAccessToken = jwt.sign(
-            { userId: decoded.userId },
+            {
+                userId: user.id,
+                role: user.role,
+                tokenVersion: user.token_version,
+            },
             process.env.JWT_SECRET,
-            { expiresIn: "1d" } // Змінено з "15m" на "1d"
+            { expiresIn: "1d" }
         );
 
         res.json({ accessToken: newAccessToken });
@@ -487,10 +553,61 @@ export const refreshToken = async (req, res) => {
     }
 };
 
-export const validateToken = (req, res) => {
-    res.json({ isValid: true, user: req.user });
+// Validate Token
+export const validateToken = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const [userRows] = await pool.query(
+            `
+            SELECT 
+                u.id, u.email, u.name, u.avatar, u.role, u.is_profile_complete, u.faculty_id, u.dormitory_id,
+                f.name AS faculty_name,
+                d.name AS dormitory_name
+            FROM users u
+            LEFT JOIN faculties f ON u.faculty_id = f.id
+            LEFT JOIN dormitories d ON u.dormitory_id = d.id
+            WHERE u.id = ?
+            `,
+            [userId]
+        );
+
+        if (!userRows[0]) {
+            return res.status(404).json({ error: "Користувача не знайдено" });
+        }
+
+        const user = userRows[0];
+        const isComplete = await isProfileComplete(userId, user.role);
+
+        // Оновлення is_profile_complete, якщо значення відрізняється
+        if (user.is_profile_complete !== (isComplete ? 1 : 0)) {
+            await pool.execute(
+                `UPDATE users SET is_profile_complete = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+                [isComplete ? 1 : 0, userId]
+            );
+        }
+
+        res.json({
+            isValid: true,
+            user: {
+                id: user.id,
+                email: user.email,
+                name: user.name,
+                avatar: user.avatar,
+                role: user.role,
+                faculty_id: user.faculty_id || null,
+                faculty_name: user.faculty_name || null,
+                dormitory_id: user.dormitory_id || null,
+                dormitory_name: user.dormitory_name || null,
+                is_profile_complete: isComplete,
+            },
+        });
+    } catch (error) {
+        console.error("[ValidateToken] Помилка:", error);
+        res.status(500).json({ error: "Помилка сервера" });
+    }
 };
 
+// Forgot Password
 export const forgotPassword = async (req, res) => {
     try {
         const { email } = req.body;
@@ -527,11 +644,8 @@ export const forgotPassword = async (req, res) => {
 
         console.log("[Redis] Стан підключення:", redisClient.isReady ? "Готово" : "Не готово");
 
-        // Видаляємо всі попередні токени для цього користувача
         await redisClient.del(`reset:${user.id}`);
-        
-        // Зберігаємо новий токен
-        await redisClient.setEx(`reset:${user.id}`, 60 * 60, resetToken); // 1 година
+        await redisClient.setEx(`reset:${user.id}`, 60 * 60, resetToken);
         console.log("[Redis] Токен успішно збережено");
 
         const storedToken = await redisClient.get(`reset:${user.id}`);
@@ -565,6 +679,7 @@ export const forgotPassword = async (req, res) => {
     }
 };
 
+// Reset Password
 export const resetPassword = async (req, res) => {
     console.log("[ResetPassword] Початок обробки запиту");
 
@@ -572,7 +687,6 @@ export const resetPassword = async (req, res) => {
         const { token } = req.query;
         const { password } = req.body;
 
-        // Додаткове логування
         console.log("[ResetPassword] Повний токен з запиту:", token?.slice(0, 15) + "...");
         console.log(
             "[ResetPassword] Поточний час сервера:",
@@ -583,38 +697,32 @@ export const resetPassword = async (req, res) => {
             return res.status(401).json({ error: "Токен не надано" });
         }
 
-        // Перевірка формату токена
         if (!token.match(/^[\w-]+\.[\w-]+\.[\w-_.+/=]*$/)) {
             console.error("[ResetPassword] Недійсний формат токена");
             return res.status(401).json({ error: "Недійсний формат токена" });
         }
 
-        // Декодування без верифікації для діагностики
         const unverifiedDecoded = jwt.decode(token);
         console.log(
             "[ResetPassword] Декодований токен (без верифікації):",
             unverifiedDecoded
         );
 
-        // Верифікація токена
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         console.log(
             "[ResetPassword] Час життя токена:",
             decoded.exp - decoded.iat
         );
 
-        // Діагностика Redis
         const redisKeys = await redisClient.keys("reset:*");
         console.log("[ResetPassword] Всі ключі reset:* у Redis:", redisKeys);
 
-        // Перевірка наявності токена в Redis
         const storedToken = await redisClient.get(`reset:${decoded.userId}`);
         const ttl = await redisClient.ttl(`reset:${decoded.userId}`);
         console.log(
             `[ResetPassword] TTL для reset:${decoded.userId}: ${ttl} секунд`
         );
 
-        // Перевірка на одноразовість токена
         if (!storedToken) {
             console.error("[ResetPassword] Токен вже використаний або недійсний");
             return res.status(401).json({ 
@@ -631,31 +739,16 @@ export const resetPassword = async (req, res) => {
             return res.status(401).json({ error: "Недійсний токен" });
         }
 
-        // Видаляємо токен ОДРАЗУ після перевірки
         await redisClient.del(`reset:${decoded.userId}`);
 
-        // Валідація пароля
-        const validatePassword = (password) => {
-            if (!password) return { isValid: false, errors: ["Пароль не надано"] };
-            const errors = [];
-            if (password.length < 8) errors.push("Мінімум 8 символів");
-            if (!/[A-Z]/.test(password)) errors.push("Хоча б одна велика літера");
-            if (!/[0-9]/.test(password)) errors.push("Хоча б одна цифра");
-            return {
-                isValid: errors.length === 0,
-                errors: errors
-            };
-        };
-
         const passwordValidation = validatePassword(password);
-        if (!passwordValidation.isValid) {
+        if (!passwordValidation) {
             console.error(
-                "[ResetPassword] Невірний формат пароля:",
-                passwordValidation.errors
+                "[ResetPassword] Невірний формат пароля"
             );
             return res.status(400).json({
                 error: "Пароль не відповідає вимогам",
-                details: passwordValidation.errors.join(", ")
+                details: "Пароль повинен містити мінімум 8 символів, хоча б одну велику літеру та одну цифру"
             });
         }
 
@@ -715,137 +808,354 @@ export const resetPassword = async (req, res) => {
     }
 };
 
+// Get Profile
 export const getProfile = async (req, res) => {
     try {
-      const userId = req.user.userId;
-  
-      const [user] = await pool.query(
-        `
-        SELECT 
-          u.id, u.email, u.name, u.avatar, u.role,
-          up.birthday, up.phone, up.about_me, 
-          up.interests, up.room, up.dormitory, 
-          up.instagram, up.telegram
-        FROM users u
-        LEFT JOIN user_profiles up ON u.id = up.user_id
-        WHERE u.id = ?
-      `,
-        [userId]
-      );
-  
-      if (!user[0]) {
-        return res.status(404).json({ error: "Користувача не знайдено" });
-      }
-  
-      // Ensure user_profiles exists
-      if (!user[0].about_me && !user[0].phone && !user[0].birthday) {
-        await pool.execute(
-          `INSERT INTO user_profiles (user_id) VALUES (?) 
-           ON DUPLICATE KEY UPDATE user_id = user_id`,
-          [userId]
-        );
-      }
-  
-      res.json({
-        id: user[0].id,
-        email: user[0].email,
-        name: user[0].name,
-        avatar: user[0].avatar,
-        role: user[0].role,
-        birthday: user[0].birthday?.toISOString().split("T")[0] || null,
-        phone: user[0].phone || null,
-        about_me: user[0].about_me || null,
-        interests: user[0].interests || null,
-        room: user[0].room || null,
-        dormitory: user[0].dormitory || null,
-        instagram: user[0].instagram || null,
-        telegram: user[0].telegram || null,
-      });
-    } catch (error) {
-      console.error("Помилка отримання профілю:", error);
-      res.status(500).json({ error: "Помилка сервера" });
-    }
-  };
-  
-  export const updateProfile = async (req, res) => {
-    try {
-      const userId = req.user.userId;
-      const profileData = req.body;
-  
-      const schema = Joi.object({
-        birthday: Joi.date().max(new Date()).optional().allow(null),
-        phone: Joi.string().pattern(/^\+380\d{9}$/).optional().allow(null),
-        aboutMe: Joi.string().max(1000).optional().allow(null),
-        interests: Joi.string().max(255).optional().allow(null),
-        room: Joi.string().max(10).optional().allow(null),
-        dormitory: Joi.string().max(50).optional().allow(null),
-        instagram: Joi.string().uri().optional().allow(null),
-        telegram: Joi.string().uri().optional().allow(null),
-      });
-  
-      const { error } = schema.validate(profileData, { abortEarly: false });
-      if (error) {
-        const errorDetails = error.details.map(detail => ({
-          field: detail.path[0],
-          message: detail.message
-        }));
-        return res.status(400).json({ error: "Невалідні дані", details: errorDetails });
-      }
-  
-      const connection = await pool.getConnection();
-      try {
-        await connection.beginTransaction();
-  
-        // Ensure user_profiles exists
-        await connection.execute(
-            `INSERT INTO user_profiles (user_id) VALUES (?) 
-             ON DUPLICATE KEY UPDATE user_id = user_id`,
+        const userId = req.user.userId;
+
+        const [user] = await pool.query(
+            `
+            SELECT 
+                u.id, u.email, u.name, u.avatar, u.role, u.faculty_id, u.dormitory_id,
+                up.birthday, up.phone, up.about_me, up.interests, up.room, 
+                up.dormitory, up.instagram, up.telegram, 
+                up.faculty_id AS profile_faculty_id, up.group_name, up.course,
+                f.name AS faculty_name,
+                d.name AS dormitory_name
+            FROM users u
+            LEFT JOIN user_profiles up ON u.id = up.user_id
+            LEFT JOIN faculties f ON u.faculty_id = f.id
+            LEFT JOIN dormitories d ON u.dormitory_id = d.id
+            WHERE u.id = ?
+            `,
             [userId]
         );
-  
-        await connection.query(
-          `
-          UPDATE user_profiles 
-          SET 
-            birthday = ?, 
-            phone = ?, 
-            about_me = ?, 
-            interests = ?, 
-            room = ?, 
-            dormitory = ?, 
-            instagram = ?, 
-            telegram = ?
-          WHERE user_id = ?
-        `,
-          [
-            profileData.birthday || null,
-            profileData.phone || null,
-            profileData.aboutMe || null,
-            profileData.interests || null,
-            profileData.room || null,
-            profileData.dormitory || null,
-            profileData.instagram || null,
-            profileData.telegram || null,
-            userId,
-          ]
-        );
-  
-        await connection.commit();
-        res.json({ message: "Профіль оновлено" });
-      } catch (error) {
-        await connection.rollback();
-        throw error;
-      } finally {
-        connection.release();
-      }
+
+        if (!user[0]) {
+            return res.status(404).json({ error: "Користувача не знайдено" });
+        }
+
+        const isComplete = await isProfileComplete(userId, user[0].role);
+
+        const profile = {
+            id: user[0].id,
+            email: user[0].email,
+            name: user[0].name,
+            avatar: user[0].avatar,
+            role: user[0].role,
+            is_profile_complete: isComplete,
+            birthday: user[0].birthday?.toISOString().split("T")[0] || null,
+            phone: user[0].phone || null,
+            about_me: user[0].about_me || null,
+            interests: user[0].interests || null,
+            room: user[0].room || null,
+            dormitory: user[0].dormitory || null,
+            instagram: user[0].instagram || null,
+            telegram: user[0].telegram || null,
+            dormitory_id: user[0].dormitory_id || null,
+            dormitory_name: user[0].dormitory_name || null,
+        };
+
+        if (user[0].role === "student") {
+            profile.faculty_id = user[0].profile_faculty_id || null;
+            profile.faculty_name = user[0].faculty_name || null;
+            profile.group_name = user[0].group_name || null;
+            profile.course = user[0].course || null;
+        } else if (["faculty_dean_office", "student_council_head", "student_council_member"].includes(user[0].role)) {
+            profile.faculty_id = user[0].faculty_id || null;
+            profile.faculty_name = user[0].faculty_name || null;
+        }
+
+        res.json(profile);
     } catch (error) {
-      console.error("Помилка оновлення профілю:", error);
-      res.status(500).json({ error: "Помилка сервера" });
+        console.error("[GetProfile] Помилка:", error);
+        res.status(500).json({ error: "Помилка сервера" });
     }
-  };
-  
-  
-  export default {
+};
+
+// Update Profile
+// Update Profile
+export const updateProfile = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const role = req.user.role;
+        const profileData = req.body;
+
+        // Flexible Joi schema for all possible fields
+        const schema = Joi.object({
+            name: Joi.string().max(255).optional().allow(null),
+            birthday: Joi.date().max(new Date()).optional().allow(null),
+            phone: Joi.string().pattern(/^\+380\d{9}$/).optional().allow(null),
+            aboutMe: Joi.string().max(1000).optional().allow(null),
+            interests: Joi.string().max(255).optional().allow(null),
+            room: Joi.string().max(10).optional().allow(null),
+            dormitory: Joi.string().max(50).optional().allow(null),
+            instagram: Joi.string().uri().optional().allow(null),
+            telegram: Joi.string().uri().optional().allow(null),
+            faculty_id: Joi.number().integer().positive().optional().allow(null),
+            group_name: Joi.string().max(255).optional().allow(null),
+            course: Joi.number().integer().min(1).max(6).optional().allow(null),
+            dormitory_id: Joi.number().integer().positive().optional().allow(null),
+        }).unknown(false); // Disallow unknown fields
+
+        // Validate incoming data
+        const { error } = schema.validate(profileData, { abortEarly: false });
+        if (error) {
+            const errorDetails = error.details.map(detail => ({
+                field: detail.path[0],
+                message: detail.message,
+            }));
+            return res.status(400).json({ error: "Невалідні дані", details: errorDetails });
+        }
+
+        const connection = await pool.getConnection();
+        try {
+            await connection.beginTransaction();
+
+            // Step 1: Update `users` table
+            const userUpdates = {};
+            if (profileData.name !== undefined) {
+                userUpdates.name = profileData.name;
+            }
+
+            // Update faculty_id in users for specific roles
+            if (
+                ["faculty_dean_office", "student_council_head", "student_council_member"].includes(role) &&
+                profileData.faculty_id !== undefined
+            ) {
+                // Validate faculty_id existence
+                const [faculty] = await connection.execute(
+                    `SELECT id FROM faculties WHERE id = ?`,
+                    [profileData.faculty_id]
+                );
+                if (profileData.faculty_id && !faculty[0]) {
+                    return res.status(400).json({
+                        error: "Невалідні дані",
+                        details: [{ field: "faculty_id", message: "Факультет не існує" }],
+                    });
+                }
+                userUpdates.faculty_id = profileData.faculty_id || null;
+            }
+
+            // Update dormitory_id in users for dorm_manager
+            if (role === "dorm_manager" && profileData.dormitory_id !== undefined) {
+                // Validate dormitory_id existence
+                const [dormitory] = await connection.execute(
+                    `SELECT id FROM dormitories WHERE id = ?`,
+                    [profileData.dormitory_id]
+                );
+                if (profileData.dormitory_id && !dormitory[0]) {
+                    return res.status(400).json({
+                        error: "Невалідні дані",
+                        details: [{ field: "dormitory_id", message: "Гуртожиток не існує" }],
+                    });
+                }
+                userUpdates.dormitory_id = profileData.dormitory_id || null;
+            }
+
+            // Apply updates to users table
+            if (Object.keys(userUpdates).length > 0) {
+                const fields = Object.keys(userUpdates)
+                    .map(field => `${field} = ?`)
+                    .join(", ");
+                const values = [...Object.values(userUpdates), userId];
+                await connection.execute(
+                    `UPDATE users SET ${fields}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+                    values
+                );
+            }
+
+            // Step 2: Update `user_profiles` table
+            // Ensure user_profiles record exists
+            await connection.execute(
+                `INSERT INTO user_profiles (user_id) VALUES (?) 
+                 ON DUPLICATE KEY UPDATE user_id = user_id`,
+                [userId]
+            );
+
+            // Collect profile fields to update
+            const profileUpdates = {};
+            if (profileData.birthday !== undefined) profileUpdates.birthday = profileData.birthday || null;
+            if (profileData.phone !== undefined) profileUpdates.phone = profileData.phone || null;
+            if (profileData.aboutMe !== undefined) profileUpdates.about_me = profileData.aboutMe || null;
+            if (profileData.interests !== undefined) profileUpdates.interests = profileData.interests || null;
+            if (profileData.room !== undefined) profileUpdates.room = profileData.room || null;
+            if (profileData.dormitory !== undefined) profileUpdates.dormitory = profileData.dormitory || null;
+            if (profileData.instagram !== undefined) profileUpdates.instagram = profileData.instagram || null;
+            if (profileData.telegram !== undefined) profileUpdates.telegram = profileData.telegram || null;
+
+            // Student-specific fields in user_profiles
+            if (role === "student") {
+                if (profileData.faculty_id !== undefined) {
+                    // Validate faculty_id existence
+                    const [faculty] = await connection.execute(
+                        `SELECT id FROM faculties WHERE id = ?`,
+                        [profileData.faculty_id]
+                    );
+                    if (profileData.faculty_id && !faculty[0]) {
+                        return res.status(400).json({
+                            error: "Невалідні дані",
+                            details: [{ field: "faculty_id", message: "Факультет не існує" }],
+                        });
+                    }
+                    profileUpdates.faculty_id = profileData.faculty_id || null;
+                }
+                if (profileData.group_name !== undefined) profileUpdates.group_name = profileData.group_name || null;
+                if (profileData.course !== undefined) profileUpdates.course = profileData.course || null;
+            }
+
+            // Apply updates to user_profiles table
+            if (Object.keys(profileUpdates).length > 0) {
+                const fields = Object.keys(profileUpdates)
+                    .map(field => `${field} = ?`)
+                    .join(", ");
+                const values = [...Object.values(profileUpdates), userId];
+                await connection.execute(
+                    `UPDATE user_profiles SET ${fields} WHERE user_id = ?`,
+                    values
+                );
+            }
+
+            // Step 3: Recalculate is_profile_complete
+            const isComplete = await isProfileComplete(userId, role);
+
+            // Update is_profile_complete in users table
+            await connection.execute(
+                `UPDATE users SET is_profile_complete = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+                [isComplete ? 1 : 0, userId]
+            );
+
+            await connection.commit();
+
+            // Step 4: Fetch updated user data
+            const [updatedUser] = await pool.query(
+                `
+                SELECT 
+                    u.id, u.email, u.name, u.avatar, u.role, u.faculty_id, u.dormitory_id,
+                    up.birthday, up.phone, up.about_me, up.interests, up.room, 
+                    up.dormitory, up.instagram, up.telegram, 
+                    up.faculty_id AS profile_faculty_id, up.group_name, up.course,
+                    f.name AS faculty_name,
+                    d.name AS dormitory_name
+                FROM users u
+                LEFT JOIN user_profiles up ON u.id = up.user_id
+                LEFT JOIN faculties f ON u.faculty_id = f.id
+                LEFT JOIN dormitories d ON u.dormitory_id = d.id
+                WHERE u.id = ?
+                `,
+                [userId]
+            );
+
+            if (!updatedUser[0]) {
+                throw new Error("Користувача не знайдено після оновлення");
+            }
+
+            const user = updatedUser[0];
+            const responseUser = {
+                id: user.id,
+                email: user.email,
+                name: user.name,
+                avatar: user.avatar,
+                role: user.role,
+                is_profile_complete: isComplete,
+                birthday: user.birthday?.toISOString().split("T")[0] || null,
+                phone: user.phone || null,
+                about_me: user.about_me || null,
+                interests: user.interests || null,
+                room: user.room || null,
+                dormitory: user.dormitory || null,
+                instagram: user.instagram || null,
+                telegram: user.telegram || null,
+                dormitory_id: user.dormitory_id || null,
+                dormitory_name: user.dormitory_name || null,
+            };
+
+            if (role === "student") {
+                responseUser.faculty_id = user.profile_faculty_id || null;
+                responseUser.faculty_name = user.faculty_name || null;
+                responseUser.group_name = user.group_name || null;
+                responseUser.course = user.course || null;
+            } else if (["faculty_dean_office", "student_council_head", "student_council_member"].includes(role)) {
+                responseUser.faculty_id = user.faculty_id || null;
+                responseUser.faculty_name = user.faculty_name || null;
+            }
+
+            res.json({
+                message: "Профіль успішно оновлено",
+                user: responseUser,
+            });
+        } catch (error) {
+            await connection.rollback();
+            console.error("[UpdateProfile] Помилка:", error);
+            res.status(400).json({
+                error: "Помилка при оновленні профілю",
+                details: error.message.includes("Факультет не існує") || error.message.includes("Гуртожиток не існує")
+                    ? [{ field: error.message.includes("Факультет") ? "faculty_id" : "dormitory_id", message: error.message }]
+                    : [{ field: "general", message: "Помилка сервера" }],
+            });
+        } finally {
+            connection.release();
+        }
+    } catch (error) {
+        console.error("[UpdateProfile] Помилка:", error);
+        res.status(500).json({ error: "Помилка сервера" });
+    }
+};
+
+// Is Profile Complete
+// Is Profile Complete
+export const isProfileComplete = async (userId, role) => {
+    try {
+        // Fetch user data
+        const [userRows] = await pool.execute(
+            `SELECT name, faculty_id, dormitory_id, isVerified FROM users WHERE id = ?`,
+            [userId]
+        );
+        // Fetch profile data
+        const [profileRows] = await pool.execute(
+            `SELECT phone, faculty_id, group_name, course 
+             FROM user_profiles 
+             WHERE user_id = ?`,
+            [userId]
+        );
+
+        const user = userRows[0];
+        const profile = profileRows[0] || {};
+
+        // Base requirements for all roles
+        if (!user?.name || !user?.isVerified || !profile?.phone) {
+            return false;
+        }
+
+        // Role-specific requirements
+        switch (role) {
+            case "student":
+                return !!(
+                    profile.faculty_id &&
+                    profile.group_name &&
+                    profile.course &&
+                    profile.course >= 1 &&
+                    profile.course <= 6
+                );
+            case "dorm_manager":
+                return !!user.dormitory_id;
+            case "faculty_dean_office":
+            case "student_council_head":
+            case "student_council_member":
+                return !!user.faculty_id;
+            case "admin":
+            case "superadmin":
+                return true;
+            default:
+                console.warn(`[isProfileComplete] Невідома роль: ${role}`);
+                return false;
+        }
+    } catch (error) {
+        console.error("[isProfileComplete] Помилка перевірки профілю:", error);
+        return false;
+    }
+};
+export default {
     register,
     verifyEmail,
     login,
@@ -858,4 +1168,5 @@ export const getProfile = async (req, res) => {
     updateProfile,
     logout,
     validateToken,
-  };
+    isProfileComplete,
+};

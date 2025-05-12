@@ -1,8 +1,10 @@
+// frontend/src/pages/Applications/ApplicationsPage.jsx
 import React, { useState, useEffect } from "react";
 import Navbar from "../../components/UI/Navbar/Navbar";
 import Sidebar from "../../components/UI/Sidebar/Sidebar";
 import api from "../../utils/api";
 import styles from "./styles/ApplicationsPage.module.css";
+import { ToastService } from "../../utils/toastConfig";
 
 const ApplicationsPage = () => {
   const [applications, setApplications] = useState([]);
@@ -19,9 +21,10 @@ const ApplicationsPage = () => {
     const fetchApplications = async () => {
       try {
         const response = await api.get("/applications");
-        setApplications(response.data);
+        setApplications(response.data || []);
       } catch (error) {
         console.error("Помилка отримання заявок:", error);
+        ToastService.error("Не вдалося завантажити заявки");
       }
     };
     fetchApplications();
@@ -41,7 +44,7 @@ const ApplicationsPage = () => {
             <ul>
               {applications.map((app) => (
                 <li key={app.id}>
-                  {app.name} {app.surname} - {app.status}
+                  {app.name || "Заявка"} - {app.status || "Невідомий статус"}
                 </li>
               ))}
             </ul>

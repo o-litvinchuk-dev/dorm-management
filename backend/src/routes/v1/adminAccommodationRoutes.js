@@ -12,7 +12,7 @@ const router = express.Router();
 
 // Middleware to check admin or dorm_admin role
 const authorizeAdmin = (req, res, next) => {
-  const allowedRoles = ["admin", "dorm_admin"];
+  const allowedRoles = ["superadmin", "admin", "dorm_admin"];
   if (!allowedRoles.includes(req.user.role)) {
     return res.status(403).json({ error: "Доступ заборонено" });
   }

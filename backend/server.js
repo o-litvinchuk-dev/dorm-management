@@ -1,4 +1,3 @@
-// server.js
 import "dotenv/config";
 import express from "express";
 import { createServer } from "http";
@@ -7,14 +6,17 @@ import helmet from "helmet";
 import rateLimiter from "./src/middlewares/rateLimiter.js";
 import cors from "cors";
 import authRoutes from "./src/routes/v1/authRoutes.js";
-import { secureRoutes } from "./src/routes/v1/secureRoutes.js";
+import secureRoutes from "./src/routes/v1/secureRoutes.js"; // Виправлено імпорт
 import adminRoutes from "./src/routes/v1/adminRoutes.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import servicesRoutes from "./src/routes/v1/servicesRoutes.js";
-import { getEnforcer, checkPermission } from "./src/config/permissions.js";
+import { getEnforcer } from "./src/config/permissions.js";
 import adminAccommodationRoutes from "./src/routes/v1/adminAccommodationRoutes.js";
 import { authenticate } from "./src/middlewares/auth.js";
+import facultyRoutes from "./src/routes/v1/facultyRoutes.js";
+import facultyDormitoryRoutes from "./src/routes/v1/facultyDormitoryRoutes.js";
+import userRoutes from "./src/routes/v1/userRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -25,58 +27,52 @@ const server = createServer(app);
 // Ініціалізація Casbin
 let enforcer;
 (async () => {
-  try {
-    enforcer = await getEnforcer();
-    console.log("[Casbin] Enforcer ініціалізовано");
-
-    // Тестовий маршрут для перевірки прав
-    app.use(
-      "/api/v1/secure/test",
-      checkPermission("secure"),
-      (req, res) => {
-        res.json({ message: "Доступ дозволено до Secure Endpoint" });
-      }
-    );
-  } catch (error) {
-    console.error("[Casbin] Помилка ініціалізації:", error);
-    process.exit(1);
-  }
+    try {
+        enforcer = await getEnforcer();
+        console.log("[Casbin] Enforcer ініціалізовано");
+    } catch (error) {
+        console.error("[Casbin] Помилка ініціалізації:", error);
+        process.exit(1);
+    }
 })();
 
 // Налаштування CORS
 app.use(
-  cors({
-    origin: [
-      process.env.FRONTEND_URL || "http://localhost:3000",
-      "https://accounts.google.com",
-      "https://*.googleapis.com",
-    ],
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
-    credentials: true,
-  })
+    cors({
+        origin: [
+            process.env.FRONTEND_URL || "http://localhost:3000",
+            "https://accounts.google.com",
+            "https://*.googleapis.com",
+        ],
+        methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+        allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+        credentials: true,
+    })
 );
 
 // Базові middleware
-app.use(express.json());
+app.use(express. json());
 app.use(express.urlencoded({ extended: true }));
 app.use(
-  helmet({
-    crossOriginOpenerPolicy: { policy: "unsafe-none" }, // Дозволяє postMessage
-  })
+    helmet({
+        crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
+    })
 );
 app.use(rateLimiter);
 
 // Логування запитів
 app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-  next();
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+    next();
 });
 
 // Підключення маршрутів
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/secure", secureRoutes);
 app.use("/api/v1/admin", authenticate, adminRoutes);
+app.use("/api/v1/faculties", facultyRoutes);
+app.use("/api/v1/faculty-dormitories", facultyDormitoryRoutes);
+app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/services", servicesRoutes);
 app.use("/api/v1/admin/accommodation-applications", adminAccommodationRoutes);
 
@@ -88,7 +84,7 @@ import "./src/config/redis.js";
 
 // Тестовий маршрут
 app.get("/", (req, res) => {
-  res.send("Сервер працює!");
+    res.send("Сервер працює!");
 });
 
 app.use(express.static(path.join(__dirname, "src")));

@@ -1,8 +1,10 @@
+// frontend/src/pages/Dormitories/DormitoriesPage.jsx
 import React, { useState, useEffect } from "react";
 import Navbar from "../../components/UI/Navbar/Navbar";
 import Sidebar from "../../components/UI/Sidebar/Sidebar";
 import api from "../../utils/api";
 import styles from "./styles/DormitoriesPage.module.css";
+import { ToastService } from "../../utils/toastConfig";
 
 const DormitoriesPage = () => {
   const [dormitories, setDormitories] = useState([]);
@@ -19,9 +21,10 @@ const DormitoriesPage = () => {
     const fetchDormitories = async () => {
       try {
         const response = await api.get("/dormitories");
-        setDormitories(response.data);
+        setDormitories(response.data || []);
       } catch (error) {
         console.error("Помилка отримання гуртожитків:", error);
+        ToastService.error("Не вдалося завантажити гуртожитки");
       }
     };
     fetchDormitories();
@@ -41,7 +44,7 @@ const DormitoriesPage = () => {
             <ul>
               {dormitories.map((dorm) => (
                 <li key={dorm.id}>
-                  {dorm.name} - {dorm.address}
+                  {dorm.name || "Гуртожиток"} - {dorm.address || "Адреса не вказана"}
                 </li>
               ))}
             </ul>

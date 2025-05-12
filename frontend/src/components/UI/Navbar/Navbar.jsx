@@ -5,7 +5,7 @@ import { useUser } from "../../../contexts/UserContext";
 import styles from "./Navbar.module.css";
 import Breadcrumb from "./Breadcrumb/Breadcrumb";
 import Avatar from "../Avatar/Avatar";
-import Notifications from "../Notifications/Notifications"; // Імпортуємо компонент сповіщень
+import Notifications from "../Notifications/Notifications";
 
 import {
   BellIcon,
@@ -19,7 +19,7 @@ import {
 } from "@heroicons/react/24/solid";
 
 const Navbar = ({ isSidebarExpanded }) => {
-  const { user, loading, logout: forceLogout } = useUser();
+  const { user, isLoading, logout } = useUser();
   const navigate = useNavigate();
   const location = useLocation();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -33,13 +33,32 @@ const Navbar = ({ isSidebarExpanded }) => {
   ]);
 
   const getDisplayName = () => {
-    if (loading) return "Завантаження...";
+    if (isLoading) return "Завантаження...";
     return user?.name || user?.email || "Користувач";
   };
 
   const getNickname = (email) => {
     if (!email) return "Користувач";
-    return email.split("@")[0]; // Беремо частину до "@"
+    return email.split("@")[0];
+  };
+
+  const getUserRoleDisplay = () => {
+    if (!user) return "Користувач";
+    switch (user.role) {
+      case "admin":
+      case "superadmin":
+        return "Адміністратор";
+      case "faculty_dean_office":
+        return `Деканат (${user.faculty_name || "Факультет"})`;
+      case "dorm_manager":
+        return `Комендант (Гуртожиток ${user.dormitory_name || user.dormitory_id || "невідомий"})`;
+      case "student_council_head":
+        return `Голова студ. ради (${user.faculty_name || "Факультет"})`;
+      case "student_council_member":
+        return `Студ. рада (${user.faculty_name || "Факультет"})`;
+      default:
+        return "Студент";
+    }
   };
 
   useEffect(() => {
@@ -62,7 +81,7 @@ const Navbar = ({ isSidebarExpanded }) => {
   const handleLogout = async () => {
     try {
       await api.post("/auth/logout");
-      forceLogout();
+      logout();
       navigate("/login");
       window.dispatchEvent(new Event("storage"));
     } catch (error) {
@@ -99,7 +118,7 @@ const Navbar = ({ isSidebarExpanded }) => {
             <MagnifyingGlassIcon className={styles.searchIcon} />
           </button>
 
-          <Notifications /> {/* Додаємо компонент сповіщень */}
+          <Notifications />
 
           <div className={styles.divider}></div>
 
@@ -114,9 +133,7 @@ const Navbar = ({ isSidebarExpanded }) => {
             </div>
             <div className={styles.userInfo}>
               <span className={styles.userName}>{getNickname(user?.email)}</span>
-              <span className={styles.userRole}>
-                {user?.role === "admin" ? "Адміністратор" : "Студент"}
-              </span>
+              <span className={styles.userRole}>{getUserRoleDisplay()}</span>
             </div>
             <ChevronDownIcon
               className={`${styles.chevronIcon} ${isDropdownOpen ? styles.rotated : ""}`}

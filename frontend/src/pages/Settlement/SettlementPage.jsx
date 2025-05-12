@@ -1,8 +1,10 @@
+// frontend/src/pages/Settlement/SettlementPage.jsx
 import React, { useState, useEffect } from "react";
 import Navbar from "../../components/UI/Navbar/Navbar";
 import Sidebar from "../../components/UI/Sidebar/Sidebar";
 import api from "../../utils/api";
 import styles from "./styles/SettlementPage.module.css";
+import { ToastService } from "../../utils/toastConfig";
 
 const SettlementPage = () => {
   const [settlements, setSettlements] = useState([]);
@@ -19,9 +21,10 @@ const SettlementPage = () => {
     const fetchSettlements = async () => {
       try {
         const response = await api.get("/settlement");
-        setSettlements(response.data);
+        setSettlements(response.data || []);
       } catch (error) {
         console.error("Помилка отримання розкладу поселення:", error);
+        ToastService.error("Не вдалося завантажити розклад поселення");
       }
     };
     fetchSettlements();
@@ -41,7 +44,7 @@ const SettlementPage = () => {
             <ul>
               {settlements.map((settlement) => (
                 <li key={settlement.id}>
-                  {settlement.date} - {settlement.description}
+                  {settlement.date || "Дата не вказана"} - {settlement.description || "Опис відсутній"}
                 </li>
               ))}
             </ul>

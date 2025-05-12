@@ -10,7 +10,7 @@ const LoginForm = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [isGoogleInitialized, setIsGoogleInitialized] = useState(false);
     const navigate = useNavigate();
-    const { forceRefresh } = useUser();
+    const { refreshUser } = useUser(); // Змінено з forceRefresh на refreshUser
 
     const validatePassword = (password) => {
         const isLengthValid = password.length >= 8;
@@ -53,7 +53,7 @@ const LoginForm = () => {
             localStorage.setItem("accessToken", response.data.accessToken);
             localStorage.setItem("refreshToken", response.data.refreshToken);
             
-            forceRefresh();
+            await refreshUser(); // Змінено з forceRefresh на refreshUser, додано await
             ToastService.success("Вітаємо!", "Ви успішно авторизувалися в системі");
             navigate("/dashboard");
         } catch (error) {
@@ -85,7 +85,7 @@ const LoginForm = () => {
             localStorage.setItem("accessToken", res.data.accessToken);
             localStorage.setItem("refreshToken", res.data.refreshToken);
             
-            forceRefresh();
+            await refreshUser(); // Змінено з forceRefresh на refreshUser, додано await
             navigate("/dashboard");
             ToastService.success("Вітаємо!", "Ви успішно увійшли через Google");
         } catch (error) {
@@ -105,7 +105,7 @@ const LoginForm = () => {
                 ToastService.googleError(errorMessage);
             }
         }
-    }, [navigate, forceRefresh]);
+    }, [navigate, refreshUser]); // Оновлено залежність
 
     const initGoogleSignIn = useCallback(() => {
         try {

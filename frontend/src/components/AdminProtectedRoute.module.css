@@ -1,0 +1,32 @@
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background-color: var(--blue-gray-50, #eceff1);
+  font-family: "Roboto", sans-serif;
+  gap: 16px;
+}
+
+.loadingIcon {
+  width: 40px;
+  height: 40px;
+  color: var(--blue-gray-900, #263238);
+  animation: spin 1s linear infinite;
+}
+
+.loadingText {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--blue-gray-900, #263238);
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}

@@ -1,62 +1,89 @@
-// frontend/src/contexts/UserContext.jsx
-import { createContext, useContext, useEffect, useState } from 'react';
-import api from '../utils/api';
+import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
+import api from "../utils/api";
+import { ToastService } from "../utils/toastConfig";
 
-export const UserContext = createContext();
+const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [tokenVersion, setTokenVersion] = useState(0); // Нова версія токенів
+  const [isLoading, setIsLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const fetchUser = async () => {
+  const refreshUser = useCallback(async () => {
+    setRefreshing(true);
     try {
-      const { data } = await api.get('/secure/profile');
-      setUser({
-        ...data,
-        role: (data.role || 'student').toLowerCase(),
-        avatar: data.avatar ? `${data.avatar}?${Date.now()}` : null
-      });
+      // Validate token and get basic user data
+      const validateResponse = await api.get("/auth/validate-token");
+      const userData = validateResponse.data.user;
+
+      // Get full profile
+      const profileResponse = await api.get("/secure/profile");
+      const profileData = profileResponse.data;
+
+      // Construct user object with all required fields
+      const updatedUser = {
+        id: userData.id,
+        email: userData.email,
+        role: userData.role,
+        name: userData.name || profileData.name || "",
+        avatar: userData.avatar || profileData.avatar || null,
+        faculty_id: userData.faculty_id || profileData.faculty_id || null,
+        faculty_name: userData.faculty_name || profileData.faculty_name || null,
+        dormitory_id: userData.dormitory_id || profileData.dormitory_id || null,
+        dormitory_name: userData.dormitory_name || profileData.dormitory_name || null,
+        phone: profileData.phone || null,
+        course: profileData.course || null,
+        group_name: profileData.group_name || null,
+        is_profile_complete: profileData.is_profile_complete || false,
+      };
+
+      setUser(updatedUser);
+      localStorage.setItem("user", JSON.stringify(updatedUser));
     } catch (error) {
-      if (error.response?.status === 401) handleLogout();
+      console.error("Помилка валідації токена:", error);
+      setUser(null);
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("user");
+      ToastService.error("Сесія недійсна", "Будь ласка, увійдіть знову");
     } finally {
-      setLoading(false);
+      setRefreshing(false);
+      setIsLoading(false);
     }
-  };
-
-  const handleLogout = async () => {
-    try {
-      await api.post('/auth/logout');
-    } catch (e) {}
-    localStorage.clear();
-    setUser(null);
-    setTokenVersion(prev => prev + 1); // Форсуємо оновлення
-  };
-
-  const forceRefresh = () => {
-    setTokenVersion(prev => prev + 1);
-  };
+  }, []);
 
   useEffect(() => {
-    const token = localStorage.getItem('accessToken');
-    if (token) {
-      fetchUser();
+    const token = localStorage.getItem("accessToken");
+    const storedUser = localStorage.getItem("user");
+    if (token && storedUser) {
+      setUser(JSON.parse(storedUser));
+      refreshUser();
+    } else if (token) {
+      refreshUser();
     } else {
-      setLoading(false);
+      setIsLoading(false);
     }
-  }, [tokenVersion]); // Залежність від версії токена
+  }, [refreshUser]);
+
+  const logout = useCallback(() => {
+    setUser(null);
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("user");
+    ToastService.success("Ви вийшли з системи");
+  }, []);
 
   return (
-    <UserContext.Provider value={{ 
-      user, 
-      loading, 
-      refreshUser: fetchUser,
-      logout: handleLogout,
-      forceRefresh // Додаємо метод для примусового оновлення
-    }}>
+    <UserContext.Provider value={{ user, setUser, refreshUser, isLoading, refreshing, logout }}>
       {children}
     </UserContext.Provider>
   );
 };
 
-export const useUser = () => useContext(UserContext);
+export const useUser = () => {
+  const context = useContext(UserContext);
+  if (!context) {
+    throw new Error("useUser must be used within a UserProvider");
+  }
+  return context;
+};

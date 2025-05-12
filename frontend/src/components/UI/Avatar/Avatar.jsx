@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 
 const stringToColor = (str) => {
   let hash = 0;
@@ -23,6 +23,7 @@ const Avatar = ({ user, size = 96 }) => {
   const avatarUrl = user?.avatar ? `${user.avatar}?${Date.now()}` : null;
   const initials = getInitials(user?.email);
   const backgroundColor = stringToColor(user?.email || "user");
+  const [showInitials, setShowInitials] = useState(!avatarUrl);
 
   return (
     <div
@@ -33,25 +34,25 @@ const Avatar = ({ user, size = 96 }) => {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: avatarUrl ? "transparent" : backgroundColor,
-        color: avatarUrl ? "transparent" : "#fff",
+        backgroundColor: avatarUrl && !showInitials ? "#f0f0f0" : backgroundColor, // Light gray for image background, colored for initials
+        color: avatarUrl && !showInitials ? "transparent" : "#fff",
         fontSize: size / 2,
         fontWeight: "bold",
         overflow: "hidden",
       }}
     >
-      {avatarUrl ? (
+      {avatarUrl && !showInitials ? (
         <img
           src={avatarUrl}
           alt="Avatar"
           style={{
             width: "100%",
             height: "100%",
-            objectFit: "contain", // Зображення вміщається повністю
-            objectPosition: "center", // Центрування
+            objectFit: "contain", // Changed to contain to show full image
+            objectPosition: "center",
             borderRadius: "50%",
           }}
-          onError={(e) => (e.target.style.display = "none")}
+          onError={() => setShowInitials(true)} // Show initials on image load failure
           referrerPolicy="no-referrer"
         />
       ) : (

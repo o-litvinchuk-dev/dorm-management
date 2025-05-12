@@ -14,11 +14,11 @@ const Pagination = ({ total = 0, page = 1, limit = 10, onPageChange, onLimitChan
   return (
     <div className={styles.pagination}>
       <div className={styles.limit}>
-        <label className={styles.label}>На сторінці:</label>
+        <label className={styles.inputLabel}>На сторінці:</label>
         <select
           value={limit}
           onChange={(e) => onLimitChange?.(Number(e.target.value))}
-          className={styles.select}
+          className={styles.inputField}
           aria-label="Кількість записів на сторінці"
         >
           {limits.map((l) => (

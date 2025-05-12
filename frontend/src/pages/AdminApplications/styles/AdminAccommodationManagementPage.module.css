@@ -1,100 +1,170 @@
-.container {
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+.layout {
     display: flex;
     min-height: 100vh;
-    background: #f5f5f5;
-  }
-  
-  .mainContent {
+    background: var(--blue-gray-50, #f8fafc);
+    font-family: 'Roboto', sans-serif;
+}
+
+.mainContent {
     flex: 1;
-    padding: 20px;
-  }
-  
-  .content {
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-  
-  .title {
-    font-size: 24px;
-    font-weight: 700;
-    margin-bottom: 20px;
-    color: #263238;
-  }
-  
-  .filters {
-    display: flex;
-    gap: 20px;
-    margin-bottom: 20px;
-  }
-  
-  .searchInput {
-    padding: 10px;
-    border: 1px solid #e0e0e0;
-    border-radius: 6px;
-    width: 300px;
-    font-size: 14px;
-  }
-  
-  .statusSelect {
-    padding: 10px;
-    border: 1px solid #e0e0e0;
-    border-radius: 6px;
-    font-size: 14px;
-  }
-  
-  .table {
+    transition: margin-left 0.3s ease;
+    margin-left: calc(250px + 16px);
+    padding: calc(72px + 16px) 16px 16px 16px;
+    box-sizing: border-box;
+    min-height: 100vh;
+}
+
+.mainContent.sidebarCollapsed {
+    margin-left: calc(80px + 16px);
+}
+
+.profileContainer {
+    background: var(--white, #fff);
+    border: 1px solid var(--gray-300, #d1d5db);
+    border-radius: 12px;
+    padding: 0px 14px;
+    margin-top: 16px;
     width: 100%;
-    border-collapse: collapse;
-    background: #fff;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
-  
-  .table th, .table td {
-    padding: 12px;
-    text-align: left;
-    border-bottom: 1px solid #e0e0e0;
-  }
-  
-  .table th {
-    background: #f8f9fa;
+    height: calc(100vh - 170px);
+    box-sizing: border-box;
+    font-family: 'Roboto', sans-serif;
+    position: relative;
+    overflow-y: auto;
+}
+
+.profileHeader {
+    height: 200px;
+    background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+    border-radius: 12px 12px 0 0;
+    margin: -24px -24px 0 -24px;
+}
+
+.profileBody {
+    padding: 2rem 0;
+}
+
+.profileContent {
+    height: 100%;
+    padding: 0 16px;
+}
+
+.title {
+    font-size: 2rem;
     font-weight: 600;
-    color: #607d8b;
-  }
-  
-  .tableRow {
-    cursor: pointer;
-    transition: background 0.2s;
-  }
-  
-  .tableRow:hover {
-    background: #f8f9fa;
-  }
-  
-  .pagination {
+    margin: 0 0 1rem 0;
+    color: #1e293b;
+}
+
+.filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 1.5rem;
+}
+
+.searchInput, .statusSelect, .dateInput, .dormInput {
+    padding: 0.75rem 1rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: 'Roboto', sans-serif;
+    font-weight: 400;
+    background: #fff;
+    transition: border-color 0.2s ease;
+    min-width: 200px;
+}
+
+.searchInput:focus, .statusSelect:focus, .dateInput:focus, .dormInput:focus {
+    outline: none;
+    border-color: #3b82f6;
+}
+
+.searchInput::placeholder, .dateInput::placeholder, .dormInput::placeholder {
+    color: #94a3b8;
+}
+
+.table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+}
+
+.table th, .table td {
+    padding: 16px;
+    text-align: left;
+    font-size: 14px;
+    font-family: 'Roboto', sans-serif;
+}
+
+.table th {
+    background: var(--blue-gray-50, #f8fafc);
+    font-weight: 600;
+    color: #1e293b;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.table td {
+    border-bottom: 1px solid #e2e8f0;
+    color: #4b5563;
+}
+
+.tableRow {
+    transition: background 0.2s ease;
+}
+
+.tableRow:hover {
+    background: #eff6ff;
+}
+
+.tableRow:last-child td {
+    border-bottom: none;
+}
+
+.paginationWrapper {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 10px;
-    margin-top: 20px;
-  }
-  
-  .paginationButton {
-    padding: 8px 16px;
-    background: #006aff;
-    color: #fff;
-    border: none;
-    border-radius: 6px;
+    margin-top: 16px;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+}
+
+.paginationButton {
+    padding: 0.75rem 1rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    background: #fff;
+    color: #1e293b;
+    font-size: 14px;
+    font-weight: 500;
     cursor: pointer;
-  }
-  
-  .paginationButton:disabled {
-    background: #ccc;
+    transition: all 0.2s ease;
+}
+
+.paginationButton:hover {
+    background: #3b82f6;
+    color: #fff;
+    border-color: #3b82f6;
+}
+
+.paginationButton:disabled {
+    background: #f1f5f9;
+    color: #94a3b8;
     cursor: not-allowed;
-  }
-  
-  .modal {
+}
+
+.modal {
     position: fixed;
     top: 0;
     left: 0;
@@ -104,80 +174,217 @@
     display: flex;
     justify-content: center;
     align-items: center;
-  }
-  
-  .modalContent {
+    z-index: 1000;
+}
+
+.modalContent {
     background: #fff;
-    padding: 20px;
-    border-radius: 8px;
-    width: 600px;
+    padding: 24px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 600px;
     max-height: 80vh;
     overflow-y: auto;
-  }
-  
-  .details p {
-    margin: 10px 0;
-  }
-  
-  .statusButtons {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.details p {
+    font-size: 14px;
+    color: #4b5563;
+    margin: 12px 0;
+}
+
+.statusButtons {
     display: flex;
-    gap: 10px;
-    margin-top: 20px;
-  }
-  
-  .statusButton {
-    padding: 10px 20px;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.statusButton {
+    padding: 0.75rem 1.5rem;
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
     cursor: pointer;
-  }
-  
-  .approve {
-    background: #28a745;
+    transition: opacity 0.2s ease;
+}
+
+.approve {
+    background: #22c55e;
     color: #fff;
-  }
-  
-  .reject {
-    background: #dc3545;
+}
+
+.approve:hover {
+    opacity: 0.9;
+}
+
+.reject {
+    background: #ef4444;
     color: #fff;
-  }
-  
-  .commentsSection {
-    margin-top: 20px;
-  }
-  
-  .commentList {
+}
+
+.reject:hover {
+    opacity: 0.9;
+}
+
+.commentsSection {
+    margin-top: 24px;
+}
+
+.commentList {
     list-style: none;
     padding: 0;
-  }
-  
-  .comment {
-    margin-bottom: 10px;
-  }
-  
-  .commentInput {
+}
+
+.comment {
+    padding: 12px;
+    background: #f8fafc;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    font-size: 14px;
+    color: #4b5563;
+}
+
+.commentInput {
     width: 100%;
-    padding: 10px;
-    margin-top: 10px;
-    border: 1px solid #e0e0e0;
-    border-radius: 6px;
-  }
-  
-  .addCommentButton {
-    margin-top: 10px;
-    padding: 10px 20px;
-    background: #006aff;
+    padding: 0.75rem 1rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: 'Roboto', sans-serif;
+    margin-top: 12px;
+    resize: vertical;
+}
+
+.addCommentButton {
+    margin-top: 12px;
+    padding: 0.75rem 1.5rem;
+    background: #3b82f6;
     color: #fff;
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
     cursor: pointer;
-  }
-  
-  .closeModal {
-    margin-top: 20px;
-    padding: 10px 20px;
-    background: #ccc;
+    transition: opacity 0.2s ease;
+}
+
+.addCommentButton:hover {
+    opacity: 0.9;
+}
+
+.closeModal {
+    margin-top: 24px;
+    padding: 0.75rem 1.5rem;
+    background: #e2e8f0;
+    color: #1e293b;
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
     cursor: pointer;
-  }
+    transition: opacity 0.2s ease;
+}
+
+.closeModal:hover {
+    opacity: 0.9;
+}
+
+.loading {
+    text-align: center;
+    padding: 2rem;
+    font-size: 1.2rem;
+    color: #64748b;
+}
+
+.errorMessage {
+    background: #fee2e2;
+    color: #dc2626;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    text-align: center;
+    font-size: 1.1rem;
+}
+
+@media (max-width: 1024px) {
+    .mainContent {
+        margin-left: calc(80px + 16px);
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+}
+
+@media (max-width: 768px) {
+    .mainContent {
+        margin-left: 0 !important;
+        padding: calc(72px + 16px) 16px 16px 16px;
+    }
+
+    .profileContainer {
+        height: calc(100vh - 100px);
+        padding: 16px;
+        margin-top: 8px;
+    }
+
+    .profileHeader {
+        height: 150px;
+    }
+
+    .profileBody {
+        padding: 1rem 0;
+    }
+
+    .filters {
+        flex-direction: column;
+    }
+
+    .searchInput, .statusSelect, .dateInput, .dormInput {
+        min-width: 100%;
+    }
+
+    .table th, .table td {
+        padding: 12px;
+        font-size: 13px;
+    }
+
+    .modalContent {
+        width: 95%;
+        padding: 16px;
+    }
+
+    .paginationWrapper {
+        margin-top: 16px;
+    }
+
+    .title {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .mainContent {
+        padding: calc(72px + 8px) 8px 8px 8px;
+    }
+
+    .profileContainer {
+        padding: 12px;
+        margin-top: 8px;
+    }
+
+    .paginationButton {
+        padding: 0.5rem 0.75rem;
+        font-size: 13px;
+    }
+
+    .statusButton, .addCommentButton, .closeModal {
+        padding: 0.5rem 1rem;
+        font-size: 13px;
+    }
+
+    .loading, .errorMessage {
+        font-size: 1rem;
+        padding: 1rem;
+    }
+}
