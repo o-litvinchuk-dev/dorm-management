@@ -1,279 +1,196 @@
-.authContainer {
+.pageContainer {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background-color: #f5f7fa;
+  background-color: #f5f7fa; /* Світло-сірий фон для сторінки */
   padding: 20px;
   box-sizing: border-box;
+  font-family: "Roboto", sans-serif;
 }
 
-.authWrapper {
+.formWrapper {
+  background: white;
+  border-radius: 12px;
+  padding: 32px 40px; /* Трохи більше відступів */
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.07); /* М'якша тінь */
   width: 100%;
-  max-width: 480px;
+  max-width: 500px;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-.authCard {
-  width: 100%;
-  background: white;
-  border-radius: 12px;
-  padding: 32px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  box-sizing: border-box;
-  position: relative;
+.logoContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px; /* Менший проміжок біля лого */
+  margin-bottom: 20px;
+}
+
+.logoImage {
+  width: 40px; 
+  height: 40px;
+}
+
+.logoText {
+  font-family: "Roboto", sans-serif;
+  font-weight: 700;
+  font-size: 26px; /* Трохи менший текст лого */
+  color: #212121;
 }
 
 .title {
-  font-family: "Roboto", sans-serif;
-  font-weight: 700;
-  font-size: 24px;
-  color: var(--blue-gray-900, #263238);
-  margin: 0 0 8px;
+  font-size: 22px; /* Менший заголовок */
+  font-weight: 600; /* Менш жирний */
+  color: #263238; /* Темно-сірий */
+  margin-bottom: 8px;
   text-align: center;
 }
 
 .subtitle {
-  font-family: "Roboto", sans-serif;
-  font-weight: 400;
   font-size: 14px;
-  color: var(--gray-900, #212121);
-  margin: 0 0 24px;
+  color: #607d8b; /* Світліший сірий */
+  margin-bottom: 24px;
   text-align: center;
+  line-height: 1.6; /* Краща читабельність */
 }
 
-.formContainer {
+.form {
+  width: 100%;
   display: flex;
   flex-direction: column;
-  width: 100%;
-  gap: 16px;
-  align-items: center;
+  gap: 18px; /* Збільшений проміжок між групами вводу */
 }
 
 .inputGroup {
-  position: relative;
   display: flex;
   flex-direction: column;
-  width: 100%;
-  gap: 8px;
+  gap: 6px;
 }
 
-.inputLabel {
-  font-family: "Roboto", sans-serif;
+.inputGroup label {
+  font-size: 13px; /* Менший розмір мітки */
   font-weight: 500;
-  color: var(--blue-gray-900, #263238);
-  font-size: 14px;
+  color: #4a5568; /* Ще один відтінок сірого */
 }
 
-.inputField {
-  width: 100%;
-  font-family: "Roboto", sans-serif;
-  font-weight: 400;
-  padding: 12px 16px;
-  border-radius: 8px;
-  border: 1px solid var(--blue-gray-100, #cfd8dc);
+.inputGroup input[type="text"],
+.inputGroup input[type="tel"],
+.inputGroup input[type="number"],
+.inputGroup select {
+  padding: 10px 14px; /* Оптимальний розмір */
+  border: 1px solid #cbd5e0; /* Світліша рамка */
+  border-radius: 6px; /* Менш заокруглені кути */
   font-size: 14px;
-  transition: border-color 0.3s ease;
+  font-family: "Roboto", sans-serif;
+  color: #2d3748;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
   box-sizing: border-box;
-}
-
-.inputField:focus {
-  outline: none;
-  border-color: var(--blue-gray-300, #90a4ae);
-}
-
-.inputField::placeholder {
-  font-family: "Roboto", sans-serif;
-  font-weight: 400;
-  color: var(--gray-500, #9e9e9e);
-}
-
-.selectField {
   width: 100%;
-  font-family: "Roboto", sans-serif;
-  font-weight: 400;
-  padding: 12px 16px;
-  border-radius: 8px;
-  border: 1px solid var(--blue-gray-100, #cfd8dc);
-  font-size: 14px;
-  background-color: white;
-  cursor: pointer;
+}
+
+.inputGroup input:focus,
+.inputGroup select:focus {
+  outline: none;
+  border-color: #006aff; /* Колір бренду при фокусі */
+  box-shadow: 0 0 0 3px rgba(0, 106, 255, 0.15); /* Тінь при фокусі */
+}
+
+.inputGroup select {
   appearance: none;
-  background-image: url("data:image/svg+xml;utf8,<svg fill='gray' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%23607D8B'%3E%3Cpath fill-rule='evenodd' d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z' clip-rule='evenodd'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right 12px center;
+  background-position: right 10px center;
   background-size: 16px;
 }
 
-.selectField:focus {
-  outline: none;
-  border-color: var(--blue-gray-300, #90a4ae);
+.inputGroup select[disabled] {
+  background-color: #edf2f7;
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
-.error {
-  font-family: "Roboto", sans-serif;
-  font-weight: 400;
+.inputError { /* Узгоджений клас для помилок вводу */
+  border-color: #ef4444 !important; /* Важливо для перевизначення */
+}
+
+.inputError:focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important;
+}
+
+.errorMessage {
   font-size: 12px;
-  color: #c62828;
-  margin-top: 4px;
+  color: #c62828; /* Темніший червоний для помилок */
+  font-weight: 400;
 }
 
 .submitButton {
-  font-family: "Roboto", sans-serif;
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 1.4px;
-  width: 100%;
-  padding: 14px 0;
-  border-radius: 8px;
-  background: linear-gradient(45deg, #006aff 0%, #488be9 100%);
+  margin-top: 12px; /* Додатковий відступ зверху кнопки */
+  padding: 12px; /* Менші відступи */
+  border-radius: 6px;
+  background: #006aff; /* Прямий колір бренду */
   color: white;
-  text-transform: uppercase;
+  font-size: 14px;
+  font-weight: 500; /* Менш жирний текст кнопки */
+  text-transform: none; /* Звичайний текст, не uppercase */
+  letter-spacing: 0;
   border: none;
   cursor: pointer;
-  transition: opacity 0.3s ease;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
 }
 
 .submitButton:hover:not(:disabled) {
-  opacity: 0.9;
+  background-color: #0056d2; /* Темніший відтінок при наведенні */
 }
 
 .submitButton:disabled {
-  background: #999;
+  background-color: #a0aec0; /* Сірий для неактивної кнопки */
   cursor: not-allowed;
 }
 
-.backButton {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-family: "Roboto", sans-serif;
-  font-size: 14px;
-  font-weight: 500;
-  color: #006AFF;
-  background: none;
-  border: none;
-  cursor: pointer;
-  position: absolute;
-  top: 16px;
-  left: 16px;
-  transition: opacity 0.3s ease;
-}
-
-.backButton:hover {
-  opacity: 0.8;
-}
-
-.loginLink {
-  font-family: "Roboto", sans-serif;
-  font-size: 14px;
-  font-weight: 500;
-  color: #006AFF;
-  background: none;
-  border: none;
-  cursor: pointer;
-  margin-top: 16px;
-  transition: opacity 0.3s ease;
-}
-
-.loginLink:hover {
-  opacity: 0.8;
-}
-
-.loadingText {
-  font-family: "Roboto", sans-serif;
-  font-weight: 400;
-  font-size: 14px;
-  color: var(--gray-900, #212121);
-  margin: 0;
-}
-
-.loading {
-  font-family: "Roboto", sans-serif;
-  font-weight: 400;
-  font-size: 16px;
-  color: var(--gray-900, #212121);
+.termsText {
+  font-size: 12px;
+  color: #718096;
   text-align: center;
-  margin-top: 20px;
+  margin-top: 24px;
+  line-height: 1.6;
 }
 
-.progressBarContainer {
-  width: 100%;
-  height: 4px;
-  background: #e0e0e0;
-  border-radius: 2px;
-  margin-bottom: 16px;
+.termsLink {
+  color: #006aff;
+  text-decoration: none;
+  font-weight: 500;
 }
 
-.progressBar {
-  height: 100%;
-  background: #006AFF;
-  border-radius: 2px;
+.termsLink:hover {
+  text-decoration: underline;
 }
 
-.illustration {
+.loadingScreen {
   display: flex;
   justify-content: center;
-  margin-bottom: 24px;
+  align-items: center;
+  height: 100vh;
+  font-size: 18px;
+  color: #2d3748;
 }
-
-.logo {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    gap: 16px;
-    margin-bottom: 21px;
-    width: 100%;
-}
-
-.logoText {
-    font-family: "Roboto", sans-serif;
-    font-weight: 700;
-    font-size: 24px;
-    font-weight: 700;
-    color: #212121;
-}
-
 
 @media (max-width: 480px) {
-  .authContainer {
-    padding: 10px;
+  .formWrapper {
+    padding: 24px;
   }
-
-  .authCard {
-    padding: 20px;
-  }
-
-  .submitButton {
-    font-size: 13px;
-  }
-
-  .backButton {
-    font-size: 13px;
-  }
-
-  .loginLink {
-    font-size: 13px;
-  }
-
   .title {
     font-size: 20px;
   }
-
   .subtitle {
     font-size: 13px;
   }
-
-  .illustration svg {
-    width: 150px;
-    height: 150px;
-  }
-
-  .illustration svg[style*="80px"] {
-    width: 60px;
-    height: 60px;
+  .submitButton {
+    font-size: 13px;
+    padding: 12px;
   }
 }

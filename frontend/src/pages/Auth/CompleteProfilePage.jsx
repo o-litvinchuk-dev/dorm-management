@@ -1,608 +1,397 @@
-import React, { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
-import { useUser } from "../../contexts/UserContext";
+import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate, Navigate } from "react-router-dom";
+import { useFormik } from "formik";
+import * as Yup from "yup";
 import api from "../../utils/api";
 import { ToastService } from "../../utils/toastConfig";
+import { useUser } from "../../contexts/UserContext";
 import styles from "./styles/CompleteProfilePage.module.css";
-import * as Yup from "yup";
-import { useForm } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
-import IMask from "imask";
 import logoImg from "../../images/logo.svg";
 
-const getSchema = (role) =>
-  Yup.object().shape({
-    full_name: Yup.string()
-      .required("ПІБ є обов'язковим")
-      .matches(
-        /^[А-ЯІЇЄҐ][а-яіїєґ']+ [А-ЯІЇЄҐ][а-яіїєґ']+ [А-ЯІЇЄҐ][а-яіїєґ']+$/,
-        "Формат: Прізвище Ім'я По батькові (лише кирилиця)"
-      ),
+const CompleteProfilePage = () => {
+  const { user, refreshUser, isLoading: userIsLoading } = useUser();
+  const navigate = useNavigate();
+
+  const [faculties, setFaculties] = useState([]);
+  const [groups, setGroups] = useState([]);
+  const [dormitories, setDormitories] = useState([]);
+  const [dataLoading, setDataLoading] = useState(true);
+
+  const getInitialValues = useCallback(() => {
+    if (!user) {
+      return {
+        name: "", phone: "", faculty_id: "", group_id: "", course: "", dormitory_id: "", userRole: ""
+      };
+    }
+    // Початкове значення faculty_id беремо з user.faculty_id, якщо є, інакше порожній рядок.
+    // Це важливо, бо faculty_id для деканату може бути встановлено при створенні адміном
+    // або очікується вибір на цій сторінці.
+    let initialFacultyId = user.faculty_id || ""; 
+    // Аналогічно для гуртожитку
+    let initialDormitoryId = user.dormitory_id || "";
+
+
+    // Якщо роль "student", але user.faculty_id з user_profiles (змінене поле в getProfile)
+    if (user.role === "student" && user.profile_faculty_id) {
+      initialFacultyId = user.profile_faculty_id;
+    }
+
+
+    return {
+      name: user.name || "",
+      phone: user.phone || "",
+      faculty_id: initialFacultyId,
+      group_id: user.group_id || "", 
+      course: user.course || "",
+      dormitory_id: initialDormitoryId,
+      userRole: user.role,
+    };
+  }, [user]);
+  
+  const validationSchema = Yup.object().shape({
+    name: Yup.string()
+      .required("ПІБ обов'язкове")
+      .matches(/^[А-ЯІЄЇҐа-яієїґA-Za-zЁё'\s-]+$/, "ПІБ може містити літери, пробіли, дефіс, апостроф")
+      .min(5, "ПІБ занадто коротке (мін. 5 символів)"),
     phone: Yup.string()
-      .required("Телефон є обов'язковим")
-      .matches(/^\+380\d{9}$/, "Формат: +380XXXXXXXXX"),
-    faculty_id: Yup.number()
-      .nullable()
-      .when("role", {
-        is: (r) => ["student", "faculty_dean_office", "student_council_head", "student_council_member"].includes(r),
-        then: (schema) => schema.required("Факультет є обов'язковим").typeError("Факультет має бути обраний"),
-        otherwise: (schema) => schema.notRequired().nullable(),
-      }),
-    course: Yup.number()
-      .nullable()
-      .when("role", {
-        is: "student",
-        then: (schema) => schema.required("Курс є обов'язковим").min(1, "Курс має бути від 1 до 6").max(6, "Курс має бути від 1 до 6").typeError("Курс має бути числом"),
-        otherwise: (schema) => schema.notRequired().nullable(),
-      }),
-    group_name: Yup.string()
-      .nullable()
-      .when("role", {
-        is: "student",
-        then: (schema) => schema.required("Група є обов'язковою").test("is-valid-group", "Група має бути обрана", (value) => value !== ""),
-        otherwise: (schema) => schema.notRequired().nullable(),
-      }),
-    dormitory_id: Yup.number()
-      .nullable()
-      .when("role", {
-        is: "dorm_manager",
-        then: (schema) => schema.required("Гуртожиток є обов'язковим").typeError("Гуртожиток має бути обраний"),
-        otherwise: (schema) => schema.notRequired().nullable(),
-      }),
-    role: Yup.string().required("Роль є обов'язковою"),
+      .matches(/^\+380\d{9}$/, "Формат телефону: +380XXXXXXXXX (наприклад, +380991234567)")
+      .required("Телефон обов'язковий"),
+    faculty_id: Yup.number().when('userRole', { 
+      is: (userRole) => ["student", "faculty_dean_office", "student_council_head", "student_council_member"].includes(userRole),
+      then: (schema) => schema.required("Факультет обов'язковий для вашої ролі").typeError("Виберіть факультет"),
+      otherwise: (schema) => schema.nullable(),
+    }),
+    group_id: Yup.number().when('userRole', {
+      is: "student",
+      then: (schema) => schema.required("Група обов'язкова для студента").typeError("Виберіть групу"),
+      otherwise: (schema) => schema.nullable(),
+    }),
+    course: Yup.number().when('userRole', {
+      is: "student",
+      then: (schema) =>
+        schema
+          .min(1, "Курс має бути від 1 до 6")
+          .max(6, "Курс має бути від 1 до 6")
+          .required("Курс обов'язковий для студента").typeError("Вкажіть курс"),
+      otherwise: (schema) => schema.nullable(),
+    }),
+    dormitory_id: Yup.number().when('userRole', {
+      is: "dorm_manager",
+      then: (schema) => schema.required("Гуртожиток обов'язковий для коменданта").typeError("Виберіть гуртожиток"),
+      otherwise: (schema) => schema.nullable(),
+    }),
   });
 
-const CompleteProfilePage = () => {
-  const { user, setUser, refreshUser } = useUser();
-  const navigate = useNavigate();
-  const [currentStep, setCurrentStep] = useState(1);
-  const [history, setHistory] = useState([1]);
-  const phoneInputRef = useRef(null);
-  const [faculties, setFaculties] = useState([]);
-  const [dormitories, setDormitories] = useState([]);
-  const [isDormitoriesError, setIsDormitoriesError] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const formik = useFormik({
+    initialValues: getInitialValues(),
+    validationSchema: validationSchema,
+    enableReinitialize: true,
+    onSubmit: async (values, { setSubmitting }) => {
+      setSubmitting(true);
+      try {
+        const payload = {
+          name: values.name,
+          phone: values.phone,
+        };
 
-  useEffect(() => {
-    if (user?.is_profile_complete) {
-      navigate("/dashboard", { replace: true });
-    }
-  }, [user, navigate]);
-
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    formState: { errors, isValid, isSubmitting },
-    watch,
-    resetField,
-  } = useForm({
-    resolver: yupResolver(getSchema(user?.role || "student")),
-    mode: "onChange",
-    defaultValues: {
-      full_name: user?.name || "",
-      phone: user?.phone || "+380",
-      faculty_id: user?.faculty_id ? Number(user.faculty_id) : null,
-      course: user?.course ? Number(user.course) : null,
-      group_name: user?.group_name || null,
-      dormitory_id: user?.dormitory_id ? Number(user.dormitory_id) : null,
-      role: user?.role || "student",
+        // Включаємо role-specific поля в payload
+        if (user?.role === "student") {
+          payload.faculty_id = values.faculty_id || null;
+          payload.group_id = values.group_id || null;
+          payload.course = values.course || null;
+        } else if (["faculty_dean_office", "student_council_head", "student_council_member"].includes(user?.role)) {
+          payload.faculty_id = values.faculty_id || null; // Це має оновлювати users.faculty_id
+        } else if (user?.role === "dorm_manager") {
+          payload.dormitory_id = values.dormitory_id || null; // Це має оновлювати users.dormitory_id
+        }
+        
+        // Очищення порожніх рядків до null, щоб уникнути помилок з зовнішніми ключами
+        Object.keys(payload).forEach(key => {
+          if (payload[key] === "") { 
+             payload[key] = null;
+          }
+        });
+        
+        await api.patch("/secure/profile", payload);
+        ToastService.success("Профіль успішно оновлено!");
+        await refreshUser(); // Дуже важливо для оновлення is_profile_complete та інших даних в UserContext
+        // Перенаправлення на /dashboard має відбутися автоматично через AuthRequiredRoute
+      } catch (error) {
+        ToastService.handleApiError(error);
+      } finally {
+        setSubmitting(false);
+      }
     },
   });
-
-  const selectedFacultyId = watch("faculty_id");
+  
+  useEffect(() => {
+    if (user && formik.values.userRole !== user.role) {
+      formik.setFieldValue('userRole', user.role);
+    }
+  }, [user, formik]);
 
   useEffect(() => {
-    console.log("Form state:", {
-      errors,
-      isValid,
-      formValues: watch(),
-      userRole: user?.role,
-    });
-  }, [errors, isValid, watch, user?.role]);
-
-  const itGroups = [
-    "ІУСТ-24001м", "ІУСТ-24002м", "ЕкК-24003м", "ПЗІС-24004м", "ПЗІС-24005м",
-    "КСІМ-24006м", "КСЗІ-24007м", "КН-24001б", "КН-24002б", "КН-24003б",
-    "КН-24004бск", "ЕкК-24005б", "ЦЕ-24006б", "ІПЗ-24007б", "ІПЗ-24008б",
-    "ІПЗ-24009бск", "КІ-24010б", "КІ-24011бск", "КІБ-24012б", "КІБ-24013б",
-    "ІСТ-24014б", "ЕкК-23005б", "ЦЕ-22006б", "ЕкК-22005б", "ЦЕ-21006б",
-    "ЕкК-21005б", "ІСТ-23012б", "ІСТ-22016б", "ІСТ-21017б", "КІ-23009б",
-    "КІБ-23011б", "КІ-22012б", "КІБ-22014б", "КІБ-22015б", "КІ-21012б",
-    "КІБ-21015б", "КІБ-21016б", "КІ-23010бск", "ІПЗ-23006б", "ІПЗ-23007б",
-    "ІПЗ-23008бск", "ІПЗ-22007б", "ІПЗ-22008б", "ІПЗ-22009б", "ІПЗ-22010бск",
-    "ІПЗ-22011бск", "ІПЗ-21007б", "ІПЗ-21008б", "ІПЗ-21009б", "КН-23001б",
-    "КН-23002б", "КН-23003б", "КН-22001б", "КН-22002б", "КН-22003б",
-    "КН-21001б", "КН-21002б", "КН-21003б", "КН-23004бск",
-  ];
+    if (!userIsLoading && user && user.is_profile_complete) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [user, userIsLoading, navigate]);
 
   useEffect(() => {
     const fetchData = async () => {
-      setIsLoading(true);
+      if (!user) {
+        setDataLoading(false);
+        return;
+      }
+      setDataLoading(true);
       try {
-        const [facultiesResponse, dormitoriesResponse] = await Promise.all([
-          api.get("/faculties").catch(() => ({ data: [{ id: 1, name: "IT" }, { id: 2, name: "Економічний" }] })),
-          api.get("/secure/dormitories").catch((err) => {
-            console.error("Помилка завантаження гуртожитків:", err);
-            setIsDormitoriesError(true);
-            return { data: [] };
-          }),
-        ]);
-        setFaculties(facultiesResponse.data || []);
-        setDormitories(dormitoriesResponse.data || []);
-      } catch (err) {
-        console.error("Помилка завантаження даних:", err);
-        ToastService.error("Не вдалося завантажити дані");
+        const requests = [];
+        // Завантажуємо факультети, якщо роль потребує вибору факультету
+        if (["student", "faculty_dean_office", "student_council_head", "student_council_member"].includes(user.role)) {
+          requests.push(api.get("/faculties"));
+        } else {
+          requests.push(Promise.resolve({ data: [] })); 
+        }
+        // Завантажуємо гуртожитки, якщо роль потребує вибору гуртожитку
+        if (user.role === "dorm_manager") {
+          requests.push(api.get("/dormitories"));
+        } else {
+          requests.push(Promise.resolve({ data: [] }));
+        }
+        
+        const [facultiesRes, dormitoriesRes] = await Promise.all(requests);
+        
+        setFaculties(facultiesRes.data || []);
+        setDormitories(dormitoriesRes.data || []);
+
+      } catch (error) {
+        ToastService.handleApiError(error);
       } finally {
-        setIsLoading(false);
+        setDataLoading(false);
       }
     };
     fetchData();
-  }, []);
+  }, [user]); // Перезавантажувати, якщо змінився об'єкт user
 
   useEffect(() => {
-    if (phoneInputRef.current) {
-      const mask = IMask(phoneInputRef.current, {
-        mask: "+380000000000",
-        overwrite: true,
-      });
-      mask.on("accept", () => {
-        setValue("phone", mask.value, { shouldValidate: true });
-      });
-      return () => mask.destroy();
+    const facultyIdValue = formik.values.faculty_id;
+    if (user?.role === "student" && facultyIdValue) {
+      setDataLoading(true);
+      api.get(`/faculties/${facultyIdValue}/groups`)
+        .then(response => {
+          const fetchedGroups = response.data || [];
+          setGroups(fetchedGroups);
+          
+          const currentGroupId = parseInt(formik.values.group_id, 10);
+          const groupInNewList = fetchedGroups.find(g => g.id === currentGroupId);
+
+          if (currentGroupId && groupInNewList) {
+            if (formik.values.course !== groupInNewList.course) {
+              formik.setFieldValue('course', groupInNewList.course, false); // false - не запускати валідацію зараз
+            }
+          } else { 
+             // Якщо користувач змінив факультет, скидаємо групу та курс
+            if(formik.dirty || formik.values.group_id){ // Якщо форма була змінена або group_id ще має старе значення
+              formik.setFieldValue('group_id', '', false);
+              formik.setFieldValue('course', '', false);
+            }
+          }
+        })
+        .catch(error => {
+          ToastService.handleApiError(error);
+          setGroups([]);
+          formik.setFieldValue('group_id', '', false);
+          formik.setFieldValue('course', '', false);
+        })
+        .finally(() => setDataLoading(false));
+    } else if (user?.role === "student") {
+      setGroups([]);
+      if (formik.values.group_id || formik.values.course) { // Очистити, тільки якщо були значення
+        formik.setFieldValue('group_id', '', false);
+        formik.setFieldValue('course', '', false);
+      }
     }
-  }, [setValue]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formik.values.faculty_id, user?.role]); 
 
-  useEffect(() => {
-    if (user) {
-      setValue("full_name", user.name || "", { shouldValidate: true });
-      setValue("phone", user.phone || "+380", { shouldValidate: true });
-      setValue("faculty_id", user.faculty_id ? Number(user.faculty_id) : null, { shouldValidate: true });
-      setValue("course", user.course ? Number(user.course) : null, { shouldValidate: true });
-      setValue("group_name", user.group_name || null, { shouldValidate: true });
-      setValue("dormitory_id", user.dormitory_id ? Number(user.dormitory_id) : null, { shouldValidate: true });
-      setValue("role", user.role || "student", { shouldValidate: true });
-    }
-  }, [user, setValue]);
-
-  useEffect(() => {
-    const facultyIsIT = faculties.find((f) => f.id === Number(selectedFacultyId))?.name === "IT";
-    if (!facultyIsIT) {
-      resetField("group_name", { defaultValue: null });
-    }
-  }, [selectedFacultyId, faculties, resetField]);
-
-  const onSubmitProfile = async (data) => {
-    try {
-      if (!user?.role) {
-        console.error("User role is undefined");
-        ToastService.error("Помилка: роль користувача не визначена");
-        return;
-      }
-
-      const payload = {
-        name: data.full_name,
-        phone: data.phone,
-      };
-
-      if (["student", "faculty_dean_office", "student_council_head", "student_council_member"].includes(user.role)) {
-        if (data.faculty_id) payload.faculty_id = Number(data.faculty_id);
-      }
-      if (user.role === "student") {
-        if (data.course) payload.course = Number(data.course);
-        if (data.group_name) payload.group_name = data.group_name;
-      }
-      if (user.role === "dorm_manager") {
-        if (data.dormitory_id) payload.dormitory_id = Number(data.dormitory_id);
-      }
-
-      console.log("Final payload:", payload);
-      const response = await api.patch("/secure/profile", payload);
-      await refreshUser();
-
-      if (response.data.user.is_profile_complete) {
-        ToastService.success("Профіль успішно заповнено!");
-        setUser({ ...user, is_profile_complete: true });
-        setHistory((prev) => [...prev, 3]);
-        setCurrentStep(3);
+  const handleGroupChange = (event) => {
+    const newGroupId = event.target.value;
+    formik.setFieldValue('group_id', newGroupId);
+    if (newGroupId) {
+      const selectedGroupObject = groups.find(g => g.id === parseInt(newGroupId, 10));
+      if (selectedGroupObject && typeof selectedGroupObject.course !== 'undefined') {
+        formik.setFieldValue('course', selectedGroupObject.course);
       } else {
-        ToastService.warning("Профіль оновлено, але ще не завершено. Перевірте дані.");
+        formik.setFieldValue('course', ''); 
       }
-    } catch (error) {
-      console.error("Помилка при збереженні профілю:", error);
-      if (error.response?.data?.details) {
-        ToastService.error(`Помилка: ${error.response.data.details.map((d) => d.message).join(", ")}`);
-      } else {
-        ToastService.error("Помилка при збереженні профілю");
-      }
-    }
-  };
-
-  const handleCompleteProfile = () => {
-    if (user?.is_profile_complete) {
-      navigate("/dashboard", { replace: true });
     } else {
-      ToastService.warning("Профіль ще не завершено.");
-      navigate("/complete-profile", { replace: true });
+      formik.setFieldValue('course', ''); 
     }
   };
 
-  const goBack = () => {
-    if (history.length > 1) {
-      const newHistory = history.slice(0, -1);
-      setHistory(newHistory);
-      setCurrentStep(newHistory[newHistory.length - 1]);
-    }
-  };
-
-  const goToLogin = () => {
-    navigate("/login", { replace: true });
-  };
-
-  const totalSteps = 4;
-  const progressWidth = `${(currentStep / totalSteps) * 100}%`;
-
-  const renderStep = () => {
-    switch (currentStep) {
-      case 1:
-        return (
-          <div className={styles.authCard}>
-            <div className={styles.logo}>
-              <img src={logoImg} alt="DORMLIFE Logo" className={styles.logoImage} />
-              <h1 className={styles.logoText}>DORM LIFE</h1>
-            </div>
-            <h2 className={styles.title}>Ласкаво просимо до Dorm Life!</h2>
-            <p className={styles.subtitle}>
-              Декілька простих кроків, і ви готові до нового етапу!
-            </p>
-            <button
-              className={styles.submitButton}
-              onClick={() => {
-                setHistory((prev) => [...prev, 2]);
-                setCurrentStep(2);
-              }}
-            >
-              Розпочати
-            </button>
-          </div>
-        );
-      case 2:
-        return (
-          <div className={styles.authCard}>
-            <button className={styles.backButton} onClick={goBack}>
-              <svg
-                style={{ width: "20px", height: "20px", color: "#006AFF" }}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-              Назад
-            </button>
-            <h2 className={styles.title}>Розкажіть нам про себе</h2>
-            <p className={styles.subtitle}>
-              Ця інформація допоможе нам персоналізувати ваш досвід.
-            </p>
-            {isLoading ? (
-              <div className={styles.loading}>Завантаження...</div>
-            ) : user?.role === "dorm_manager" && isDormitoriesError ? (
-              <div className={styles.error}>
-                Помилка завантаження списку гуртожитків. Спробуйте пізніше.
-              </div>
-            ) : (
-              <form onSubmit={handleSubmit(onSubmitProfile)} className={styles.formContainer}>
-                <div className={styles.inputGroup}>
-                  <label htmlFor="full_name" className={styles.inputLabel}>
-                    ПІБ*
-                  </label>
-                  <div style={{ position: "relative" }}>
-                    <input
-                      type="text"
-                      id="full_name"
-                      className={styles.inputField}
-                      {...register("full_name")}
-                      placeholder="Прізвище Ім'я По батькові"
-                      style={{ paddingLeft: "40px" }}
-                    />
-                    <svg
-                      style={{
-                        position: "absolute",
-                        left: "12px",
-                        top: "50%",
-                        transform: "translateY(-50%)",
-                        width: "20px",
-                        height: "20px",
-                        color: "#607D8B",
-                      }}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                      />
-                    </svg>
-                  </div>
-                  {errors.full_name && <p className={styles.error}>{errors.full_name.message}</p>}
-                </div>
-                <div className={styles.inputGroup}>
-                  <label htmlFor="phone" className={styles.inputLabel}>
-                    Телефон*
-                  </label>
-                  <div style={{ position: "relative" }}>
-                    <input
-                      type="tel"
-                      id="phone"
-                      className={styles.inputField}
-                      ref={phoneInputRef}
-                      value={watch("phone")}
-                      onChange={(e) =>
-                        setValue("phone", e.target.value, { shouldValidate: true })
-                      }
-                      placeholder="+380XXXXXXXXX"
-                      style={{ paddingLeft: "40px" }}
-                    />
-                    <svg
-                      style={{
-                        position: "absolute",
-                        left: "12px",
-                        top: "50%",
-                        transform: "translateY(-50%)",
-                        width: "20px",
-                        height: "20px",
-                        color: "#607D8B",
-                      }}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-                      />
-                    </svg>
-                  </div>
-                  {errors.phone && <p className={styles.error}>{errors.phone.message}</p>}
-                </div>
-                {["student", "faculty_dean_office", "student_council_head", "student_council_member"].includes(user?.role) && (
-                  <div className={styles.inputGroup}>
-                    <label htmlFor="faculty_id" className={styles.inputLabel}>
-                      Факультет*
-                    </label>
-                    <select
-                      id="faculty_id"
-                      className={styles.selectField}
-                      {...register("faculty_id")}
-                      defaultValue={user?.faculty_id ? Number(user.faculty_id) : ""}
-                    >
-                      <option value="" disabled>
-                        Виберіть факультет
-                      </option>
-                      {faculties.map((fac) => (
-                        <option key={fac.id} value={fac.id}>
-                          {fac.name}
-                        </option>
-                      ))}
-                    </select>
-                    {errors.faculty_id && <p className={styles.error}>{errors.faculty_id.message}</p>}
-                  </div>
-                )}
-                {user?.role === "student" && (
-                  <>
-                    <div className={styles.inputGroup}>
-                      <label htmlFor="course" className={styles.inputLabel}>
-                        Курс*
-                      </label>
-                      <input
-                        type="number"
-                        id="course"
-                        className={styles.inputField}
-                        {...register("course")}
-                        min="1"
-                        max="6"
-                        placeholder="1-6"
-                      />
-                      {errors.course && <p className={styles.error}>{errors.course.message}</p>}
-                    </div>
-                    {faculties.find((f) => f.id === Number(selectedFacultyId))?.name === "IT" && (
-                      <div className={styles.inputGroup}>
-                        <label htmlFor="group_name" className={styles.inputLabel}>
-                          Група*
-                        </label>
-                        <select
-                          id="group_name"
-                          className={styles.selectField}
-                          {...register("group_name")}
-                        >
-                          <option value="" disabled>
-                            Виберіть групу
-                          </option>
-                          {itGroups.map((group) => (
-                            <option key={group} value={group}>
-                              {group}
-                            </option>
-                          ))}
-                        </select>
-                        {errors.group_name && <p className={styles.error}>{errors.group_name.message}</p>}
-                      </div>
-                    )}
-                  </>
-                )}
-                {user?.role === "dorm_manager" && !isDormitoriesError && (
-                  <div className={styles.inputGroup}>
-                    <label htmlFor="dormitory_id" className={styles.inputLabel}>
-                      Гуртожиток*
-                    </label>
-                    <select
-                      id="dormitory_id"
-                      className={styles.selectField}
-                      {...register("dormitory_id")}
-                      defaultValue={user?.dormitory_id ? Number(user.dormitory_id) : ""}
-                    >
-                      <option value="" disabled>
-                        Виберіть гуртожиток
-                      </option>
-                      {dormitories.map((dorm) => (
-                        <option key={dorm.id} value={dorm.id}>
-                          {dorm.name}
-                        </option>
-                      ))}
-                    </select>
-                    {errors.dormitory_id && <p className={styles.error}>{errors.dormitory_id.message}</p>}
-                  </div>
-                )}
-                <button
-                  type="submit"
-                  disabled={!isValid || isSubmitting || (user?.role === "dorm_manager" && isDormitoriesError)}
-                  className={styles.submitButton}
-                >
-                  {isSubmitting ? "Збереження..." : "Далі"}
-                </button>
-              </form>
-            )}
-          </div>
-        );
-      case 3:
-        return (
-          <div className={styles.authCard}>
-            <button className={styles.backButton} onClick={goBack}>
-              <svg
-                style={{ width: "20px", height: "20px", color: "#006AFF" }}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-              Назад
-            </button>
-            <div className={styles.illustration}>
-              <svg
-                style={{ width: "80px", height: "80px", color: "#006AFF" }}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
-            </div>
-            <h2 className={styles.title}>Плануйте своє поселення</h2>
-            <p className={styles.subtitle}>
-              Легко подавайте заяви, відстежуйте їх статус та дізнавайтеся про дати поселення.
-            </p>
-            <button
-              className={styles.submitButton}
-              onClick={() => {
-                setHistory((prev) => [...prev, 4]);
-                setCurrentStep(4);
-              }}
-            >
-              Зрозуміло
-            </button>
-          </div>
-        );
-      case 4:
-        return (
-          <div className={styles.authCard}>
-            <button className={styles.backButton} onClick={goBack}>
-              <svg
-                style={{ width: "20px", height: "20px", color: "#006AFF" }}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-              Назад
-            </button>
-            <div className={styles.illustration}>
-              <svg
-                style={{ width: "80px", height: "80px", color: "#006AFF" }}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-            <h2 className={styles.title}>Все готово!</h2>
-            <p className={styles.subtitle}>
-              Ваш профіль успішно налаштовано. Тепер ви можете повноцінно користуватися Dorm Life.
-            </p>
-            <button
-              className={styles.submitButton}
-              onClick={handleCompleteProfile}
-            >
-              Перейти на головну
-            </button>
-          </div>
-        );
-      default:
-        return null;
-    }
-  };
-
-  if (!user) {
-    return <div className={styles.loading}>Завантаження...</div>;
+  if (userIsLoading || (dataLoading && user)) { 
+    return <div className={styles.loadingScreen}>Завантаження даних...</div>;
+  }
+  
+  if (!user) { 
+    return <Navigate to="/login" replace />;
   }
 
   return (
-    <div className={styles.authContainer} style={{ backgroundColor: "#F8FAFC" }}>
-      <div className={styles.authWrapper}>
-        <div className={styles.progressBarContainer}>
-          <div
-            className={styles.progressBar}
-            style={{
-              width: progressWidth,
-              height: "4px",
-              background: "#006AFF",
-              borderRadius: "2px",
-              transition: "width 0.3s ease",
-            }}
-          ></div>
+    <div className={styles.pageContainer}>
+      <div className={styles.formWrapper}>
+      <div className={styles.logoContainer}>
+          <img src={logoImg} alt="Dorm Life Logo" className={styles.logoImage} />
+          <h1 className={styles.logoText}>DORM LIFE</h1>
         </div>
-        {renderStep()}
-        <button className={styles.loginLink} onClick={goToLogin}>
-          Повернутися до входу
-        </button>
+        <h2 className={styles.title}>Завершення реєстрації профілю</h2>
+        <p className={styles.subtitle}>
+          Будь ласка, заповніть або перевірте ваші дані для подальшої роботи з системою.
+        </p>
+        <form onSubmit={formik.handleSubmit} className={styles.form}>
+          <div className={styles.inputGroup}>
+            <label htmlFor="name">Повне ім'я (ПІБ)</label>
+            <input
+              id="name"
+              name="name"
+              type="text"
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              value={formik.values.name}
+              className={formik.touched.name && formik.errors.name ? styles.inputError : ""}
+              placeholder="Прізвище Ім'я По-батькові"
+            />
+            {formik.touched.name && formik.errors.name && (
+              <div className={styles.errorMessage}>{formik.errors.name}</div>
+            )}
+          </div>
+
+          <div className={styles.inputGroup}>
+            <label htmlFor="phone">Номер телефону</label>
+            <input
+              id="phone"
+              name="phone"
+              type="tel"
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              value={formik.values.phone}
+              className={formik.touched.phone && formik.errors.phone ? styles.inputError : ""}
+              placeholder="+380XXXXXXXXX"
+            />
+            {formik.touched.phone && formik.errors.phone && (
+              <div className={styles.errorMessage}>{formik.errors.phone}</div>
+            )}
+          </div>
+
+          {["student", "faculty_dean_office", "student_council_head", "student_council_member"].includes(user.role) && (
+            <div className={styles.inputGroup}>
+              <label htmlFor="faculty_id">Факультет 
+                {user.role === "faculty_dean_office" && " (Обов'язково для Деканату)"}
+                {(user.role === "student_council_head" || user.role === "student_council_member") && " (Обов'язково для Студ. ради)"}
+                {user.role === "student" && " (Обов'язково для Студента)"}
+              </label>
+              <select
+                id="faculty_id"
+                name="faculty_id"
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                value={formik.values.faculty_id}
+                className={formik.touched.faculty_id && formik.errors.faculty_id ? styles.inputError : ""}
+              >
+                <option value="">Виберіть факультет</option>
+                {faculties.map((f) => (
+                  <option key={f.id} value={f.id}>
+                    {f.name}
+                  </option>
+                ))}
+              </select>
+              {formik.touched.faculty_id && formik.errors.faculty_id && (
+                <div className={styles.errorMessage}>{formik.errors.faculty_id}</div>
+              )}
+            </div>
+          )}
+
+          {user.role === "student" && (
+            <>
+              <div className={styles.inputGroup}>
+                <label htmlFor="group_id">Група (Обов'язково для Студента)</label>
+                <select
+                  id="group_id"
+                  name="group_id"
+                  onChange={handleGroupChange}
+                  onBlur={formik.handleBlur}
+                  value={formik.values.group_id}
+                  disabled={!formik.values.faculty_id || groups.length === 0 || dataLoading}
+                  className={formik.touched.group_id && formik.errors.group_id ? styles.inputError : ""}
+                >
+                  <option value="">{dataLoading && formik.values.faculty_id ? "Завантаження груп..." : (groups.length === 0 && formik.values.faculty_id ? "Немає груп для факультету" : "Виберіть групу")}</option>
+                  {groups.map((g) => (
+                    <option key={g.id} value={g.id}>
+                      {g.name} (Курс: {g.course})
+                    </option>
+                  ))}
+                </select>
+                {formik.touched.group_id && formik.errors.group_id && (
+                  <div className={styles.errorMessage}>{formik.errors.group_id}</div>
+                )}
+              </div>
+
+              <div className={styles.inputGroup}>
+                <label htmlFor="course">Курс (Автоматично)</label>
+                <input
+                  id="course"
+                  name="course"
+                  type="number"
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  value={formik.values.course}
+                  className={formik.touched.course && formik.errors.course ? styles.inputError : ""}
+                  min="1"
+                  max="6"
+                  readOnly 
+                />
+                {formik.touched.course && formik.errors.course && (
+                  <div className={styles.errorMessage}>{formik.errors.course}</div>
+                )}
+              </div>
+            </>
+          )}
+           {user.role === "dorm_manager" && (
+             <div className={styles.inputGroup}>
+              <label htmlFor="dormitory_id">Гуртожиток (Обов'язково для Коменданта)</label>
+              <select
+                id="dormitory_id"
+                name="dormitory_id"
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                value={formik.values.dormitory_id}
+                className={formik.touched.dormitory_id && formik.errors.dormitory_id ? styles.inputError : ""}
+              >
+                <option value="">Виберіть гуртожиток</option>
+                {dormitories.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.name}
+                  </option>
+                ))}
+              </select>
+              {formik.touched.dormitory_id && formik.errors.dormitory_id && (
+                <div className={styles.errorMessage}>{formik.errors.dormitory_id}</div>
+              )}
+            </div>
+          )}
+
+          <button type="submit" disabled={formik.isSubmitting || dataLoading} className={styles.submitButton}>
+            {formik.isSubmitting ? "Збереження..." : "Зберегти та продовжити"}
+          </button>
+        </form>
+        <p className={styles.termsText}>
+          Заповнюючи профіль, ви погоджуєтеся з нашою{" "}
+          <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className={styles.termsLink}>
+            Політикою конфіденційності
+          </a>{" "}
+          та <a href="/terms-of-service" target="_blank" rel="noopener noreferrer" className={styles.termsLink}>
+            Умовами надання послуг
+            </a>.
+        </p>
       </div>
     </div>
   );

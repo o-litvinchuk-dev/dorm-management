@@ -6,28 +6,28 @@ const ApplicationsTable = ({ category, applications, onViewDetails, sort, onSort
   const getColumns = () => {
     if (category === "accommodation") {
       return [
-        { key: "id", label: "ID" },
-        { key: "full_name", label: "ПІБ Заявника" },
-        { key: "user_email", label: "Email" },
-        { key: "faculty_name", label: "Факультет" },
-        { key: "course", label: "Курс" },
-        { key: "group_name", label: "Група" },
-        { key: "dormitory_name", label: "Гуртожиток" },
-        { key: "phone_number", label: "Телефон" },
-        { key: "status", label: "Статус" },
-        { key: "application_date", label: "Дата подачі" },
-        { key: "created_at", label: "Створено" },
-        { key: "actions", label: "Дії" },
+        { key: "id", label: "ID", sortable: true },
+        { key: "full_name", label: "ПІБ Заявника", sortable: true },
+        { key: "user_email", label: "Email", sortable: false },
+        { key: "faculty_name", label: "Факультет", sortable: false },
+        { key: "course", label: "Курс", sortable: false },
+        { key: "group_name", label: "Група", sortable: false },
+        { key: "dormitory_name", label: "Гуртожиток", sortable: false },
+        { key: "phone_number", label: "Телефон", sortable: false },
+        { key: "status", label: "Статус", sortable: true },
+        { key: "created_at", label: "Створено", sortable: true },
+        { key: "actions", label: "Дії", sortable: false },
       ];
     }
+    // Fallback for other categories, if any
     return [
-      { key: "id", label: "ID" },
-      { key: "name", label: "Ім'я" },
-      { key: "surname", label: "Прізвище" },
-      { key: "faculty", label: "Факультет" },
-      { key: "course", label: "Курс" },
-      { key: "created_at", label: "Дата створення" },
-      { key: "actions", label: "Дії" },
+      { key: "id", label: "ID", sortable: true },
+      { key: "name", label: "Ім'я", sortable: true },
+      { key: "surname", label: "Прізвище", sortable: true },
+      { key: "faculty", label: "Факультет", sortable: false },
+      { key: "course", label: "Курс", sortable: false },
+      { key: "created_at", label: "Дата створення", sortable: true },
+      { key: "actions", label: "Дії", sortable: false },
     ];
   };
 
@@ -35,18 +35,30 @@ const ApplicationsTable = ({ category, applications, onViewDetails, sort, onSort
 
   const formatDate = (dateString) => {
     if (!dateString) return "Н/Д";
-    return new Date(dateString).toLocaleDateString("uk-UA");
+    try {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return "Некор. дата";
+        return date.toLocaleDateString("uk-UA", {
+            year: 'numeric', month: 'short', day: 'numeric'
+        });
+    } catch (e) {
+        console.error("Error formatting date:", dateString, e);
+        return "Помилка дати";
+    }
   };
 
   const handleSort = (key) => {
-    if (!["id", "full_name", "status", "application_date", "created_at"].includes(key)) return;
+    const column = columns.find(col => col.key === key);
+    if (!column || !column.sortable) return;
+
     const newSortOrder =
       sort.sortBy === key && sort.sortOrder === "asc" ? "desc" : "asc";
     onSortChange(key, newSortOrder);
   };
 
   const getStatusClass = (status) => {
-    switch (status) {
+    if (!status) return ""; // Default or no specific class
+    switch (status.toLowerCase()) {
       case "pending":
         return styles.statusPending;
       case "approved":
@@ -59,22 +71,22 @@ const ApplicationsTable = ({ category, applications, onViewDetails, sort, onSort
       case "rejected_by_dorm":
         return styles.statusRejected;
       default:
-        return "";
+        return styles.statusDefault; // Added a default style
     }
   };
 
   const getStatusLabel = (status) => {
-    switch (status) {
-      case "pending": return "Очікує";
-      case "approved": return "Підтверджено";
-      case "rejected": return "Відхилено";
-      case "approved_by_faculty": return "Підтверджено факультетом";
-      case "rejected_by_faculty": return "Відхилено факультетом";
-      case "approved_by_dorm": return "Підтверджено гуртожитком";
-      case "rejected_by_dorm": return "Відхилено гуртожитком";
-      case "settled": return "Поселено";
-      default: return status;
-    }
+    const statusLabels = {
+        pending: "Очікує",
+        approved: "Затверджено",
+        rejected: "Відхилено",
+        approved_by_faculty: "Затв. деканатом",
+        rejected_by_faculty: "Відх. деканатом",
+        approved_by_dorm: "Затв. гуртожитком",
+        rejected_by_dorm: "Відх. гуртожитком",
+        settled: "Поселено",
+    };
+    return statusLabels[status] || status;
   };
 
   return (
@@ -87,14 +99,18 @@ const ApplicationsTable = ({ category, applications, onViewDetails, sort, onSort
                 <div
                   className={styles.header}
                   onClick={() => handleSort(column.key)}
-                  style={column.key !== "actions" ? { cursor: "pointer" } : {}}
+                  style={column.sortable ? { cursor: "pointer" } : { cursor: "default" }}
+                  role={column.sortable ? "button" : undefined}
+                  tabIndex={column.sortable ? 0 : undefined}
+                  onKeyDown={column.sortable ? (e) => (e.key === 'Enter' || e.key === ' ') && handleSort(column.key) : undefined}
+                  aria-sort={column.sortable && sort.sortBy === column.key ? (sort.sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'}
                 >
                   {column.label}
-                  {sort.sortBy === column.key && (
+                  {column.sortable && sort.sortBy === column.key && (
                     sort.sortOrder === "asc" ? (
-                      <ArrowUpIcon className={styles.sortIcon} />
+                      <ArrowUpIcon className={styles.sortIcon} aria-hidden="true"/>
                     ) : (
-                      <ArrowDownIcon className={styles.sortIcon} />
+                      <ArrowDownIcon className={styles.sortIcon} aria-hidden="true"/>
                     )
                   )}
                 </div>
@@ -106,23 +122,24 @@ const ApplicationsTable = ({ category, applications, onViewDetails, sort, onSort
           {applications.map((app) => (
             <tr key={app.id} className={styles.tr}>
               {columns.map((column) => (
-                <td key={column.key} className={styles.td}>
+                <td key={column.key} className={styles.td} data-label={column.label}>
                   {column.key === "actions" ? (
                     <button
                       className={styles.actionButton}
                       onClick={() => onViewDetails(app)}
                       disabled={!canUpdateStatus && !canAddComment}
+                      aria-label={`Деталі для заявки ID ${app.id}`}
                     >
                       Деталі
                     </button>
-                  ) : column.key === "application_date" || column.key === "created_at" ? (
+                  ) : column.key === "created_at" ? (
                     formatDate(app[column.key])
                   ) : column.key === "status" ? (
                     <span className={`${styles.status} ${getStatusClass(app[column.key])}`}>
                       {getStatusLabel(app[column.key])}
                     </span>
                   ) : (
-                    app[column.key] || "Н/Д"
+                    app[column.key] === null || app[column.key] === undefined || app[column.key] === '' ? "Н/Д" : String(app[column.key])
                   )}
                 </td>
               ))}

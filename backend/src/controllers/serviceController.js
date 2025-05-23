@@ -1,8 +1,7 @@
 import Joi from "joi";
-import DormApplication from "../models/DormApplication.js";
-import AccommodationApplication from "../models/AccommodationApplication.js"; // Переконайся, що імпорт правильний
+import pool from "../config/db.js";
+import AccommodationApplication from "../models/AccommodationApplication.js";
 
-// Існуюча функція
 export const getServices = (req, res) => {
     const services = [
         {
@@ -17,140 +16,235 @@ export const getServices = (req, res) => {
             description: "Створіть контракт для поселення в гуртожиток.",
             route: "/services/contract",
         },
+        {
+            id: 3,
+            name: "Заява на поселення (нова)",
+            description: "Подати нову заяву на поселення в гуртожиток.",
+            route: "/services/accommodation-application",
+        }
     ];
     res.json(services);
 };
 
-// Існуюча функція
 export const createDormApplication = async (req, res) => {
     try {
-      const { name, surname, faculty, course } = req.body;
-      const user_id = req.user.userId;
-
-      if (!name || !surname || !faculty || !course) {
-        return res.status(400).json({ error: "Усі поля обов’язкові" });
-      }
-
-      const applicationId = await DormApplication.create({
-        user_id,
-        name,
-        surname,
-        faculty,
-        course,
-      });
-      res.status(201).json({ message: "Заявка успішно подана", applicationId });
+        const { name, surname, faculty, course } = req.body;
+        const user_id = req.user.userId;
+        if (!name || !surname || !faculty || !course) {
+            return res.status(400).json({ error: "Усі поля обов’язкові" });
+        }
+        return res.status(501).json({ error: "Цей тип заявки (createDormApplication) не реалізовано або застарів." });
     } catch (error) {
-      console.error("[createDormApplication] Error:", error); // Додано логування помилки
-      res.status(500).json({ error: "Помилка при поданні заявки" });
+        console.error("[createDormApplication] Error:", error);
+        res.status(500).json({ error: "Помилка при поданні заявки" });
     }
 };
 
-// Оновлена функція
 export const submitAccommodationApplication = async (req, res) => {
     try {
-        console.log("[AccommodationApplication] Received request from user:", req.user.userId);
-        
-        // Перевіряємо, чи є faculty_id у користувача
-        if (!req.user.faculty_id) {
-            console.error("[AccommodationApplication] User faculty_id is missing for user:", req.user.userId);
-            return res.status(400).json({ error: "Faculty ID is missing for the user. Please complete your profile." });
-        }
-
-        // Define validation schema using Joi
+        console.log("[AccommodationApplication] Received request from user:", req.user.userId, "with body:", req.body);
         const schema = Joi.object({
-            course: Joi.number().integer().min(1).max(6).required(),
-            group: Joi.string().min(1).required(), // Це буде group_name
-            // faculty: Joi.string().min(1).required(), // Видалено, faculty_id береться з req.user
-            fullName: Joi.string().min(1).required(),
-            surname: Joi.string().min(1).required(),
-            residentPhone: Joi.string().pattern(/^\+380\d{9}$/).required(), // Це буде phone_number
-            dormNumber: Joi.number().integer().positive().required(), // Це буде dormitory_id
-            startDay: Joi.string().pattern(/^(0[1-9]|[12]\d|3[01])$/).required(),
-            startMonth: Joi.string().pattern(/^(0[1-9]|1[0-2])$/).required(),
-            startYear: Joi.string().pattern(/^\d{2}$/).required(), // Припускаємо YY формат (наприклад, 24 для 2024)
-            endDay: Joi.string().pattern(/^(0[1-9]|[12]\d|3[01])$/).required(),
-            endMonth: Joi.string().pattern(/^(0[1-9]|1[0-2])$/).required(),
-            endYear: Joi.string().pattern(/^\d{2}$/).required(), // Припускаємо YY формат
-            applicationDay: Joi.string().pattern(/^(0[1-9]|[12]\d|3[01])$/).required(),
-            applicationMonth: Joi.string().pattern(/^(0[1-9]|1[0-2])$/).required(),
-            applicationYear: Joi.string().pattern(/^\d{2}$/).required(), // Припускаємо YY формат
-        });
+            faculty_id: Joi.number().integer().positive().required().messages({
+                "number.base": "ID факультету має бути числом",
+                "number.positive": "ID факультету має бути позитивним числом",
+                "any.required": "ID факультету є обов'язковим",
+            }),
+            group_id: Joi.number().integer().positive().required().messages({
+                "number.base": "ID групи має бути числом",
+                "number.positive": "ID групи має бути позитивним числом",
+                "any.required": "ID групи є обов'язковим",
+            }),
+            course: Joi.number().integer().min(1).max(6).required().messages({
+                "number.base": "Курс повинен бути числом",
+                "number.min": "Курс повинен бути не менше 1",
+                "number.max": "Курс повинен бути не більше 6",
+                "any.required": "Курс є обов'язковим",
+            }),
+            full_name: Joi.string().min(1).max(255).required().messages({
+                "string.empty": "ПІБ не може бути порожнім",
+                "string.max": "ПІБ не може перевищувати 255 символів",
+                "any.required": "ПІБ є обов'язковим",
+            }),
+            surname: Joi.string().min(1).max(100).required().messages({
+                "string.empty": "Прізвище не може бути порожнім",
+                "string.max": "Прізвище не може перевищувати 100 символів",
+                "any.required": "Прізвище є обов'язковим",
+            }),
+            phone_number: Joi.string()
+                .pattern(/^\+380\d{9}$/)
+                .required()
+                .messages({
+                    "string.pattern.base": "Номер телефону повинен бути у форматі +380XXXXXXXXX",
+                    "any.required": "Номер телефону є обов'язковим",
+                }),
+            dormitory_id: Joi.number().integer().positive().required().messages({
+                "number.base": "ID гуртожитку повинен бути числом",
+                "number.positive": "ID гуртожитку повинен бути позитивним числом",
+                "any.required": "ID гуртожитку є обов'язковим",
+            }),
+            start_date: Joi.date().iso().required().messages({
+                "date.format": "Дата початку повинна бути у форматі ISO (РРРР-ММ-ДД)",
+                "any.required": "Дата початку є обов'язковою",
+            }),
+            end_date: Joi.date()
+                .iso()
+                .greater(Joi.ref("start_date"))
+                .required()
+                .messages({
+                    "date.greater": "Дата закінчення повинна бути пізніше дати початку",
+                    "date.format": "Дата закінчення повинна бути у форматі ISO (РРРР-ММ-ДД)",
+                    "any.required": "Дата закінчення є обов'язковою",
+                }),
+            application_date: Joi.date().iso().required().messages({
+                "date.format": "Дата заявки повинна бути у форматі ISO (РРРР-ММ-ДД)",
+                "any.required": "Дата заявки є обов'язковою",
+            }),
+            preferred_room: Joi.string().max(10).allow(null, "").optional(),
+            comments: Joi.string().max(1000).allow(null, "").optional(),
+        }).unknown(false);
 
-        // Validate incoming request body
-        // Видаляємо faculty з req.body перед валідацією, якщо воно там є, оскільки ми беремо faculty_id з req.user
-        const { faculty, ...validationData } = req.body;
-        const { error, value } = schema.validate(validationData, { abortEarly: false });
-
+        const { error, value } = schema.validate(req.body, { abortEarly: false });
         if (error) {
-            const errorDetails = error.details.map(detail => detail.message);
+            const errorDetails = error.details.map((detail) => detail.message);
             console.error("[AccommodationApplication] Validation error:", errorDetails);
-            return res.status(400).json({ error: "Validation failed", details: errorDetails });
-        }
-        
-        // Combine date parts into YYYY-MM-DD format (assume 20YY for YY years)
-        const startDateStr = `20${value.startYear}-${value.startMonth}-${value.startDay}`;
-        const endDateStr = `20${value.endYear}-${value.endMonth}-${value.endDay}`;
-        const applicationDateStr = `20${value.applicationYear}-${value.applicationMonth}-${value.applicationDay}`;
-
-        // Validate combined dates
-        const isValidDate = (dateStr) => {
-            const date = new Date(dateStr);
-            // Перевіряємо, чи дата валідна і чи відповідає рядок формату YYYY-MM-DD
-            return !isNaN(date) && date.toISOString().startsWith(dateStr.substring(0,10));
-        };
-
-        if (!isValidDate(startDateStr) || !isValidDate(endDateStr) || !isValidDate(applicationDateStr)) {
-            console.error("[AccommodationApplication] Invalid date format after construction:", {startDateStr, endDateStr, applicationDateStr});
-            return res.status(400).json({ error: "Invalid date provided" });
+            return res.status(400).json({
+                error: "Невалідні дані",
+                code: "VALIDATION_ERROR",
+                details: errorDetails,
+            });
         }
 
-        // Ensure startDate is before or equal to endDate
-        const startDate = new Date(startDateStr);
-        const endDate = new Date(endDateStr);
-        if (startDate > endDate) {
-            console.error("[AccommodationApplication] Start date is after end date");
-            return res.status(400).json({ error: "Start date must be before or equal to end date" });
+        const [groupRows] = await pool.query(
+            "SELECT id, faculty_id, course FROM `groups` WHERE id = ?",
+            [value.group_id]
+        );
+        if (!groupRows[0]) {
+            console.error("[AccommodationApplication] Invalid group_id:", value.group_id);
+            return res.status(400).json({
+                error: "Обрана група не існує",
+                code: "INVALID_GROUP",
+            });
+        }
+        const groupData = groupRows[0];
+        if (groupData.faculty_id !== value.faculty_id) {
+            console.error(
+                "[AccommodationApplication] Group does not belong to selected faculty:",
+                groupData.faculty_id,
+                value.faculty_id
+            );
+            return res.status(400).json({
+                error: "Обрана група не належить до обраного факультету",
+                code: "GROUP_FACULTY_MISMATCH",
+            });
+        }
+        if (groupData.course !== value.course) {
+            console.error(
+                "[AccommodationApplication] Course mismatch: Form course vs Group's actual course",
+                value.course,
+                groupData.course
+            );
+            return res.status(400).json({
+                error: `Курс (${value.course}) не відповідає курсу обраної групи (${groupData.course})`,
+                code: "COURSE_GROUP_MISMATCH",
+            });
+        }
+        const [facultyDormitoryRows] = await pool.query(
+            `SELECT faculty_id FROM faculty_dormitories WHERE faculty_id = ? AND dormitory_id = ?`,
+            [value.faculty_id, value.dormitory_id]
+        );
+        if (!facultyDormitoryRows[0]) {
+            console.error(
+                "[AccommodationApplication] Dormitory not accessible for selected faculty:",
+                value.dormitory_id,
+                value.faculty_id
+            );
+            return res.status(400).json({
+                error: "Обраний гуртожиток недоступний для обраного факультету",
+                code: "DORMITORY_FACULTY_MISMATCH",
+            });
         }
 
-        // Prepare data for database insertion
-        const applicationData = {
-            user_id: req.user.userId,
-            course: value.course,
-            group_name: value.group, // Поле в БД group_name
-            faculty_id: req.user.faculty_id, // Беремо faculty_id з аутентифікованого користувача
-            full_name: value.fullName,
-            phone_number: value.residentPhone, // Поле в БД phone_number
-            dormitory_id: value.dormNumber, // Це ID гуртожитку
-            start_date: startDateStr,
-            end_date: endDateStr,
-            application_date: applicationDateStr,
-            surname: value.surname,
-            status: 'pending' // Додаємо статус за замовчуванням
-        };
-        
-        console.log("[AccommodationApplication] Data to be created:", applicationData);
+        const [existingIdenticalPendingApplication] = await pool.query(
+            `SELECT id, status FROM accommodation_applications
+             WHERE user_id = ? AND dormitory_id = ? AND start_date = ? AND end_date = ?
+             AND status IN ('pending', 'approved_by_faculty', 'approved_by_dorm')`,
+            [req.user.userId, value.dormitory_id, new Date(value.start_date).toISOString().split("T")[0], new Date(value.end_date).toISOString().split("T")[0]]
+        );
 
-        // Insert into database and get the new application ID
-        const applicationId = await AccommodationApplication.create(applicationData);
+        if (existingIdenticalPendingApplication[0]) {
+            console.error(
+                "[AccommodationApplication] User already has an identical pending/active application:",
+                existingIdenticalPendingApplication[0].id, "with status:", existingIdenticalPendingApplication[0].status
+            );
+            return res.status(409).json({
+                error: "У вас вже є активна заявка на цей гуртожиток та період, яка ще розглядається.",
+                code: "DUPLICATE_IDENTICAL_PENDING_APPLICATION",
+            });
+        }
 
-        // Return success response
-        res.status(201).json({
-            success: true,
-            message: "Application submitted successfully",
-            applicationId,
-        });
+
+        const connection = await pool.getConnection();
+        try {
+            await connection.beginTransaction();
+            const applicationData = {
+                user_id: req.user.userId,
+                faculty_id: value.faculty_id,
+                course: value.course,
+                group_id: value.group_id,
+                full_name: value.full_name,
+                surname: value.surname,
+                phone_number: value.phone_number,
+                dormitory_id: value.dormitory_id,
+                start_date: new Date(value.start_date).toISOString().split("T")[0],
+                end_date: new Date(value.end_date).toISOString().split("T")[0],
+                application_date: new Date(value.application_date).toISOString().split("T")[0],
+                status: "pending",
+                preferred_room: value.preferred_room || null,
+                comments: value.comments || null,
+            };
+            console.log("[AccommodationApplication] Data to be created:", applicationData);
+            const applicationId = await AccommodationApplication.create(applicationData);
+            await connection.commit();
+            res.status(201).json({
+                success: true,
+                message: "Заявку успішно подано",
+                applicationId,
+            });
+        } catch (dbError) {
+            await connection.rollback();
+            console.error("[AccommodationApplication] Database error during transaction:", dbError);
+            throw dbError;
+        } finally {
+            connection.release();
+        }
     } catch (error) {
-        console.error("[AccommodationApplication] Error:", error);
-        // Додамо більш детальне логування помилки, якщо вона не від Joi
-        if (!error.details) {
-            console.error("Error stack:", error.stack);
+        console.error("[AccommodationApplication] Error in submitAccommodationApplication:", {
+            message: error.message,
+            stack: error.stack,
+            userId: req.user?.userId,
+            body: req.body,
+            code: error.code,
+        });
+        if (error.code === "ER_NO_REFERENCED_ROW_2") {
+            return res.status(400).json({
+                error: "Невалідні дані: один із вказаних ID (гуртожиток, факультет, група) не існує.",
+                code: "FOREIGN_KEY_VIOLATION",
+            });
         }
-        res.status(500).json({ error: "Server error", details: error.message });
+        if (!res.headersSent) {
+            res.status(500).json({
+                error: "Помилка сервера при обробці заявки",
+                code: "INTERNAL_SERVER_ERROR",
+                details: process.env.NODE_ENV === "development" ? error.message : undefined,
+            });
+        } else {
+            console.error("[AccommodationApplication] Headers already sent, cannot send error response.");
+        }
     }
 };
 
 export default {
     getServices,
     createDormApplication,
-    submitAccommodationApplication
+    submitAccommodationApplication,
 };

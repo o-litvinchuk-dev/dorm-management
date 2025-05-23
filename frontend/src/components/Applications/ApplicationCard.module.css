@@ -1,0 +1,98 @@
+.card {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: transform 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cardHeader h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.status {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.statusPending {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.statusApproved {
+  background: #d4edda;
+  color: #155724;
+}
+
+.statusRejected {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.cardBody {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cardBody p {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #555;
+}
+
+.cardBody p strong {
+  color: #333;
+}
+
+.cardFooter {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.detailsButton {
+  background: #007bff;
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.detailsButton:hover {
+  background: #0056b3;
+}
+
+@media (max-width: 768px) {
+  .card {
+    padding: 12px;
+  }
+
+  .cardHeader h3 {
+    font-size: 1.1rem;
+  }
+
+  .detailsButton {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+  }
+}

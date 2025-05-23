@@ -17,15 +17,15 @@ const UserProfile = {
     return rows[0] || null;
   },
 
-  async update(user_id, { faculty_id, group_name, course, phone }) {
-    const [result] = await pool.execute(
-      `UPDATE user_profiles 
-       SET faculty_id = ?, group_name = ?, course = ?, phone = ? 
-       WHERE user_id = ?`,
-      [faculty_id || null, group_name || null, course || null, phone || null, user_id]
-    );
-    return result.affectedRows > 0;
-  },
+  async update(user_id, { faculty_id, group_id, course, phone }) {
+  const [result] = await pool.execute(
+    `UPDATE user_profiles
+     SET faculty_id = ?, group_id = ?, course = ?, phone = ?
+     WHERE user_id = ?`,
+    [faculty_id || null, group_id || null, course || null, phone || null, user_id]
+  );
+  return result.affectedRows > 0;
+},
 };
 
 export default UserProfile;

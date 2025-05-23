@@ -1,6 +1,8 @@
 import jwt from "jsonwebtoken";
 import { getEnforcer } from "../config/permissions.js";
 import User from "../models/User.js";
+import Faculties from "../models/Faculties.js"; 
+import Dormitory from "../models/Dormitory.js"; 
 
 const authenticate = async (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -12,25 +14,42 @@ const authenticate = async (req, res, next) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     console.log("[Auth] Токен верифіковано, userId:", decoded.userId);
-    const user = await User.findById(decoded.userId);
-    if (!user) {
+    const userFromDb = await User.findById(decoded.userId); 
+    if (!userFromDb) { 
       console.log("[Auth] Користувача не знайдено для userId:", decoded.userId);
       return res.status(403).json({ error: "Користувача не знайдено" });
     }
-    if (user.token_version !== decoded.tokenVersion) {
+    if (userFromDb.token_version !== decoded.tokenVersion) { 
       console.log("[Auth] Невідповідність tokenVersion:", {
-        db: user.token_version,
+        db: userFromDb.token_version, 
         token: decoded.tokenVersion,
       });
       return res.status(403).json({ error: "Недійсний токен" });
     }
+
+    let facultyName = null; 
+    if (userFromDb.faculty_id) { 
+      const faculty = await Faculties.findById(userFromDb.faculty_id); 
+      facultyName = faculty?.name || null; 
+    }
+
+    let dormitoryName = null; 
+    if (userFromDb.dormitory_id) { 
+      const dormitory = await Dormitory.findById(userFromDb.dormitory_id); 
+      dormitoryName = dormitory?.name || null; 
+    }
+
     req.user = {
-      userId: user.id,
-      role: user.role,
-      email: user.email,
-      avatar: user.avatar,
-      faculty_id: user.faculty_id || null,
-      dormitory_id: user.dormitory_id || null,
+      userId: userFromDb.id, 
+      role: userFromDb.role, 
+      email: userFromDb.email, 
+      name: userFromDb.name, 
+      avatar: userFromDb.avatar, 
+      faculty_id: userFromDb.faculty_id || null, 
+      faculty_name: facultyName, 
+      dormitory_id: userFromDb.dormitory_id || null, 
+      dormitory_name: dormitoryName, 
+      is_profile_complete: userFromDb.is_profile_complete === 1, 
     };
     console.log("[Auth] Користувач автентифікований:", req.user);
     next();

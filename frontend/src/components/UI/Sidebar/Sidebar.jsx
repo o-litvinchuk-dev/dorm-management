@@ -14,6 +14,8 @@ import {
   ChevronLeftIcon,
   ClipboardDocumentListIcon,
   ShieldCheckIcon,
+  AcademicCapIcon,
+  WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
 import {
   ChartBarIcon as ChartBarSolidIcon,
@@ -25,7 +27,9 @@ import {
   ArrowLeftOnRectangleIcon as ArrowLeftOnRectangleSolidIcon,
   ClipboardDocumentListIcon as ClipboardDocumentListSolidIcon,
   ShieldCheckIcon as ShieldCheckSolidIcon,
-} from "@heroicons/react/24/outline";
+  AcademicCapIcon as AcademicCapSolidIcon,
+  WrenchScrewdriverIcon as WrenchScrewdriverSolidIcon,
+} from "@heroicons/react/24/solid";
 import api from "../../../utils/api";
 
 const Sidebar = ({ onToggle }) => {
@@ -51,27 +55,33 @@ const Sidebar = ({ onToggle }) => {
   ].includes(user.role);
 
   useEffect(() => {
-    const pathSegments = location.pathname.slice(1).split("/");
-    const basePath = pathSegments[0] || "dashboard";
-    const mainTabs = [
-      "dashboard",
-      "applications",
-      "dormitories",
-      "services",
-      "settlement",
-      "settings",
-      "help",
-      "logout",
-      "adminApplications",
-      "admin/management",
-      "admin/accommodation-applications",
+    const path = location.pathname.slice(1).split('/')[0] || "dashboard";
+    const currentPath = location.pathname.slice(1);
+    const adminSubPaths = ["admin/management", "admin/accommodation-applications", "dean/groups", "adminApplications", "admin/application-presets"];
+
+    let matchedTab = path;
+    if (adminSubPaths.some(subPath => currentPath.startsWith(subPath))) {
+        matchedTab = currentPath.startsWith("adminApplications") && currentPath.includes("accommodation")
+                     ? "admin/accommodation-applications"
+                     : currentPath.split('/').slice(0, 2).join('/');
+        if (!adminSubPaths.includes(matchedTab) && currentPath.startsWith("adminApplications")) {
+            matchedTab = "adminApplications";
+        }
+    } else if (currentPath.startsWith("services/")) {
+        matchedTab = "services";
+    }
+
+    const allTabs = [
+      "dashboard", "applications", "dormitories", "services", "settlement",
+      "settings", "help", "logout", ...adminSubPaths
     ];
 
-    if (mainTabs.includes(basePath)) {
-      setActiveTab(basePath);
-    } else if (pathSegments[0] === "services" || pathSegments[0] === "admin") {
-      setActiveTab(pathSegments[1] || basePath);
+    if (allTabs.includes(matchedTab)) {
+      setActiveTab(matchedTab);
+    } else {
+      setActiveTab(path);
     }
+
   }, [location.pathname]);
 
   useEffect(() => {
@@ -100,6 +110,21 @@ const Sidebar = ({ onToggle }) => {
     [isSidebarOpen]
   );
 
+  // Define handleLogout BEFORE handleNavigation
+  const handleLogout = useCallback(
+    async () => {
+      try {
+        await api.post("/auth/logout");
+      } catch (error) {
+        console.error("Logout API error:", error);
+      } finally {
+        logout();
+        navigate("/login");
+      }
+    },
+    [navigate, logout]
+  );
+
   const handleNavigation = useCallback(
     (tab) => {
       setActiveTab(tab);
@@ -110,22 +135,7 @@ const Sidebar = ({ onToggle }) => {
         navigate(`/${tab}`);
       }
     },
-    [navigate, hideTooltip]
-  );
-
-  const handleLogout = useCallback(
-    async () => {
-      try {
-        await api.post("/auth/logout");
-        logout();
-        navigate("/login");
-      } catch (error) {
-        console.error("Logout error:", error);
-        logout();
-        navigate("/login");
-      }
-    },
-    [navigate, logout]
+    [navigate, hideTooltip, handleLogout] // Now handleLogout is correctly in scope
   );
 
   const toggleSidebar = useCallback(() => {
@@ -148,8 +158,8 @@ const Sidebar = ({ onToggle }) => {
   );
 
   useEffect(() => {
-    document.addEventListener("click", handleClickOutside);
-    return () => document.removeEventListener("click", handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [handleClickOutside]);
 
   const getIcon = useCallback((iconName, isActive) => {
@@ -165,8 +175,10 @@ const Sidebar = ({ onToggle }) => {
       adminApplications: isActive ? DocumentTextSolidIcon : DocumentTextIcon,
       "admin/management": isActive ? ShieldCheckSolidIcon : ShieldCheckIcon,
       "admin/accommodation-applications": isActive ? ClipboardDocumentListSolidIcon : ClipboardDocumentListIcon,
+      "dean/groups": isActive ? AcademicCapSolidIcon : AcademicCapIcon,
+      "admin/application-presets": isActive ? WrenchScrewdriverSolidIcon : WrenchScrewdriverIcon,
     };
-    const IconComponent = icons[iconName];
+    const IconComponent = icons[iconName] || QuestionMarkCircleIcon;
     return <IconComponent className={styles.menuIcon} />;
   }, []);
 
@@ -200,10 +212,10 @@ const Sidebar = ({ onToggle }) => {
       { name: "settlement", label: "Розклад поселення" },
     ],
     admin: [
-      { name: "adminApplications", label: "Усі заявки", roles: ["admin", "superadmin"] },
-      { name: "admin/accommodation-applications", label: "Заявки факультету", roles: ["faculty_dean_office", "student_council_head", "student_council_member"] },
-      { name: "admin/accommodation-applications", label: "Заявки гуртожитку", roles: ["dorm_manager"] },
-      { name: "admin/management", label: "Керування ролями", roles: ["superadmin"] },
+      { name: "adminApplications", label: "Адмін-заявки", roles: ["admin", "superadmin", "faculty_dean_office", "dorm_manager", "student_council_head", "student_council_member"] },
+      { name: "admin/management", label: "Керування системою", roles: ["superadmin"] },
+      { name: "dean/groups", label: "Управління групами", roles: ["faculty_dean_office", "admin", "superadmin"] },
+      { name: "admin/application-presets", label: "Налаштування Заяв", roles: ["admin", "superadmin", "faculty_dean_office"] },
     ],
     settings: [
       { name: "settings", label: "Налаштування" },
@@ -221,10 +233,12 @@ const Sidebar = ({ onToggle }) => {
     >
       <div className={styles.logoContainer}>
         <img src="/logo2.svg" alt="Dorm Life Logo" className={styles.logoImage} />
-        <div className={styles.logoText}>
-          <span className={styles.logoTitle}>Dorm Life</span>
-          <span className={styles.logoSubtitle}>Campus Management</span>
-        </div>
+        {isSidebarOpen && (
+          <div className={styles.logoText}>
+            <span className={styles.logoTitle}>Dorm Life</span>
+            <span className={styles.logoSubtitle}>Campus Management</span>
+          </div>
+        )}
       </div>
 
       <button
@@ -252,7 +266,7 @@ const Sidebar = ({ onToggle }) => {
               <div className={styles.sidebarSection}>
                 {renderSectionHeader("Управління")}
                 {menuItems.admin
-                  .filter((item) => item.roles.includes(user.role))
+                  .filter((item) => user && item.roles.includes(user.role))
                   .map((item) => renderMenuItem(item.name, item.label))}
               </div>
             )}

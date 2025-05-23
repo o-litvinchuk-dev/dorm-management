@@ -1,0 +1,540 @@
+/* frontend/src/pages/Dean/styles/GroupsPage.module.css */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+/* --- Загальні стилі сторінки --- */
+.layout {
+  display: flex;
+  min-height: 100vh;
+  background: var(--blue-gray-50, #f8fafc);
+  font-family: 'Roboto', sans-serif;
+}
+
+.mainContent {
+  flex: 1;
+  transition: margin-left 0.3s ease;
+  margin-left: calc(250px + 16px); 
+  padding: calc(72px + 16px) 16px 16px 16px; 
+  box-sizing: border-box;
+  min-height: 100vh;
+  overflow-y: auto; 
+}
+
+.mainContent.sidebarCollapsed {
+  margin-left: calc(80px + 16px);
+}
+
+.pageContainer {
+  background: var(--white, #fff);
+  border: 1px solid var(--gray-300, #d1d5db);
+  border-radius: 12px;
+  padding: 24px;
+  margin-top: 16px;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - (72px + 16px + 16px + 16px)); 
+  overflow: hidden; 
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.pageTitle {
+  font-size: 1.75rem; 
+  font-weight: 600;
+  color: #1e293b; 
+  margin: 0;
+}
+
+.headerActions {
+  display: flex;
+  gap: 0.75rem; /* 12px */
+}
+
+.addButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem; 
+  padding: 0.625rem 1rem; 
+  background-color: #3b82f6; /* Blue 500 */
+  color: white;
+  font-weight: 500;
+  font-size: 0.875rem; /* 14px */
+  border: none;
+  border-radius: 0.375rem; /* 6px */
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.addButton:hover {
+  background-color: #2563eb; /* Blue 600 */
+}
+
+.addButton svg {
+  width: 1.125rem; /* 18px */
+  height: 1.125rem;
+}
+
+.batchButton {
+  background-color: #059669; /* Зелений для пакетного додавання */
+}
+
+.batchButton:hover {
+  background-color: #047857; /* Темніший зелений */
+}
+
+/* --- Стилі для фільтрів --- */
+.filters {
+  display: flex;
+  gap: 1rem; /* 16px */
+  margin-bottom: 1.5rem; /* 24px */
+  align-items: center;
+  flex-wrap: wrap; /* Дозволити переноситись на новий рядок на малих екранах */
+}
+
+.searchInput,
+.courseSelect {
+  padding: 0.625rem 0.75rem; /* 10px 12px */
+  border: 1px solid #d1d5db; /* Gray 300 */
+  border-radius: 0.375rem; /* 6px */
+  font-size: 0.875rem; /* 14px */
+  background-color: white;
+  box-sizing: border-box;
+}
+
+.searchInput {
+  flex-grow: 1;
+  min-width: 200px; /* Мінімальна ширина для поля пошуку */
+  max-width: 350px;
+}
+
+.courseSelect {
+  min-width: 150px;
+}
+
+.searchInput:focus,
+.courseSelect:focus {
+  outline: none;
+  border-color: #3b82f6; /* Blue 500 */
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4); /* Тінь при фокусі */
+}
+
+/* --- Стилі для таблиці --- */
+.tableContainer {
+  overflow-x: auto;
+  flex-grow: 1;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  margin-top: 1rem;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  min-width: 600px;
+}
+
+.table th,
+.table td {
+  border-bottom: 1px solid #e5e7eb;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.table td:first-child, .table th:first-child {
+  padding-left: 1.5rem;
+}
+.table td:last-child, .table th:last-child {
+  padding-right: 1.5rem;
+  text-align: right; /* Вирівнювання колонки "Дії" по правому краю */
+}
+
+
+.table th {
+  background-color: #f9fafb;
+  font-weight: 500;
+  color: #374151;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+}
+
+.table tbody tr:hover {
+  background-color: #f3f4f6;
+}
+
+.actionsCell {
+  text-align: right;
+}
+
+.actionButton {
+  background: transparent;
+  border: none;
+  padding: 0.375rem;
+  cursor: pointer;
+  color: #6b7280;
+  transition: color 0.2s ease, transform 0.1s ease;
+  margin-left: 0.5rem;
+}
+
+.actionButton:hover {
+  transform: translateY(-1px);
+}
+
+.actionButton svg {
+  width: 1.125rem;
+  height: 1.125rem;
+  stroke-width: 1.5;
+}
+
+.editButton:hover {
+  color: #16a34a;
+}
+
+.deleteButton:hover {
+  color: #ef4444;
+}
+
+/* --- Повідомлення --- */
+.emptyMessage,
+.loadingMessage {
+  text-align: center;
+  padding: 2rem;
+  color: #6b7280;
+  font-style: italic;
+  font-size: 1rem;
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.errorMessage {
+  color: #b91c1c;
+  padding: 1rem;
+  background-color: #fee2e2;
+  border: 1px solid #fca5a5;
+  border-radius: 0.375rem;
+  text-align: center;
+  margin-top: 1.5rem;
+}
+
+
+/* --- Стилі для модальних вікон (спільні для GroupForm та BatchGroupForm) --- */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6); /* Більш темний overlay */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px; /* Додає відступи, щоб модалка не прилипала до країв */
+  box-sizing: border-box;
+}
+
+.modal {
+  background: white;
+  padding: 24px 32px; /* Збільшені відступи */
+  border-radius: 12px; /* Більш заокруглені кути */
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1), 0 5px 10px rgba(0,0,0,0.04);
+  width: 100%;
+  max-width: 500px; /* Стандартна ширина для GroupForm */
+  z-index: 1001;
+  transform: scale(0.95);
+  opacity: 0;
+  animation: fadeInModal 0.3s forwards;
+}
+
+@keyframes fadeInModal {
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.modal h2 {
+  margin-top: 0;
+  margin-bottom: 24px;
+  font-size: 1.5rem; /* 24px */
+  font-weight: 600;
+  color: #1e293b;
+  text-align: center;
+}
+
+.inputGroup {
+  margin-bottom: 1rem; /* 16px */
+}
+
+.inputGroup label {
+  display: block;
+  margin-bottom: 0.375rem; /* 6px */
+  font-weight: 500;
+  font-size: 0.875rem; /* 14px */
+  color: #374151; /* Gray 700 */
+}
+
+.inputGroup input[type="text"],
+.inputGroup input[type="number"],
+.inputGroup textarea {
+  width: 100%;
+  padding: 0.625rem 0.75rem; /* 10px 12px */
+  border: 1px solid #d1d5db; /* Gray 300 */
+  border-radius: 0.375rem; /* 6px */
+  box-sizing: border-box;
+  font-size: 0.9375rem; /* 15px */
+  font-family: 'Roboto', sans-serif;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.inputGroup input[type="text"]:focus,
+.inputGroup input[type="number"]:focus,
+.inputGroup textarea:focus {
+  outline: none;
+  border-color: #3b82f6; /* Blue 500 */
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+
+.inputGroup input.errorInput,
+.inputGroup textarea.errorInput {
+  border-color: #ef4444; /* Red 500 */
+  background-color: #fee2e2; /* Red 100 */
+}
+.inputGroup input.errorInput:focus,
+.inputGroup textarea.errorInput:focus {
+   box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.3);
+}
+
+
+.error {
+  color: #ef4444; /* Red 500 */
+  font-size: 0.8125rem; /* 13px */
+  margin-top: 0.25rem; /* 4px */
+}
+
+.buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem; /* 12px */
+  margin-top: 1.5rem; /* 24px */
+}
+
+.submitButton,
+.cancelButton {
+  padding: 0.625rem 1.25rem; /* 10px 20px */
+  border-radius: 0.375rem; /* 6px */
+  border: none;
+  font-size: 0.9375rem; /* 15px */
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.submitButton {
+  background-color: #3b82f6; /* Blue 500 */
+  color: white;
+}
+
+.submitButton:hover:not(:disabled) {
+  background-color: #2563eb; /* Blue 600 */
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.submitButton:disabled {
+  background-color: #9ca3af; /* Gray 400 */
+  color: #e5e7eb; /* Gray 200 */
+  cursor: not-allowed;
+}
+
+.cancelButton {
+  background-color: #e5e7eb; /* Gray 200 */
+  color: #374151; /* Gray 700 */
+}
+
+.cancelButton:hover {
+  background-color: #d1d5db; /* Gray 300 */
+}
+
+/* Стилі спеціально для BatchGroupForm */
+.batchModal { /* Можна використовувати цей клас для BatchGroupForm, щоб зробити його ширшим */
+  max-width: 700px;
+}
+
+.instructions {
+  font-size: 0.875rem; /* 14px */
+  color: #4b5563; /* Gray 600 */
+  margin-bottom: 1rem;
+  background-color: #f3f4f6; /* Gray 100 */
+  padding: 0.75rem;
+  border-radius: 0.25rem; /* 4px */
+  line-height: 1.6;
+  border-left: 3px solid #3b82f6; /* Blue 500 */
+}
+
+.instructions strong {
+  font-weight: 500;
+  color: #1f293b; /* Gray 800 */
+}
+
+.inputGroup textarea { /* Стилі для textarea пакетного додавання */
+  min-height: 180px;
+  font-family: 'Menlo', 'Monaco', 'Consolas', "Courier New", monospace;
+  font-size: 0.875rem; /* 14px */
+  line-height: 1.5;
+}
+
+.resultsContainer {
+  margin-top: 1.25rem; /* 20px */
+  padding: 0.75rem; /* 12px */
+  border: 1px solid #e5e7eb; /* Gray 200 */
+  border-radius: 0.375rem; /* 6px */
+  max-height: 200px;
+  overflow-y: auto;
+  font-size: 0.8125rem; /* 13px */
+  background-color: #f9fafb; /* Gray 50 */
+}
+
+.resultsContainer h4 {
+  margin-top: 0;
+  margin-bottom: 0.625rem; /* 10px */
+  font-size: 0.9375rem; /* 15px */
+  font-weight: 500;
+  color: #1f293b; /* Gray 800 */
+}
+
+.resultsContainer ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.resultsContainer li {
+  padding: 0.375rem 0; /* 6px */
+  border-bottom: 1px dashed #e5e7eb; /* Gray 200 */
+}
+.resultsContainer li:last-child {
+  border-bottom: none;
+}
+
+.resultSuccess {
+  color: #059669; /* Green 600 */
+}
+.resultSuccess strong {
+  color: #065f46; /* Green 800 */
+}
+
+.resultError {
+  color: #dc2626; /* Red 600 */
+}
+.resultError strong {
+  color: #991b1b; /* Red 800 */
+}
+
+
+/* Медіа-запити для адаптивності */
+@media (max-width: 1024px) {
+  .mainContent {
+    margin-left: calc(80px + 12px);
+    padding: calc(72px + 12px) 12px 12px 12px;
+  }
+  .mainContent.sidebarCollapsed {
+     margin-left: calc(80px + 12px);
+  }
+   .pageContainer {
+    height: calc(100vh - (72px + 12px + 12px + 12px));
+    padding: 20px;
+  }
+  .pageTitle {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .mainContent {
+    margin-left: 0 !important;
+    padding: calc(60px + 10px) 10px 10px 10px;
+  }
+  .pageContainer {
+    padding: 16px;
+    height: calc(100vh - (60px + 10px + 10px + 10px));
+  }
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .pageTitle {
+    font-size: 1.375rem; /* 22px */
+    text-align: center;
+  }
+  .addButton {
+    width: 100%;
+    justify-content: center;
+    padding: 0.75rem;
+  }
+  .filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .searchInput, .courseSelect {
+    max-width: none;
+    width: 100%;
+  }
+  .table th,
+  .table td {
+    padding: 0.625rem 0.75rem;
+    font-size: 0.8125rem;
+    white-space: normal; /* Дозволити перенос тексту на мобільних */
+  }
+   .table td:first-child, .table th:first-child {
+    padding-left: 0.75rem;
+  }
+  .table td:last-child, .table th:last-child {
+    padding-right: 0.75rem;
+    text-align: left; /* Для кращого вигляду кнопок на мобільних */
+  }
+  .actionsCell {
+    text-align: left;
+    display: flex; /* Розмістити кнопки в ряд */
+    gap: 0.5rem;
+  }
+  .actionButton {
+    margin-left: 0;
+  }
+  .modal {
+    max-width: calc(100% - 40px); /* Щоб модалка не була на весь екран */
+    padding: 20px;
+  }
+  .modal h2 {
+    font-size: 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .pageTitle {
+    font-size: 1.25rem;
+  }
+  .inputGroup input[type="text"],
+  .inputGroup input[type="number"],
+  .inputGroup textarea {
+    font-size: 0.875rem;
+  }
+  .submitButton,
+  .cancelButton {
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+  }
+}

@@ -17,6 +17,11 @@ import { authenticate } from "./src/middlewares/auth.js";
 import facultyRoutes from "./src/routes/v1/facultyRoutes.js";
 import facultyDormitoryRoutes from "./src/routes/v1/facultyDormitoryRoutes.js";
 import userRoutes from "./src/routes/v1/userRoutes.js";
+import adminDormitoryRoutes from "./src/routes/v1/adminDormitoryRoutes.js";
+import roomRoutes from "./src/routes/v1/roomRoutes.js";
+import groupRoutes from "./src/routes/v1/groupRoutes.js";
+import dormitoryRoutes from "./src/routes/v1/dormitoryRoutes.js";
+import dormitoryApplicationPresetRoutes from "./src/routes/v1/dormitoryApplicationPresetRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -75,6 +80,13 @@ app.use("/api/v1/faculty-dormitories", facultyDormitoryRoutes);
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/services", servicesRoutes);
 app.use("/api/v1/admin/accommodation-applications", adminAccommodationRoutes);
+app.use("/api/v1/admin/dormitories", adminDormitoryRoutes);
+app.use("/api/v1", roomRoutes);
+app.use("/api/v1", groupRoutes);
+app.use("/api/v1", dormitoryRoutes);
+app.use("/api/v1/application-presets", dormitoryApplicationPresetRoutes);
+
+
 
 // Обробка помилок
 app.use(errorHandler);

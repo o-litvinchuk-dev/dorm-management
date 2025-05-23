@@ -1,71 +1,55 @@
+/* frontend/src/components/Admin/Filters.module.css */
 .filters {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 12px;
-    margin-bottom: 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Адаптивні колонки */
+  gap: 1rem; /* 16px */
+  margin-bottom: 1.5rem; /* 24px */
+  align-items: end; /* Вирівнює елементи по нижньому краю, якщо вони різної висоти */
 }
 
 .inputGroup {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+  display: flex;
+  flex-direction: column;
 }
 
 .inputLabel {
-    font-family: "Roboto", sans-serif;
-    font-weight: 500;
-    color: var(--blue-gray-900, #263238);
-    font-size: 12px;
+  display: block;
+  margin-bottom: 0.375rem; /* 6px */
+  font-weight: 500;
+  font-size: 0.875rem; /* 14px */
+  color: #374151; /* Gray 700 */
 }
 
 .inputField {
-    width: 100%;
-    font-family: "Roboto", sans-serif;
-    font-weight: 400;
-    padding: 8px 12px;
-    border-radius: 8px;
-    border: 2px solid var(--blue-gray-100, #cfd8dc);
-    font-size: 13px;
-    transition: border-color 0.3s ease;
+  width: 100%;
+  padding: 0.625rem 0.75rem; /* 10px 12px */
+  border: 1px solid #d1d5db; /* Gray 300 */
+  border-radius: 0.375rem; /* 6px */
+  box-sizing: border-box;
+  font-size: 0.875rem; /* 14px */
+  font-family: 'Roboto', sans-serif;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  background-color: white;
 }
 
 .inputField:focus {
-    outline: none;
-    border-color: var(--blue-500, #006aff);
+  outline: none;
+  border-color: #3b82f6; /* Blue 500 */
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
 }
 
 .inputField::placeholder {
-    font-family: "Roboto", sans-serif;
-    font-weight: 400;
-    color: var(--gray-400, #9ca3af);
+  color: #9ca3af; /* Gray 400 */
 }
 
 .inputField:disabled {
-    background: var(--blue-gray-50, #f8fafc);
+    background-color: #f3f4f6; /* Gray 100 */
+    color: #6b7280; /* Gray 500 */
     cursor: not-allowed;
 }
 
 @media (max-width: 768px) {
-    .filters {
-        grid-template-columns: 1fr;
-    }
-
-    .inputField {
-        font-size: 12px;
-        padding: 6px 10px;
-    }
-
-    .inputLabel {
-        font-size: 11px;
-    }
-}
-
-@media (max-width: 480px) {
-    .filters {
-        gap: 10px;
-    }
-
-    .inputGroup {
-        gap: 4px;
-    }
+  .filters {
+    grid-template-columns: 1fr; /* Одна колонка на малих екранах */
+  }
 }

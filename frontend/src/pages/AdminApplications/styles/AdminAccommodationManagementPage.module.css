@@ -1,390 +1,276 @@
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+/* frontend/src/pages/AdminApplications/styles/AdminAccommodationManagementPage.module.css */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --primary-color: #3b82f6; /* Синій */
+  --primary-hover-color: #2563eb;
+  --danger-color: #ef4444; /* Червоний */
+  --danger-hover-color: #dc2626;
+  --success-color: #22c55e; /* Зелений */
+  --success-hover-color: #16a34a;
+  --warning-color: #f59e0b; /* Жовтий/Оранжевий */
+  
+  --background-color: #f8fafc; 
+  --card-background-color: #ffffff;
+  --border-color: #e5e7eb; 
+  --text-primary-color: #1f2937; 
+  --text-secondary-color: #6b7280; 
+  --text-muted-color: #9ca3af; 
+
+  --font-family-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+
+  --border-radius-sm: 0.375rem; /* 6px */
+  --border-radius-md: 0.5rem;   /* 8px */
+  --border-radius-lg: 0.75rem;  /* 12px */
+
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+
+  /* Базові значення, як у вашому файлі AdminAccommodationManagementPage */
+  --navbar-height: 72px; 
+  --main-content-outer-padding-top: 24px; /* padding-top основного mainContent, що НЕ включає висоту Navbar */
+  --main-content-padding-bottom: 24px; /* Нижній padding mainContent */
+  --main-content-padding-horizontal: 24px; /* Бічні padding mainContent */
+  --page-container-margin-top: 16px; /* margin-top самого pageContainer */
+}
 
 .layout {
-    display: flex;
-    min-height: 100vh;
-    background: var(--blue-gray-50, #f8fafc);
-    font-family: 'Roboto', sans-serif;
+  display: flex;
+  min-height: 100vh;
+  background: var(--background-color);
+  font-family: var(--font-family-sans);
+  overflow-x: hidden;
 }
 
 .mainContent {
-    flex: 1;
-    transition: margin-left 0.3s ease;
-    margin-left: calc(250px + 16px);
-    padding: calc(72px + 16px) 16px 16px 16px;
-    box-sizing: border-box;
-    min-height: 100vh;
+  flex: 1;
+  transition: margin-left 0.3s ease-in-out;
+  margin-left: calc(250px + var(--main-content-padding-horizontal)); 
+  /* padding-top тепер включає висоту Navbar */
+  padding: 0 var(--main-content-padding-horizontal) var(--main-content-padding-bottom);
+  padding-top: calc(var(--navbar-height) + var(--main-content-outer-padding-top));
+  box-sizing: border-box;
+  min-height: 100vh;
+  /* display: flex; і flex-direction: column; тут не потрібні, якщо pageContainer має фіксовану висоту */
+  overflow: hidden; /* Важливо, щоб не було подвійних скролбарів */
 }
 
 .mainContent.sidebarCollapsed {
-    margin-left: calc(80px + 16px);
+  margin-left: calc(80px + var(--main-content-padding-horizontal)); 
 }
 
-.profileContainer {
-    background: var(--white, #fff);
-    border: 1px solid var(--gray-300, #d1d5db);
-    border-radius: 12px;
-    padding: 0px 14px;
-    margin-top: 16px;
-    width: 100%;
-    height: calc(100vh - 170px);
-    box-sizing: border-box;
-    font-family: 'Roboto', sans-serif;
-    position: relative;
-    overflow-y: auto;
+.pageContainer {
+  background: var(--white, #fff);
+  border: 1px solid var(--gray-300, #d1d5db);
+  border-radius: 12px;
+  padding: 24px;
+  margin-top: 16px;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - (72px + 16px + 16px + 16px)); 
+  overflow: hidden; 
 }
 
-.profileHeader {
-    height: 200px;
-    background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
-    border-radius: 12px 12px 0 0;
-    margin: -24px -24px 0 -24px;
-}
 
-.profileBody {
-    padding: 2rem 0;
-}
-
-.profileContent {
-    height: 100%;
-    padding: 0 16px;
+.header { 
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px; 
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0; 
 }
 
 .title {
-    font-size: 2rem;
-    font-weight: 600;
-    margin: 0 0 1rem 0;
-    color: #1e293b;
+  font-size: 1.75rem; 
+  font-weight: 600;
+  color: var(--text-primary-color); 
+  margin: 0;
+  display: flex;
+  align-items: center;
 }
 
-.filters {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-    margin-bottom: 1.5rem;
+.titleIcon {
+  width: 1.625rem; 
+  height: 1.625rem;
+  margin-right: 0.625rem; 
+  color: var(--primary-color); 
 }
 
-.searchInput, .statusSelect, .dateInput, .dormInput {
-    padding: 0.75rem 1rem;
-    border: 2px solid #e2e8f0;
-    border-radius: 8px;
-    font-size: 14px;
-    font-family: 'Roboto', sans-serif;
-    font-weight: 400;
-    background: #fff;
-    transition: border-color 0.2s ease;
-    min-width: 200px;
+.contentWrapper { 
+  flex-grow: 1; 
+  overflow-y: auto; 
+  overflow-x: hidden; 
+  display: flex; 
+  flex-direction: column; 
+  min-height: 0; 
 }
 
-.searchInput:focus, .statusSelect:focus, .dateInput:focus, .dormInput:focus {
-    outline: none;
-    border-color: #3b82f6;
-}
-
-.searchInput::placeholder, .dateInput::placeholder, .dormInput::placeholder {
-    color: #94a3b8;
-}
-
-.table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    overflow: hidden;
-}
-
-.table th, .table td {
-    padding: 16px;
-    text-align: left;
-    font-size: 14px;
-    font-family: 'Roboto', sans-serif;
-}
-
-.table th {
-    background: var(--blue-gray-50, #f8fafc);
-    font-weight: 600;
-    color: #1e293b;
-    border-bottom: 1px solid #e2e8f0;
-}
-
-.table td {
-    border-bottom: 1px solid #e2e8f0;
-    color: #4b5563;
-}
-
-.tableRow {
-    transition: background 0.2s ease;
-}
-
-.tableRow:hover {
-    background: #eff6ff;
-}
-
-.tableRow:last-child td {
-    border-bottom: none;
-}
-
-.paginationWrapper {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-top: 16px;
-}
-
-.pagination {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 12px;
-}
-
-.paginationButton {
-    padding: 0.75rem 1rem;
-    border: 2px solid #e2e8f0;
-    border-radius: 8px;
-    background: #fff;
-    color: #1e293b;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.paginationButton:hover {
-    background: #3b82f6;
-    color: #fff;
-    border-color: #3b82f6;
-}
-
-.paginationButton:disabled {
-    background: #f1f5f9;
-    color: #94a3b8;
-    cursor: not-allowed;
-}
-
-.modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-}
-
-.modalContent {
-    background: #fff;
-    padding: 24px;
-    border-radius: 12px;
-    width: 90%;
-    max-width: 600px;
-    max-height: 80vh;
-    overflow-y: auto;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.details p {
-    font-size: 14px;
-    color: #4b5563;
-    margin: 12px 0;
-}
-
-.statusButtons {
-    display: flex;
-    gap: 12px;
-    margin-top: 24px;
-}
-
-.statusButton {
-    padding: 0.75rem 1.5rem;
-    border: none;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: opacity 0.2s ease;
-}
-
-.approve {
-    background: #22c55e;
-    color: #fff;
-}
-
-.approve:hover {
-    opacity: 0.9;
-}
-
-.reject {
-    background: #ef4444;
-    color: #fff;
-}
-
-.reject:hover {
-    opacity: 0.9;
-}
-
-.commentsSection {
-    margin-top: 24px;
-}
-
-.commentList {
-    list-style: none;
-    padding: 0;
-}
-
-.comment {
-    padding: 12px;
-    background: #f8fafc;
-    border-radius: 8px;
-    margin-bottom: 12px;
-    font-size: 14px;
-    color: #4b5563;
-}
-
-.commentInput {
-    width: 100%;
-    padding: 0.75rem 1rem;
-    border: 2px solid #e2e8f0;
-    border-radius: 8px;
-    font-size: 14px;
-    font-family: 'Roboto', sans-serif;
-    margin-top: 12px;
-    resize: vertical;
-}
-
-.addCommentButton {
-    margin-top: 12px;
-    padding: 0.75rem 1.5rem;
-    background: #3b82f6;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: opacity 0.2s ease;
-}
-
-.addCommentButton:hover {
-    opacity: 0.9;
-}
-
-.closeModal {
-    margin-top: 24px;
-    padding: 0.75rem 1.5rem;
-    background: #e2e8f0;
-    color: #1e293b;
-    border: none;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: opacity 0.2s ease;
-}
-
-.closeModal:hover {
-    opacity: 0.9;
-}
-
-.loading {
-    text-align: center;
-    padding: 2rem;
-    font-size: 1.2rem;
-    color: #64748b;
+.loading, .emptyMessage { 
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-secondary-color);
+  font-style: italic;
+  font-size: 1rem;
+  flex-grow: 1; 
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .errorMessage {
-    background: #fee2e2;
-    color: #dc2626;
-    padding: 1rem;
-    border-radius: 8px;
-    margin-bottom: 1rem;
-    text-align: center;
-    font-size: 1.1rem;
+  background: #fee2e2; 
+  color: var(--danger-color);
+  padding: 1rem;
+  border-radius: var(--border-radius-md);
+  margin: 0 0 1.5rem 0; 
+  text-align: center;
+  font-size: 1rem;
+  border: 1px solid var(--danger-color);
 }
 
+.paginationWrapper {
+  display: flex;
+  justify-content: center; 
+  align-items: center;
+  padding-top: 20px; 
+  margin-top: 16px; 
+  border-top: 1px solid var(--border-color);
+  flex-shrink: 0; 
+}
+
+/* Стилі для модального вікна (оверлей та загальний контейнер) */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(31, 41, 55, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1050; 
+  padding: 16px; 
+  box-sizing: border-box;
+  backdrop-filter: blur(4px); 
+}
+
+.modalContent {
+  background: var(--card-background-color);
+  padding: 0; 
+  border-radius: var(--border-radius-lg);
+  width: 100%;
+  max-width: 720px; 
+  max-height: 90vh;
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  display: flex; 
+  flex-direction: column; 
+  animation: fadeInScaleUp 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+@keyframes fadeInScaleUp {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.closeButtonIcon {
+  position: absolute;
+  top: 12px; 
+  right: 12px;
+  background: transparent;
+  border: none;
+  padding: 6px; 
+  cursor: pointer;
+  color: var(--text-muted-color);
+  transition: color 0.2s, background-color 0.2s;
+  border-radius: 50%; 
+  z-index: 10; 
+}
+.closeButtonIcon:hover {
+  color: var(--text-primary-color);
+  background-color: var(--border-color); 
+}
+.closeButtonIcon svg {
+  width: 20px; 
+  height: 20px;
+  stroke-width: 2.5; 
+}
+
+
+/* Адаптивність */
 @media (max-width: 1024px) {
-    .mainContent {
-        margin-left: calc(80px + 16px);
-        padding-left: 16px;
-        padding-right: 16px;
-    }
+  :root { /* Перевизначаємо змінні для планшета */
+    --main-content-outer-padding-top-tablet: 16px; /* Змінено з 24px на 16px як у прикладі */
+    --main-content-padding-bottom-tablet: 16px;  /* Змінено з 24px на 16px як у прикладі */
+    --main-content-padding-horizontal-tablet: 16px; /* Змінено з 24px на 16px як у прикладі */
+    --page-container-margin-top-tablet: 16px; /* Залишаємо 16px */
+    /* --navbar-height залишається 72px, якщо не змінюється */
+  }
+
+  .mainContent {
+    margin-left: calc(80px + var(--main-content-padding-horizontal-tablet));
+    padding: 0 var(--main-content-padding-horizontal-tablet) var(--main-content-padding-bottom-tablet);
+    padding-top: calc(var(--navbar-height) + var(--main-content-outer-padding-top-tablet));
+  }
+  .mainContent.sidebarCollapsed {
+     margin-left: calc(80px + var(--main-content-padding-horizontal-tablet)); 
+  }
+   .pageContainer {
+    padding: 20px; /* Внутрішні падінги pageContainer можуть бути іншими */
+    margin-top: var(--page-container-margin-top-tablet);
+    height: calc(100vh - var(--navbar-height) - var(--main-content-outer-padding-top-tablet) - var(--main-content-padding-bottom-tablet) - var(--page-container-margin-top-tablet));
+  }
+  .title {
+    font-size: 1.5rem; 
+  }
+   .titleIcon {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
 }
 
 @media (max-width: 768px) {
-    .mainContent {
-        margin-left: 0 !important;
-        padding: calc(72px + 16px) 16px 16px 16px;
-    }
+  :root { /* Перевизначаємо змінні для мобільного */
+    --navbar-height-mobile: 60px; 
+    --main-content-outer-padding-top-mobile: 10px; 
+    --main-content-padding-bottom-mobile: 10px;
+    --main-content-padding-horizontal-mobile: 10px;
+    --page-container-margin-top-mobile: 10px; /* Зменшено з 12px для узгодження з прикладом */
+  }
 
-    .profileContainer {
-        height: calc(100vh - 100px);
-        padding: 16px;
-        margin-top: 8px;
-    }
-
-    .profileHeader {
-        height: 150px;
-    }
-
-    .profileBody {
-        padding: 1rem 0;
-    }
-
-    .filters {
-        flex-direction: column;
-    }
-
-    .searchInput, .statusSelect, .dateInput, .dormInput {
-        min-width: 100%;
-    }
-
-    .table th, .table td {
-        padding: 12px;
-        font-size: 13px;
-    }
-
-    .modalContent {
-        width: 95%;
-        padding: 16px;
-    }
-
-    .paginationWrapper {
-        margin-top: 16px;
-    }
-
-    .title {
-        font-size: 1.5rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .mainContent {
-        padding: calc(72px + 8px) 8px 8px 8px;
-    }
-
-    .profileContainer {
-        padding: 12px;
-        margin-top: 8px;
-    }
-
-    .paginationButton {
-        padding: 0.5rem 0.75rem;
-        font-size: 13px;
-    }
-
-    .statusButton, .addCommentButton, .closeModal {
-        padding: 0.5rem 1rem;
-        font-size: 13px;
-    }
-
-    .loading, .errorMessage {
-        font-size: 1rem;
-        padding: 1rem;
-    }
+  .mainContent {
+    margin-left: 0 !important; 
+    padding: 0 var(--main-content-padding-horizontal-mobile) var(--main-content-padding-bottom-mobile);
+    padding-top: calc(var(--navbar-height-mobile) + var(--main-content-outer-padding-top-mobile));
+  }
+  .pageContainer {
+    padding: 16px; 
+    margin-top: var(--page-container-margin-top-mobile); 
+    height: calc(100vh - var(--navbar-height-mobile) - var(--main-content-outer-padding-top-mobile) - var(--main-content-padding-bottom-mobile) - var(--page-container-margin-top-mobile));
+  }
+   .header {
+    flex-direction: column;
+    align-items: flex-start; 
+    gap: 12px;
+    margin-bottom: 16px; 
+    padding-bottom: 12px;
+  }
+  .title {
+    font-size: 1.375rem; 
+  }
+   .modalContent {
+    max-width: 95%; 
+   }
 }

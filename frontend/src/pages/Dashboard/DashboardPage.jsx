@@ -36,12 +36,32 @@ const DashboardPage = () => {
                 setIsLoading(false);
             } catch (error) {
                 console.error("[Dashboard] Помилка отримання даних:", error.response?.data || error.message);
-                if (error.response?.status === 401 || error.response?.status === 403) {
-                    console.log("[Dashboard] Помилка авторизації, очищення токенів");
+                const errorCode = error.response?.data?.code; 
+                const errorStatus = error.response?.status; 
+
+                if (errorStatus === 403 && (errorCode === "PROFILE_INCOMPLETE_FACULTY" || errorCode === "FACULTY_NAME_MISSING_ON_COMPLETE_PROFILE")) { 
+                    console.log(`[Dashboard] Profile/Faculty data issue (${errorCode}). AuthRequiredRoute should handle redirection or display an appropriate message.`); 
+                    // The AuthRequiredRoute should redirect to /complete-profile.
+                    // If this page renders before redirect, or user navigates here manually,
+                    // we avoid logging out. Let AuthRequiredRoute handle it or show specific error.
+                    setIsLoading(false); 
+                } else if (errorStatus === 401) { 
+                    // This path should ideally be handled by the API interceptor's refresh logic.
+                    // If it still reaches here, it means refresh failed or it's a direct 401 not caught by interceptor for some reason.
+                    console.log("[Dashboard] 401 Unauthorized error, likely session expired. Performing logout.");
                     localStorage.removeItem("accessToken");
                     localStorage.removeItem("refreshToken");
+                    localStorage.removeItem("user"); 
+                    navigate("/login");
+                } else if (errorStatus === 403) { 
+                    // For other 403 errors not related to profile completion
+                    console.log("[Dashboard] Unhandled 403 error. Logging out as a precaution.");
+                    localStorage.removeItem("accessToken");
+                    localStorage.removeItem("refreshToken");
+                    localStorage.removeItem("user"); 
                     navigate("/login");
                 } else {
+                    // For other errors (e.g., 500, network errors if not caught by interceptor)
                     setIsLoading(false);
                 }
             }
@@ -90,5 +110,4 @@ const DashboardPage = () => {
         </div>
     );
 };
-
 export default DashboardPage;

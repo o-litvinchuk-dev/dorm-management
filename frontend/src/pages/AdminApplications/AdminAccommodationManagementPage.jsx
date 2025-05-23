@@ -9,6 +9,7 @@ import api from "../../utils/api";
 import { ToastService } from "../../utils/toastConfig";
 import styles from "./styles/AdminAccommodationManagementPage.module.css";
 import { useUser } from "../../contexts/UserContext";
+import { XMarkIcon, DocumentTextIcon } from "@heroicons/react/24/outline";
 
 const AdminAccommodationManagementPage = () => {
   const { user } = useUser();
@@ -24,6 +25,7 @@ const AdminAccommodationManagementPage = () => {
   const [sort, setSort] = useState({ sortBy: "created_at", sortOrder: "desc" });
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0 });
   const [isLoading, setIsLoading] = useState(false);
+  const [isModalLoading, setIsModalLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(() => {
     const savedState = localStorage.getItem("sidebarOpen");
@@ -53,22 +55,26 @@ const AdminAccommodationManagementPage = () => {
       const response = await api.get("/admin/accommodation-applications", {
         params: queryParams,
       });
-      setApplications(response.data.applications);
+      setApplications(response.data.applications || []);
       setPagination((prev) => ({
         ...prev,
-        total: response.data.total,
+        total: response.data.total || 0,
       }));
     } catch (err) {
-      setError("Не вдалося завантажити заявки");
+      setError("Не вдалося завантажити заявки. Спробуйте оновити сторінку.");
       ToastService.handleApiError(err);
+      setApplications([]);
+      setPagination(prev => ({ ...prev, total:0 }));
     } finally {
       setIsLoading(false);
     }
   }, [filters, sort, pagination.page, pagination.limit]);
 
   useEffect(() => {
-    fetchApplications();
-  }, [fetchApplications]);
+    if (user) {
+      fetchApplications();
+    }
+  }, [fetchApplications, user]);
 
   const handleFilterChange = (newFilters) => {
     setFilters(newFilters);
@@ -92,37 +98,72 @@ const AdminAccommodationManagementPage = () => {
     setSelectedApplication(application);
   };
 
-  const handleStatusUpdate = async (id, status) => {
+  const handleCloseModal = () => {
+    setSelectedApplication(null);
+  }
+
+  const handleStatusUpdate = async (id, status, extraData = {}) => {
     if (!canUpdateStatus) {
       ToastService.error("Недостатньо прав для зміни статусу");
       return;
     }
+    setIsModalLoading(true);
     try {
-      await api.put(`/admin/accommodation-applications/${id}/status`, { status });
+      const payload = { status, ...extraData };
+      // Ensure room_id is an integer if it's present and relevant
+      if (status === "settled" && extraData.room_id) {
+        payload.room_id = parseInt(extraData.room_id, 10);
+         if (isNaN(payload.room_id)) {
+            delete payload.room_id; // Remove if not a valid number
+         }
+      } else if (status !== "settled") {
+        // If status is not 'settled', room_id might not be relevant,
+        // backend should handle if it needs to be nullified or kept
+        // For frontend optimistic update, we might want to clear it if not settled.
+        // However, let's assume backend handles this logic.
+        // If you need to explicitly send null, do: payload.room_id = null;
+        delete payload.room_id; // Or send null explicitly: payload.room_id = null;
+      }
+
+
+      await api.put(`/admin/accommodation-applications/${id}/status`, payload);
       ToastService.success("Статус оновлено");
-      fetchApplications();
-      setSelectedApplication((prev) =>
-        prev && prev.id === id ? { ...prev, status } : prev
+      
+      // Optimistically update local state
+      setApplications(prevApps =>
+        prevApps.map(app =>
+          app.id === id ? { ...app, status: status, ...(payload.room_id && { room_id: payload.room_id, room_number: extraData.room_number || app.room_number }) } : app
+        )
       );
+      setSelectedApplication(prevApp =>
+        prevApp && prevApp.id === id ? { ...prevApp, status: status, ...(payload.room_id && { room_id: payload.room_id, room_number: extraData.room_number || prevApp.room_number }) } : prevApp
+      );
+
     } catch (err) {
       ToastService.handleApiError(err);
+    } finally {
+      setIsModalLoading(false);
     }
   };
+  
 
-  const handleAddComment = async (id, comment) => {
+  const handleAddComment = async (id, commentText) => {
     if (!canAddComment) {
       ToastService.error("Недостатньо прав для додавання коментаря");
-      return;
+      return null;
     }
+    setIsModalLoading(true);
     try {
       const response = await api.post(`/admin/accommodation-applications/${id}/comments`, {
-        comment,
+        comment: commentText,
       });
       ToastService.success("Коментар додано");
-      return response.data.comment;
+      return response.data.comment; // Return the newly added comment
     } catch (err) {
       ToastService.handleApiError(err);
-      throw err;
+      throw err; // Re-throw to be caught in modal if needed
+    } finally {
+      setIsModalLoading(false);
     }
   };
 
@@ -138,52 +179,68 @@ const AdminAccommodationManagementPage = () => {
           isSidebarExpanded={isSidebarExpanded}
           onMenuToggle={() => setIsSidebarExpanded((prev) => !prev)}
         />
-        <div className={styles.profileContainer}>
-          <div className={styles.profileBody}>
-            <div className={styles.profileContent}>
-              <h2 className={styles.title}>Керування заявками на поселення</h2>
-              <Filters
+        <main className={styles.pageContainer}>
+          <div className={styles.header}>
+            <h1 className={styles.title}>
+              <DocumentTextIcon className={styles.titleIcon} />
+              Керування заявками на поселення
+            </h1>
+          </div>
+          <div className={styles.contentWrapper}>
+            <Filters
+              category="accommodation"
+              filters={filters}
+              onFilterChange={handleFilterChange}
+            />
+            {isLoading ? (
+              <div className={styles.loading}>Завантаження...</div>
+            ) : error ? (
+              <div className={styles.errorMessage}>{error}</div>
+            ) : applications.length === 0 && !isLoading ? (
+              <p className={styles.emptyMessage}>Заявки за обраними фільтрами відсутні.</p>
+            ) : (
+              <ApplicationsTable
                 category="accommodation"
-                filters={filters}
-                onFilterChange={handleFilterChange}
+                applications={applications}
+                onViewDetails={handleViewDetails}
+                sort={sort}
+                onSortChange={handleSortChange}
+                canUpdateStatus={canUpdateStatus}
+                canAddComment={canAddComment}
               />
-              {isLoading ? (
-                <div className={styles.loading}>Завантаження...</div>
-              ) : error ? (
-                <div className={styles.errorMessage}>{error}</div>
-              ) : (
-                <ApplicationsTable
-                  category="accommodation"
-                  applications={applications}
-                  onViewDetails={handleViewDetails}
-                  sort={sort}
-                  onSortChange={handleSortChange}
-                  canUpdateStatus={canUpdateStatus}
-                  canAddComment={canAddComment}
+            )}
+          </div>
+          {!isLoading && !error && applications.length > 0 && pagination.total > pagination.limit && (
+             <div className={styles.paginationWrapper}>
+                <Pagination
+                    page={pagination.page}
+                    limit={pagination.limit}
+                    total={pagination.total}
+                    onPageChange={handlePageChange}
+                    onLimitChange={handleLimitChange}
                 />
-              )}
+            </div>
+          )}
+        </main>
+        {selectedApplication && (
+          <div className={styles.modalOverlay} onClick={handleCloseModal} role="dialog" aria-modal="true">
+            <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+              <button
+                onClick={handleCloseModal}
+                className={styles.closeButtonIcon}
+                aria-label="Закрити деталі заявки"
+              >
+                <XMarkIcon />
+              </button>
+              <ApplicationDetailModal
+                application={selectedApplication}
+                onClose={handleCloseModal}
+                onStatusUpdate={handleStatusUpdate}
+                onAddComment={handleAddComment}
+                isModalLoading={isModalLoading}
+              />
             </div>
           </div>
-        </div>
-        {!isLoading && !error && (
-          <div className={styles.paginationWrapper}>
-            <Pagination
-              page={pagination.page}
-              limit={pagination.limit}
-              total={pagination.total}
-              onPageChange={handlePageChange}
-              onLimitChange={handleLimitChange}
-            />
-          </div>
-        )}
-        {selectedApplication && (
-          <ApplicationDetailModal
-            category="accommodation"
-            application={selectedApplication}
-            onClose={() => setSelectedApplication(null)}
-            onStatusUpdate={canUpdateStatus ? handleStatusUpdate : null}
-            onAddComment={canAddComment ? handleAddComment : null}
-          />
         )}
       </div>
     </div>

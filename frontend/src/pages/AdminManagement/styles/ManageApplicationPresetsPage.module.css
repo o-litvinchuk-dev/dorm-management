@@ -1,0 +1,413 @@
+/* frontend/src/pages/AdminManagement/styles/ManageApplicationPresetsPage.module.css */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+/* --- General Page Styles (from GroupsPage for consistency) --- */
+.layout {
+  display: flex;
+  min-height: 100vh;
+  background: var(--blue-gray-50, #f8fafc);
+  font-family: 'Roboto', sans-serif;
+}
+
+.mainContent {
+  flex: 1;
+  transition: margin-left 0.3s ease;
+  margin-left: calc(250px + 16px);
+  padding: calc(72px + 16px) 16px 16px 16px;
+  box-sizing: border-box;
+  min-height: 100vh;
+  overflow-y: auto;
+}
+
+.mainContent.sidebarCollapsed {
+  margin-left: calc(80px + 16px);
+}
+
+/* --- Specific Styles for ManageApplicationPresetsPage --- */
+.pageContainer {
+  background: var(--white, #fff);
+  border: 1px solid var(--gray-300, #d1d5db);
+  border-radius: 12px;
+  padding: 24px;
+  margin-top: 16px;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - (72px + 16px + 16px + 16px)); /* Adjust based on actual navbar height */
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.pageTitle {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+}
+
+.addButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  background-color: #3b82f6; /* Blue 500 */
+  color: white;
+  font-weight: 500;
+  font-size: 0.875rem;
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.addButton:hover {
+  background-color: #2563eb; /* Blue 600 */
+}
+
+.addButton svg {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+/* --- Table Styles --- */
+.tableContainer {
+  overflow-x: auto;
+  flex-grow: 1;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  margin-top: 1rem;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  min-width: 900px; /* Ensure table has enough width for all columns */
+}
+
+.table th,
+.table td {
+  border-bottom: 1px solid #e5e7eb;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.table td:first-child, .table th:first-child {
+  padding-left: 1.5rem;
+}
+.table td:last-child, .table th:last-child {
+  padding-right: 1.5rem;
+  text-align: center; /* Center actions */
+}
+
+
+.table th {
+  background-color: #f9fafb;
+  font-weight: 500;
+  color: #374151;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+}
+
+.table tbody tr:hover {
+  background-color: #f3f4f6;
+}
+
+.actionsCell {
+  text-align: center;
+  white-space: nowrap;
+}
+
+.actionButton {
+  background: transparent;
+  border: none;
+  padding: 0.375rem;
+  cursor: pointer;
+  color: #6b7280;
+  transition: color 0.2s ease, transform 0.1s ease;
+  margin-left: 0.5rem;
+}
+
+.actionButton:hover {
+  transform: translateY(-1px);
+}
+
+.actionButton svg {
+  width: 1.125rem;
+  height: 1.125rem;
+  stroke-width: 1.5;
+}
+
+.editButton:hover {
+  color: #16a34a; /* Green */
+}
+
+.deleteButton:hover {
+  color: #ef4444; /* Red */
+}
+
+.commentCell {
+  max-width: 150px; /* Adjust as needed */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: help;
+}
+
+/* --- Empty/Loading Messages --- */
+.emptyMessage,
+.loadingMessage {
+  text-align: center;
+  padding: 2rem;
+  color: #6b7280;
+  font-style: italic;
+  font-size: 1rem;
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* --- Modal Styles (reused from GroupsPage.module.css, adapted for presets) --- */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.modal {
+  background: white;
+  padding: 24px 32px;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1), 0 5px 10px rgba(0,0,0,0.04);
+  width: 100%;
+  max-width: 600px; /* Slightly wider for more fields */
+  z-index: 1001;
+  transform: scale(0.95);
+  opacity: 0;
+  animation: fadeInModal 0.3s forwards;
+  max-height: 90vh; /* Ensure modal is scrollable if content is too long */
+  overflow-y: auto;
+}
+
+@keyframes fadeInModal {
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.modal h2 {
+  margin-top: 0;
+  margin-bottom: 24px;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1e293b;
+  text-align: center;
+}
+
+.form { /* This class should be on the form inside the modal */
+  display: flex;
+  flex-direction: column;
+  gap: 1rem; /* Space between form elements */
+}
+
+.label { /* For labels inside the form */
+  display: block;
+  margin-bottom: 0.375rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+  color: #374151;
+}
+
+.input,
+.select,
+.textarea {
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  box-sizing: border-box;
+  font-size: 0.9375rem;
+  font-family: 'Roboto', sans-serif;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.input:focus,
+.select:focus,
+.textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+.textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.errorText { /* For validation errors in the form */
+  color: #ef4444;
+  font-size: 0.8125rem;
+  margin-top: 0.25rem;
+}
+
+.buttonGroup {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.submitButton,
+.cancelButton {
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.375rem;
+  border: none;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+  display: inline-flex; /* For icon alignment */
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.submitButton .buttonIcon,
+.cancelButton .buttonIcon { /* If you add icons to these buttons */
+  width: 1rem;
+  height: 1rem;
+}
+
+.submitButton {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.submitButton:hover:not(:disabled) {
+  background-color: #2563eb;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.submitButton:disabled {
+  background-color: #9ca3af;
+  color: #e5e7eb;
+  cursor: not-allowed;
+}
+
+.cancelButton {
+  background-color: #e5e7eb;
+  color: #374151;
+}
+
+.cancelButton:hover {
+  background-color: #d1d5db;
+}
+
+/* Media Queries (from GroupsPage.module.css) */
+@media (max-width: 1024px) {
+  .mainContent {
+    margin-left: calc(80px + 12px);
+    padding: calc(72px + 12px) 12px 12px 12px;
+  }
+  .mainContent.sidebarCollapsed {
+     margin-left: calc(80px + 12px);
+  }
+   .pageContainer {
+    height: calc(100vh - (72px + 12px + 12px + 12px));
+    padding: 20px;
+  }
+  .pageTitle {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .mainContent {
+    margin-left: 0 !important;
+    padding: calc(60px + 10px) 10px 10px 10px;
+  }
+  .pageContainer {
+    padding: 16px;
+    height: calc(100vh - (60px + 10px + 10px + 10px));
+  }
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .pageTitle {
+    font-size: 1.375rem; /* 22px */
+    text-align: center;
+  }
+  .addButton {
+    width: 100%;
+    justify-content: center;
+    padding: 0.75rem;
+  }
+  .table th,
+  .table td {
+    padding: 0.625rem 0.75rem;
+    font-size: 0.8125rem;
+    white-space: normal;
+  }
+   .table td:first-child, .table th:first-child {
+    padding-left: 0.75rem;
+  }
+  .table td:last-child, .table th:last-child {
+    padding-right: 0.75rem;
+    text-align: center; 
+  }
+  .actionsCell {
+    text-align: center;
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+  }
+  .actionButton {
+    margin-left: 0;
+  }
+  .modal {
+    max-width: calc(100% - 40px);
+    padding: 20px;
+  }
+  .modal h2 {
+    font-size: 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .pageTitle {
+    font-size: 1.25rem;
+  }
+  .input,
+  .select,
+  .textarea {
+    font-size: 0.875rem;
+  }
+  .submitButton,
+  .cancelButton {
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+  }
+}

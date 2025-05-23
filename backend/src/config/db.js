@@ -11,6 +11,7 @@ const pool = mysql.createPool({
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0,
+    dateStrings: true, // This will ensure that date strings are returned as strings
 });
 
 export default pool;
