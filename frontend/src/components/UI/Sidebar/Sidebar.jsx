@@ -16,6 +16,11 @@ import {
   ShieldCheckIcon,
   AcademicCapIcon,
   WrenchScrewdriverIcon,
+  BuildingStorefrontIcon,
+  BookmarkSquareIcon,
+  HomeModernIcon,
+  MagnifyingGlassCircleIcon,
+  BuildingLibraryIcon, // New for Manage Rooms
 } from "@heroicons/react/24/outline";
 import {
   ChartBarIcon as ChartBarSolidIcon,
@@ -29,6 +34,11 @@ import {
   ShieldCheckIcon as ShieldCheckSolidIcon,
   AcademicCapIcon as AcademicCapSolidIcon,
   WrenchScrewdriverIcon as WrenchScrewdriverSolidIcon,
+  BuildingStorefrontIcon as BuildingStorefrontSolidIcon,
+  BookmarkSquareIcon as BookmarkSquareSolidIcon,
+  HomeModernIcon as HomeModernSolidIcon,
+  MagnifyingGlassCircleIcon as MagnifyingGlassCircleSolidIcon,
+  BuildingLibraryIcon as BuildingLibrarySolidIcon, // New
 } from "@heroicons/react/24/solid";
 import api from "../../../utils/api";
 
@@ -39,49 +49,86 @@ const Sidebar = ({ onToggle }) => {
     const savedState = localStorage.getItem("sidebarOpen");
     return savedState !== null ? JSON.parse(savedState) : true;
   });
-  const [tooltipData, setTooltipData] = useState({ visible: false, content: "", top: 0, left: 0 });
+  const [tooltipData, setTooltipData] = useState({
+    visible: false,
+    content: "",
+    top: 0,
+    left: 0,
+  });
   const sidebarRef = useRef(null);
   const tooltipTimeoutRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
 
-  const isAdmin = user && [
-    "admin",
-    "superadmin",
-    "dorm_manager",
-    "student_council_head",
-    "student_council_member",
-    "faculty_dean_office",
-  ].includes(user.role);
+  const isAdmin =
+    user &&
+    [
+      "admin",
+      "superadmin",
+      "dorm_manager",
+      "student_council_head",
+      "student_council_member",
+      "faculty_dean_office",
+    ].includes(user.role);
 
   useEffect(() => {
-    const path = location.pathname.slice(1).split('/')[0] || "dashboard";
+    const path = location.pathname.slice(1).split("/")[0] || "dashboard";
     const currentPath = location.pathname.slice(1);
-    const adminSubPaths = ["admin/management", "admin/accommodation-applications", "dean/groups", "adminApplications", "admin/application-presets"];
+
+    const adminSubPaths = [
+      "admin/management",
+      "admin/accommodation-applications",
+      "dean/groups",
+      "adminApplications",
+      "admin/application-presets",
+      "admin/room-reservations",
+      "dorm-manager/rooms", // Added
+    ];
 
     let matchedTab = path;
-    if (adminSubPaths.some(subPath => currentPath.startsWith(subPath))) {
-        matchedTab = currentPath.startsWith("adminApplications") && currentPath.includes("accommodation")
-                     ? "admin/accommodation-applications"
-                     : currentPath.split('/').slice(0, 2).join('/');
-        if (!adminSubPaths.includes(matchedTab) && currentPath.startsWith("adminApplications")) {
-            matchedTab = "adminApplications";
-        }
+
+    if (adminSubPaths.some((subPath) => currentPath.startsWith(subPath))) {
+      matchedTab = currentPath.split("/").slice(0, 2).join("/");
+      if (
+        !adminSubPaths.includes(matchedTab) &&
+        currentPath.startsWith("adminApplications")
+      ) {
+        matchedTab = "adminApplications";
+      }
+    } else if (currentPath.startsWith("services/rooms")) {
+      matchedTab = "services/rooms/search";
     } else if (currentPath.startsWith("services/")) {
-        matchedTab = "services";
+      matchedTab = "services";
+    } else if (currentPath === "my-reservations"){
+        matchedTab = "my-reservations";
     }
 
+
     const allTabs = [
-      "dashboard", "applications", "dormitories", "services", "settlement",
-      "settings", "help", "logout", ...adminSubPaths
+      "dashboard",
+      "applications",
+      "my-accommodation-applications",
+      "dormitories",
+      "services",
+      "services/rooms/search",
+      "settlement",
+      "my-reservations",
+      "settings",
+      "help",
+      "logout",
+      ...adminSubPaths,
     ];
 
     if (allTabs.includes(matchedTab)) {
       setActiveTab(matchedTab);
     } else {
-      setActiveTab(path);
+      const parentPath = currentPath.split("/")[0];
+      if (allTabs.includes(parentPath)) {
+        setActiveTab(parentPath);
+      } else {
+        setActiveTab(path);
+      }
     }
-
   }, [location.pathname]);
 
   useEffect(() => {
@@ -110,20 +157,16 @@ const Sidebar = ({ onToggle }) => {
     [isSidebarOpen]
   );
 
-  // Define handleLogout BEFORE handleNavigation
-  const handleLogout = useCallback(
-    async () => {
-      try {
-        await api.post("/auth/logout");
-      } catch (error) {
-        console.error("Logout API error:", error);
-      } finally {
-        logout();
-        navigate("/login");
-      }
-    },
-    [navigate, logout]
-  );
+  const handleLogout = useCallback(async () => {
+    try {
+      await api.post("/auth/logout");
+    } catch (error) {
+      console.error("Logout API error:", error);
+    } finally {
+      logout();
+      navigate("/login");
+    }
+  }, [navigate, logout]);
 
   const handleNavigation = useCallback(
     (tab) => {
@@ -135,7 +178,7 @@ const Sidebar = ({ onToggle }) => {
         navigate(`/${tab}`);
       }
     },
-    [navigate, hideTooltip, handleLogout] // Now handleLogout is correctly in scope
+    [navigate, hideTooltip, handleLogout]
   );
 
   const toggleSidebar = useCallback(() => {
@@ -150,7 +193,11 @@ const Sidebar = ({ onToggle }) => {
 
   const handleClickOutside = useCallback(
     (e) => {
-      if (sidebarRef.current && !sidebarRef.current.contains(e.target) && tooltipData.visible) {
+      if (
+        sidebarRef.current &&
+        !sidebarRef.current.contains(e.target) &&
+        tooltipData.visible
+      ) {
         hideTooltip();
       }
     },
@@ -166,9 +213,12 @@ const Sidebar = ({ onToggle }) => {
     const icons = {
       dashboard: isActive ? ChartBarSolidIcon : ChartBarIcon,
       applications: isActive ? DocumentTextSolidIcon : DocumentTextIcon,
-      dormitories: isActive ? UserGroupSolidIcon : UserGroupIcon,
+      "my-accommodation-applications": isActive ? DocumentTextSolidIcon : DocumentTextIcon,
+      dormitories: isActive ? HomeModernSolidIcon : HomeModernIcon,
       services: isActive ? ClipboardDocumentListSolidIcon : ClipboardDocumentListIcon,
+      "services/rooms/search": isActive ? MagnifyingGlassCircleSolidIcon : MagnifyingGlassCircleIcon,
       settlement: isActive ? CalendarSolidIcon : CalendarIcon,
+      "my-reservations": isActive ? BookmarkSquareSolidIcon : BookmarkSquareIcon,
       settings: isActive ? Cog6ToothSolidIcon : Cog6ToothIcon,
       help: isActive ? QuestionMarkCircleSolidIcon : QuestionMarkCircleIcon,
       logout: isActive ? ArrowLeftOnRectangleSolidIcon : ArrowLeftOnRectangleIcon,
@@ -177,6 +227,8 @@ const Sidebar = ({ onToggle }) => {
       "admin/accommodation-applications": isActive ? ClipboardDocumentListSolidIcon : ClipboardDocumentListIcon,
       "dean/groups": isActive ? AcademicCapSolidIcon : AcademicCapIcon,
       "admin/application-presets": isActive ? WrenchScrewdriverSolidIcon : WrenchScrewdriverIcon,
+      "admin/room-reservations": isActive ? BuildingStorefrontSolidIcon : BuildingStorefrontIcon,
+      "dorm-manager/rooms": isActive ? BuildingLibrarySolidIcon : BuildingLibraryIcon, // New Icon
     };
     const IconComponent = icons[iconName] || QuestionMarkCircleIcon;
     return <IconComponent className={styles.menuIcon} />;
@@ -185,7 +237,9 @@ const Sidebar = ({ onToggle }) => {
   const renderMenuItem = (name, label) => (
     <button
       key={name}
-      className={`${styles.menuItem} ${activeTab === name ? styles.active : ""}`}
+      className={`${styles.menuItem} ${
+        activeTab === name ? styles.active : ""
+      }`}
       onClick={() => handleNavigation(name)}
       onMouseEnter={(e) => showTooltip(e, label)}
       onMouseLeave={hideTooltip}
@@ -206,20 +260,23 @@ const Sidebar = ({ onToggle }) => {
   const menuItems = {
     main: [
       { name: "dashboard", label: "Головна" },
-      { name: "applications", label: "Мої заявки" },
+      { name: "my-accommodation-applications", label: "Мої заявки на поселення" },
+      { name: "my-reservations", label: "Мої бронювання кімнат" },
       { name: "dormitories", label: "Гуртожитки" },
       { name: "services", label: "Послуги" },
+      { name: "services/rooms/search", label: "Пошук кімнат" },
       { name: "settlement", label: "Розклад поселення" },
     ],
     admin: [
-      { name: "adminApplications", label: "Адмін-заявки", roles: ["admin", "superadmin", "faculty_dean_office", "dorm_manager", "student_council_head", "student_council_member"] },
+      { name: "adminApplications", label: "Адмін-заявки (старі)", roles: ["admin", "superadmin", "faculty_dean_office", "dorm_manager", "student_council_head", "student_council_member"] },
+      { name: "admin/accommodation-applications", label: "Заявки на поселення", roles: ["admin", "superadmin", "faculty_dean_office", "dorm_manager", "student_council_head", "student_council_member"] },
+      { name: "admin/room-reservations", label: "Бронювання Кімнат", roles: ["admin", "superadmin", "dorm_manager"] },
       { name: "admin/management", label: "Керування системою", roles: ["superadmin"] },
       { name: "dean/groups", label: "Управління групами", roles: ["faculty_dean_office", "admin", "superadmin"] },
       { name: "admin/application-presets", label: "Налаштування Заяв", roles: ["admin", "superadmin", "faculty_dean_office"] },
+      { name: "dorm-manager/rooms", label: "Керування кімнатами", roles: ["dorm_manager", "admin", "superadmin"] }, // New Menu Item
     ],
-    settings: [
-      { name: "settings", label: "Налаштування" },
-    ],
+    settings: [{ name: "settings", label: "Налаштування" }],
     bottom: [
       { name: "help", label: "Допомога" },
       { name: "logout", label: "Вийти" },
@@ -229,10 +286,16 @@ const Sidebar = ({ onToggle }) => {
   return (
     <div
       ref={sidebarRef}
-      className={`${styles.sidebarContainer} ${!isSidebarOpen ? styles.collapsed : ""}`}
+      className={`${styles.sidebarContainer} ${
+        !isSidebarOpen ? styles.collapsed : ""
+      }`}
     >
       <div className={styles.logoContainer}>
-        <img src="/logo2.svg" alt="Dorm Life Logo" className={styles.logoImage} />
+        <img
+          src="/logo2.svg"
+          alt="Dorm Life Logo"
+          className={styles.logoImage}
+        />
         {isSidebarOpen && (
           <div className={styles.logoText}>
             <span className={styles.logoTitle}>Dorm Life</span>
@@ -245,7 +308,9 @@ const Sidebar = ({ onToggle }) => {
         className={styles.toggleButton}
         onClick={toggleSidebar}
         type="button"
-        aria-label={isSidebarOpen ? "Згорнути бічну панель" : "Розгорнути бічну панель"}
+        aria-label={
+          isSidebarOpen ? "Згорнути бічну панель" : "Розгорнути бічну панель"
+        }
       >
         {isSidebarOpen ? (
           <ChevronLeftIcon className={styles.toggleIcon} />
@@ -259,7 +324,9 @@ const Sidebar = ({ onToggle }) => {
           <div className={styles.sidebarMain}>
             <div className={styles.sidebarSection}>
               {renderSectionHeader("Основне")}
-              {menuItems.main.map((item) => renderMenuItem(item.name, item.label))}
+              {menuItems.main.map((item) =>
+                renderMenuItem(item.name, item.label)
+              )}
             </div>
 
             {isAdmin && (
@@ -273,20 +340,26 @@ const Sidebar = ({ onToggle }) => {
 
             <div className={styles.sidebarSection}>
               {renderSectionHeader("Налашт.")}
-              {menuItems.settings.map((item) => renderMenuItem(item.name, item.label))}
+              {menuItems.settings.map((item) =>
+                renderMenuItem(item.name, item.label)
+              )}
             </div>
           </div>
         </div>
-
         <div className={styles.bottomSection}>
-          {menuItems.bottom.map((item) => renderMenuItem(item.name, item.label))}
+          {menuItems.bottom.map((item) =>
+            renderMenuItem(item.name, item.label)
+          )}
         </div>
       </div>
 
       {!isSidebarOpen && tooltipData.visible && (
         <div
           className={styles.tooltip}
-          style={{ top: `${tooltipData.top}px`, left: `${tooltipData.left}px` }}
+          style={{
+            top: `${tooltipData.top}px`,
+            left: `${tooltipData.left}px`,
+          }}
           onClick={(e) => e.stopPropagation()}
         >
           <div className={styles.tooltipArrow}></div>

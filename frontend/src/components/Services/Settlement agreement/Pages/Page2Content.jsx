@@ -1,13 +1,14 @@
 import React from "react";
-import styles from "../../../../pages/Services/Settlement agreement/styles/SettlementApplicationPage.module.css";
-
+// Оновлений і правильний шлях до стилів
+import styles from "../../../../pages/Services/Settlement agreement/styles/SettlementAgreementPage.module.css";
 const Page2Content = ({
-  formData,
-  errors,
-  handleChange,
-  handleFocus,
-  handleBlur,
-  inputRefs,
+  formData, // пропс приймається, але може не використовуватися, якщо сторінка статична
+  errors,   // аналогічно
+  // ... інші стандартні пропси, якщо вони потрібні для майбутніх розширень
+  // handleChange,
+  // handleFocus,
+  // handleBlur,
+  // inputRefs, // Може не знадобитися для чисто статичних сторінок
 }) => {
   return (
     <div className={styles.contractText}>

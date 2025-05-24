@@ -1,5 +1,5 @@
 import React, { useRef } from "react";
-import styles from "../../../../pages/Services/Settlement agreement/styles/SettlementApplicationPage.module.css";
+import styles from "../../../../pages/Services/Settlement agreement/styles/SettlementAgreementPage.module.css";
 
 const Page11Content = ({
   formData,

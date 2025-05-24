@@ -1,5 +1,5 @@
 import React from "react";
-import styles from "../../../../pages/Services/Settlement agreement/styles/SettlementApplicationPage.module.css";
+import styles from "../../../../pages/Services/Settlement agreement/styles/SettlementAgreementPage.module.css";
 
 const Page8Content = ({
   formData,
@@ -10,16 +10,20 @@ const Page8Content = ({
   inputRefs,
 }) => {
   const handleDateKeyDown = (e, currentField, nextField, prevField) => {
-    if (e.key === "ArrowRight" && formData[currentField].length >= 2) {
+    if (e.key === "ArrowRight" && formData[currentField] && formData[currentField].length >= 2) {
       inputRefs.current[nextField]?.focus();
-    } else if (e.key === "ArrowLeft" && formData[currentField].length === 0) {
+    } else if (e.key === "ArrowLeft" && formData[currentField] && formData[currentField].length === 0) {
       inputRefs.current[prevField]?.focus();
     } else if (e.key === "Enter" || (e.key === "Tab" && !e.shiftKey)) {
-      inputRefs.current[nextField]?.focus();
-      e.preventDefault();
+      if (inputRefs.current[nextField]) {
+        inputRefs.current[nextField]?.focus();
+        e.preventDefault();
+      }
     } else if (e.key === "Tab" && e.shiftKey) {
-      inputRefs.current[prevField]?.focus();
-      e.preventDefault();
+       if (inputRefs.current[prevField]) {
+        inputRefs.current[prevField]?.focus();
+        e.preventDefault();
+      }
     }
   };
 
@@ -40,22 +44,22 @@ const Page8Content = ({
         7.1. Цей Договір вважається укладеним і набирає чинності з моменту його підписання Сторонами, а закінчується «
         <input
           type="text"
-          name="endDay"
-          value={formData.endDay}
+          name="endDay" // Це поле повторюється з Page1Content
+          value={formData.endDay || ""}
           onChange={(e) => handleChange(e, "endDay")}
           onFocus={() => handleFocus("endDay")}
           onBlur={() => handleBlur("endDay")}
-          onKeyDown={(e) => handleDateKeyDown(e, "endDay", "endMonth", null)}
+          onKeyDown={(e) => handleDateKeyDown(e, "endDay", "endMonth", null)} // prevField null, бо це початок секції
           maxLength="2"
           placeholder="__"
           className={`${styles.inlineInputDate} ${errors.endDay ? styles.errorInput : ''}`}
           ref={(el) => {
-            if (el) inputRefs.current["endDay"] = el;
-            else delete inputRefs.current["endDay"];
+            if (el) inputRefs.current["page8_endDay"] = el; // Унікальний ref
+            else delete inputRefs.current["page8_endDay"];
           }}
           required
-          data-error-field="endDay"
-          aria-label="День закінчення"
+          data-error-field="endDay" // data-error-field може бути однаковим, якщо валідація спільна
+          aria-label="День закінчення (строк дії)"
           aria-invalid={!!errors.endDay}
           aria-describedby={errors.endDay ? "endDay-error" : undefined}
         />{" "}
@@ -63,21 +67,21 @@ const Page8Content = ({
         <input
           type="text"
           name="endMonth"
-          value={formData.endMonth}
+          value={formData.endMonth || ""}
           onChange={(e) => handleChange(e, "endMonth")}
           onFocus={() => handleFocus("endMonth")}
           onBlur={() => handleBlur("endMonth")}
-          onKeyDown={(e) => handleDateKeyDown(e, "endMonth", "endYear", "endDay")}
+          onKeyDown={(e) => handleDateKeyDown(e, "endMonth", "endYear", "page8_endDay")}
           maxLength="2"
           placeholder="__"
           className={`${styles.inlineInputDate} ${errors.endMonth ? styles.errorInput : ''}`}
           ref={(el) => {
-            if (el) inputRefs.current["endMonth"] = el;
-            else delete inputRefs.current["endMonth"];
+            if (el) inputRefs.current["page8_endMonth"] = el;
+            else delete inputRefs.current["page8_endMonth"];
           }}
           required
           data-error-field="endMonth"
-          aria-label="Місяць закінчення"
+          aria-label="Місяць закінчення (строк дії)"
           aria-invalid={!!errors.endMonth}
           aria-describedby={errors.endMonth ? "endMonth-error" : undefined}
         />{" "}
@@ -85,21 +89,21 @@ const Page8Content = ({
         <input
           type="text"
           name="endYear"
-          value={formData.endYear}
+          value={formData.endYear || ""}
           onChange={(e) => handleChange(e, "endYear")}
           onFocus={() => handleFocus("endYear")}
           onBlur={() => handleBlur("endYear")}
-          onKeyDown={(e) => handleDateKeyDown(e, "endYear", null, "endMonth")}
+          onKeyDown={(e) => handleDateKeyDown(e, "endYear", null, "page8_endMonth")} // nextField null, бо це кінець секції дати
           maxLength="2"
           placeholder="__"
           className={`${styles.inlineInputDate} ${errors.endYear ? styles.errorInput : ''}`}
           ref={(el) => {
-            if (el) inputRefs.current["endYear"] = el;
-            else delete inputRefs.current["endYear"];
+            if (el) inputRefs.current["page8_endYear"] = el;
+            else delete inputRefs.current["page8_endYear"];
           }}
           required
           data-error-field="endYear"
-          aria-label="Рік закінчення (останні дві цифри)"
+          aria-label="Рік закінчення (строк дії, останні дві цифри)"
           aria-invalid={!!errors.endYear}
           aria-describedby={errors.endYear ? "endYear-error" : undefined}
         />{" "}

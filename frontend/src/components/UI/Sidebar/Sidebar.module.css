@@ -136,6 +136,7 @@
 .sidebarScroll {
   flex: 1;
   overflow-y: auto;
+  max-height: calc(100vh - 280px); /* адаптивна висота з урахуванням шапки + кнопки */
   padding: 0 24px 24px;
   position: relative;
 }

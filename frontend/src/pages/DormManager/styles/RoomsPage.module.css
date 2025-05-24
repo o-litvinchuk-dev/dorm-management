@@ -1,0 +1,95 @@
+/* This file is for the old RoomsPage.jsx, the new one is ManageRoomsPage.module.css */
+.container {
+    padding: 20px;
+}
+
+.addButton {
+    background-color: #4CAF50; /* Green */
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 10px 0;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.table th, .table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.table th {
+    background-color: #f2f2f2;
+}
+
+.editButton, .deleteButton {
+    padding: 5px 10px;
+    margin-right: 5px;
+    border-radius: 4px;
+    border: 1px solid transparent;
+    cursor: pointer;
+}
+
+.editButton {
+    background-color: #007bff; /* Blue */
+    color: white;
+}
+
+.deleteButton {
+    background-color: #dc3545; /* Red */
+    color: white;
+}
+
+/* Styles for modal (can be in a separate file or here) */
+.modal {
+    /* Basic modal styling, adjust as needed */
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    z-index: 1000;
+}
+
+.modal .form div {
+    margin-bottom: 10px;
+}
+.modal .form label {
+    display: block;
+    margin-bottom: 5px;
+}
+.modal .form input, .modal .form textarea {
+    width: 100%;
+    padding: 8px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+.modal .form .errorInput {
+    border-color: red;
+}
+.modal .form .error {
+    color: red;
+    font-size: 0.8em;
+}
+.modal .buttons {
+    margin-top: 15px;
+    text-align: right;
+}
+.modal .buttons button {
+    margin-left: 10px;
+}

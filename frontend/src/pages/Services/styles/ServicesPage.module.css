@@ -1,102 +1,337 @@
-/* Імпорт шрифту */
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
 
-/* Основний контейнер */
-.servicesLayout {
-    display: flex;
-    height: 100vh;
-    background-color: #f8fafc;
+
+/* --- CSS Змінні --- */
+:root {
+    --primary-blue: #3b82f6;
+    --primary-blue-dark: #2563eb;
+    --primary-blue-light: #e0f2fe; /* Світліший синій для фонів іконок, але не надто яскравий */
+    --primary-blue-hover-bg: #f0f9ff; /* Дуже світлий фон для hover карток */
+
+    --text-header: #111827;      /* Насичений темний для заголовків */
+    --text-body: #374151;       /* Основний текст */
+    --text-secondary: #4b5563;  /* Другорядний текст, описи */
+    --text-muted: #6b7280;      /* Для підписів, менш важливого */
+    --text-link: var(--primary-blue);
+    --text-link-hover: var(--primary-blue-dark);
+
+    --border-light: #e5e7eb;    /* Світла розділова лінія */
+    --border-medium: #d1d5db;   /* Рамка для карток */
+    --border-strong: #9ca3af;   /* Більш помітна рамка, якщо потрібно */
+
+    --card-bg: #ffffff;
+    --page-bg: #f9fafb;        /* Загальний фон сторінки */
+    --container-bg: var(--white); /* Фон для основного контейнера контенту */
+
+    --icon-color: var(--primary-blue);
+
+    --font-primary: 'Inter', 'Roboto', sans-serif;
+    --border-radius-base: 8px;   /* Базовий радіус для карток, кнопок */
+    --border-radius-large: 12px; /* Для великих елементів, як pageContainer */
+
+    --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.07), 0 1px 2px -1px rgba(0, 0, 0, 0.04); /* Легка тінь для карток */
+    --shadow-card-hover: 0 4px 12px 0 rgba(0, 0, 0, 0.1), 0 2px 6px -1px rgba(0, 0, 0, 0.06); /* Тінь при наведенні */
+    --red-accent: #ef4444;
 }
 
-/* Головний вміст */
+/* --- Загальні стилі сторінки --- */
+.servicesLayout {
+  display: flex;
+  min-height: 100vh;
+  background: var(--page-bg);
+  font-family: var(--font-primary);
+}
+
 .mainContent {
-    flex: 1;
-    transition: margin-left 0.3s ease;
-    margin-left: calc(235px + 16px);
-    padding: calc(72px + 16px) 16px 16px 16px;
-    box-sizing: border-box;
-    min-height: 100vh;
+  flex: 1;
+  transition: margin-left 0.3s ease;
+  margin-left: calc(250px + 16px); 
+  padding: calc(72px + 16px) 16px 16px 16px; 
+  box-sizing: border-box;
+  min-height: 100vh;
+  /* overflow-y: auto; - Прибираємо скрол звідси, він буде в pageContainer */
 }
 
 .mainContent.sidebarCollapsed {
-    margin-left: calc(66px + 16px);
+  margin-left: calc(80px + 16px);
 }
 
-/* Контейнер послуг */
-.servicesContainer {
-    position: relative;
-    overflow-y: auto;
-    padding: 24px;
+/*
+  pageContainer тепер відповідає за основну білу область контенту,
+  як у GroupsPage.module.css. Він має власну прокрутку.
+*/
+.pageContainer {
+  background: var(--container-bg);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--border-radius-large);
+  padding: 24px;
+  margin-top: 16px; /* Відступ від Navbar */
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - (72px + 16px + 16px + 16px)); /* Розрахунок висоти */
+  overflow-y: auto; /* Вмикаємо скрол для контейнера, якщо вміст не поміщається */
 }
 
-/* Заголовок */
-.title {
-    font-size: 21px;
-    font-weight: 600;
-    margin-bottom: 16px;
-    text-align: start;
-    color: #000000;
-    font-family: 'Roboto', sans-serif;
+.header {
+  display: flex;
+  flex-direction: column; /* Заголовок та інтро текст один під одним */
+  align-items: flex-start; /* Вирівнювання по лівому краю */
+  margin-bottom: 28px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border-light);
 }
 
-/* Сітка для послуг */
+.pageTitle {
+  font-size: 1.875rem; /* 30px */
+  font-weight: 700;
+  color: var(--text-header);
+  margin: 0 0 8px 0; /* Відступ знизу для відокремлення від інтро тексту */
+}
+
+.introText {
+    font-size: 1rem; /* 16px */
+    color: var(--text-secondary);
+    line-height: 1.6;
+    max-width: 850px; /* Обмеження ширини для читабельності */
+}
+
+/* --- Сітка для карток послуг --- */
 .serviceGrid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); 
+    gap: 24px;
+    /* padding-top: 4px; Якщо потрібен відступ над першим рядом карток */
+    flex-grow: 1; /* Дозволяє сітці зайняти доступний простір, якщо вміст pageContainer скролиться */
 }
 
-/* Блок послуги */
+/* --- Стиль для картки послуги --- */
 .serviceItem {
-    background: #fff;
-    border: 1px solid #e5e7eb; /* Аналог var(--gray-300) */
-    border-radius: 12px;
-    padding: 20px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-light); /* Тонша рамка за замовчуванням */
+    border-radius: var(--border-radius-base);
+    padding: 24px;
     cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: transform 0.2s ease-out, box-shadow 0.2s ease-out, border-color 0.2s ease-out;
+    display: flex;
+    flex-direction: column;
+    text-decoration: none;
+    color: inherit;
+    box-shadow: var(--shadow-card); /* Легка тінь */
 }
 
-.serviceItem:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+.serviceItem:hover, .serviceItem:focus-visible {
+    transform: translateY(-4px); /* Менший підйом */
+    box-shadow: var(--shadow-card-hover); /* Більш виразна тінь при наведенні */
+    border-color: var(--primary-blue);
+    outline: none;
 }
 
-/* Заголовок послуги */
+.serviceItem:focus-visible {
+    border-width: 1px; /* Залишаємо товщину рамки такою ж */
+    /* Можна додати кільце фокусу, якщо потрібно */
+    /* box-shadow: var(--shadow-card-hover), 0 0 0 2px var(--primary-blue-light); */
+}
+
+
+.serviceIconWrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 10px; /* Менш заокруглені */
+    background-color: var(--primary-blue-light);
+    margin-bottom: 18px;
+    color: var(--icon-color);
+    flex-shrink: 0;
+}
+
+.serviceIcon {
+    width: 28px;
+    height: 28px;
+}
+
+.serviceContent {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
 .serviceTitle {
-    font-size: 18px;
-    font-weight: 500;
+    font-size: 1.25rem; /* 20px */
+    font-weight: 600;
+    margin-top: 0;
     margin-bottom: 10px;
-    color: #000;
-    font-family: 'Roboto', sans-serif;
+    color: var(--text-header);
+    line-height: 1.35;
 }
 
-/* Опис послуги */
 .serviceDescription {
-    font-size: 14px;
-    color: #666;
-    font-family: 'Roboto', sans-serif;
-    font-weight: 400;
+    font-size: 0.9375rem; /* 15px */
+    color: var(--text-secondary);
+    line-height: 1.55;
+    margin-bottom: 20px;
+    flex-grow: 1;
 }
 
-/* Повідомлення про помилку */
-.error {
-    color: red;
-    text-align: center;
-    font-family: 'Roboto', sans-serif;
+.serviceAction {
+    display: inline-flex;
+    align-items: center;
+    color: var(--text-link);
+    font-weight: 500;
+    font-size: 0.9375rem; /* 15px */
+    margin-top: auto; 
+    padding: 4px 0; /* Менший вертикальний padding */
+    align-self: flex-start;
+    border-radius: 4px;
+    transition: color 0.2s ease;
+}
+.serviceItem:hover .serviceAction, .serviceItem:focus-visible .serviceAction {
+    color: var(--text-link-hover);
 }
 
-/* Адаптивність */
+
+.serviceAction .actionIcon {
+    width: 20px;
+    height: 20px;
+    margin-left: 8px;
+    transition: transform 0.2s ease-in-out;
+}
+
+.serviceItem:hover .serviceAction .actionIcon {
+    transform: translateX(3px);
+}
+
+
+/* --- Повідомлення про завантаження та помилки --- */
+.loadingMessage,
+.errorMessage {
+  text-align: center;
+  padding: 2.5rem;
+  color: var(--text-muted);
+  font-style: italic;
+  font-size: 1.05rem; /* 17px */
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%; /* Щоб повідомлення займало всю ширину */
+}
+
+.errorMessage {
+  color: var(--red-accent);
+  background-color: #fee2e2;
+  border: 1px solid #fca5a5;
+  border-radius: var(--border-radius-base);
+}
+
+/* --- Адаптивність --- */
+@media (max-width: 1024px) {
+  .mainContent {
+    margin-left: calc(80px + 12px);
+    padding: calc(72px + 12px) 12px 12px 12px;
+  }
+  .mainContent.sidebarCollapsed {
+     margin-left: calc(80px + 12px);
+  }
+   .pageContainer {
+    height: calc(100vh - (72px + 12px + 12px + 12px));
+    padding: 20px;
+  }
+  .pageTitle {
+    font-size: 1.75rem; 
+  }
+  .serviceGrid {
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 20px;
+  }
+}
+
 @media (max-width: 768px) {
-    .mainContent {
-        margin-left: 0 !important;
-        padding: calc(72px + 16px) 16px 16px 16px;
-    }
+  .mainContent {
+    margin-left: 0 !important;
+    padding: calc(60px + 10px) 10px 10px 10px;
+  }
+  .pageContainer {
+    padding: 20px; /* Збільшимо padding для мобільних */
+    height: auto; /* Дозволимо контейнеру рости */
+    min-height: calc(100vh - (60px + 10px + 10px)); /* Мінімальна висота */
+    overflow: visible; /* Прибираємо скрол з контейнера, скрол буде на mainContent */
+  }
+  .mainContent { /* Додаємо скрол на mainContent для мобільних */
+      overflow-y: auto;
+  }
+  .header {
+    align-items: center; /* Центруємо заголовок та інтро */
+    text-align: center;
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+  }
+  .pageTitle {
+    font-size: 1.625rem;
+  }
+  .introText {
+    font-size: 0.9375rem;
+    max-width: 100%; /* Займає всю ширину */
+  }
+  .serviceGrid {
+    grid-template-columns: 1fr; 
+  }
+  .serviceItem {
+    padding: 20px;
+    border-radius: var(--border-radius-base);
+  }
+  .serviceTitle {
+    font-size: 1.125rem;
+  }
+  .serviceDescription {
+    font-size: 0.875rem;
+    margin-bottom: 16px;
+  }
+   .serviceIconWrapper {
+    width: 52px;
+    height: 52px;
+    margin-bottom: 16px;
+    border-radius: 8px;
+  }
+  .serviceIcon {
+    width: 26px;
+    height: 26px;
+  }
+  .serviceAction {
+      font-size: 0.875rem;
+  }
+  .serviceAction .actionIcon {
+      width: 18px;
+      height: 18px;
+  }
+}
 
-    .servicesContainer {
-        padding: 16px;
-    }
-
-    .serviceGrid {
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    }
+@media (max-width: 480px) {
+  .pageContainer {
+      padding: 16px;
+  }
+  .pageTitle {
+    font-size: 1.5rem;
+  }
+   .introText {
+    font-size: 0.875rem;
+  }
+  .serviceIconWrapper {
+    width: 48px;
+    height: 48px;
+  }
+  .serviceIcon {
+    width: 24px;
+    height: 24px;
+  }
+  .serviceTitle {
+    font-size: 1.05rem;
+  }
+   .serviceDescription {
+      font-size: 0.8125rem; /* 13px */
+  }
 }

@@ -1,10 +1,9 @@
-/* frontend/src/components/Admin/Filters.module.css */
 .filters {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Адаптивні колонки */
-  gap: 1rem; /* 16px */
-  margin-bottom: 1.5rem; /* 24px */
-  align-items: end; /* Вирівнює елементи по нижньому краю, якщо вони різної висоти */
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  align-items: end; /* Align items to the bottom of their grid cell */
 }
 
 .inputGroup {
@@ -43,13 +42,13 @@
 }
 
 .inputField:disabled {
-    background-color: #f3f4f6; /* Gray 100 */
-    color: #6b7280; /* Gray 500 */
-    cursor: not-allowed;
+  background-color: #f3f4f6; /* Gray 100 */
+  color: #6b7280; /* Gray 500 */
+  cursor: not-allowed;
 }
 
 @media (max-width: 768px) {
   .filters {
-    grid-template-columns: 1fr; /* Одна колонка на малих екранах */
+    grid-template-columns: 1fr; /* Stack filters on smaller screens */
   }
 }

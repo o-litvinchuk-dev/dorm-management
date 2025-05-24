@@ -1,44 +1,47 @@
 p, superadmin, /*, *
 p, superadmin, /api/v1/faculties, *
 p, superadmin, /api/v1/faculties/:id, *
+
 p, admin, /api/v1/faculties, GET
 p, admin, /api/v1/faculties, POST
 p, admin, /api/v1/faculties/:id, GET
 p, admin, /api/v1/faculties/:id, PUT
 p, admin, /api/v1/faculties/:id, DELETE
+
 p, admin, /api/v1/dormitories, GET
 p, admin, /api/v1/dormitories, POST
 p, admin, /api/v1/dormitories/:id, GET
 p, admin, /api/v1/dormitories/:id, PUT
 p, admin, /api/v1/dormitories/:id, DELETE
+
 p, admin, /api/v1/faculty-dormitories, GET
 p, admin, /api/v1/faculty-dormitories, POST
 p, admin, /api/v1/faculty-dormitories/:faculty_id/:dormitory_id, GET
 p, admin, /api/v1/faculty-dormitories/:faculty_id/:dormitory_id, PUT
 p, admin, /api/v1/faculty-dormitories/:faculty_id/:dormitory_id, DELETE
+
 p, admin, /api/v1/users, GET
 p, admin, /api/v1/users, POST
 p, admin, /api/v1/users/:id, GET
 p, admin, /api/v1/users/:id, PUT
 p, admin, /api/v1/users/:id, DELETE
+
 p, admin, /api/v1/admin/accommodation-applications, GET
 p, admin, /api/v1/admin/accommodation-applications/:id, GET
 p, admin, /api/v1/admin/accommodation-applications/:id/status, PUT
 p, admin, /api/v1/admin/accommodation-applications/:id/comments, POST
 p, admin, /api/v1/admin/accommodation-applications/:id/comments, GET
+
 p, admin, /api/v1/admin/settlement, GET
 p, admin, /api/v1/admin/applications, GET
 p, admin, /api/v1/admin/applications-overview, GET
-p, admin, /api/v1/faculties, GET
-p, admin, /api/v1/faculties, POST
-p, admin, /api/v1/faculties/:id, GET
-p, admin, /api/v1/faculties/:id, PUT
-p, admin, /api/v1/faculties/:id, DELETE
+
 p, faculty_dean_office, /api/v1/admin/accommodation-applications, GET
 p, faculty_dean_office, /api/v1/admin/accommodation-applications/:id, GET
 p, faculty_dean_office, /api/v1/admin/accommodation-applications/:id/status, PUT
 p, faculty_dean_office, /api/v1/admin/accommodation-applications/:id/comments, POST
 p, faculty_dean_office, /api/v1/admin/accommodation-applications/:id/comments, GET
+
 p, dorm_manager, /api/v1/admin/accommodation-applications, GET
 p, dorm_manager, /api/v1/admin/accommodation-applications/:id, GET
 p, dorm_manager, /api/v1/admin/accommodation-applications/:id/status, PUT
@@ -46,14 +49,17 @@ p, dorm_manager, /api/v1/admin/accommodation-applications/:id/comments, POST
 p, dorm_manager, /api/v1/admin/accommodation-applications/:id/comments, GET
 p, dorm_manager, /api/v1/users, POST
 p, dorm_manager, /api/v1/users/:id, PUT
+
 p, student_council_head, /api/v1/admin/accommodation-applications, GET
 p, student_council_head, /api/v1/admin/accommodation-applications/:id, GET
 p, student_council_head, /api/v1/admin/accommodation-applications/:id/comments, POST
 p, student_council_head, /api/v1/admin/accommodation-applications/:id/comments, GET
-p, student_council_member, /api/v1/admin/acshamelesslycommodation-applications, GET
+
+p, student_council_member, /api/v1/admin/accommodation-applications, GET
 p, student_council_member, /api/v1/admin/accommodation-applications/:id, GET
 p, student_council_member, /api/v1/admin/accommodation-applications/:id/comments, POST
 p, student_council_member, /api/v1/admin/accommodation-applications/:id/comments, GET
+
 p, student, /api/v1/services/accommodation-application, POST
 p, student, /api/v1/accommodation-applications/my, GET
 p, student, /api/v1/accommodation-applications/my/:id, GET
@@ -61,71 +67,83 @@ p, student, /api/v1/accommodation-applications/my/:id, PUT
 p, student, /api/v1/accommodation-applications/my/:id, DELETE
 p, student, /api/v1/services/settlement, POST
 p, student, /api/v1/services/contract-creation, POST
+
 p, student, /api/v1/secure/profile, GET
-p, student, /api/v1/faculties, GET
 p, admin, /api/v1/secure/profile, GET
 p, faculty_dean_office, /api/v1/secure/profile, GET
 p, dorm_manager, /api/v1/secure/profile, GET
 p, student_council_head, /api/v1/secure/profile, GET
 p, student_council_member, /api/v1/secure/profile, GET
+
 p, student, /api/v1/secure/dashboard, GET
 p, admin, /api/v1/secure/dashboard, GET
 p, faculty_dean_office, /api/v1/secure/dashboard, GET
 p, dorm_manager, /api/v1/secure/dashboard, GET
 p, student_council_head, /api/v1/secure/dashboard, GET
 p, student_council_member, /api/v1/secure/dashboard, GET
+
 p, student, /api/v1/secure/notifications, GET
 p, admin, /api/v1/secure/notifications, GET
 p, faculty_dean_office, /api/v1/secure/notifications, GET
 p, dorm_manager, /api/v1/secure/notifications, GET
 p, student_council_head, /api/v1/secure/notifications, GET
 p, student_council_member, /api/v1/secure/notifications, GET
+
 p, student, /api/v1/dormitories, GET
 p, admin, /api/v1/dormitories, GET
 p, faculty_dean_office, /api/v1/dormitories, GET
 p, dorm_manager, /api/v1/dormitories, GET
 p, student_council_head, /api/v1/dormitories, GET
 p, student_council_member, /api/v1/dormitories, GET
+
 p, student, /api/v1/applications, GET
 p, admin, /api/v1/applications, GET
 p, faculty_dean_office, /api/v1/applications, GET
 p, dorm_manager, /api/v1/applications, GET
 p, student_council_head, /api/v1/applications, GET
 p, student_council_member, /api/v1/applications, GET
+
 p, student, /api/v1/settlement, GET
 p, admin, /api/v1/settlement, GET
 p, faculty_dean_office, /api/v1/settlement, GET
 p, dorm_manager, /api/v1/settlement, GET
 p, student_council_head, /api/v1/settlement, GET
 p, student_council_member, /api/v1/settlement, GET
+
 p, admin, /api/v1/users/assign-faculty-dean-office, POST
 p, admin, /api/v1/users/assign-dorm-manager, POST
 p, admin, /api/v1/users/assign-student-council, POST
+
 p, student, /api/v1/secure/profile, PATCH
 p, admin, /api/v1/secure/profile, PATCH
 p, faculty_dean_office, /api/v1/secure/profile, PATCH
 p, dorm_manager, /api/v1/secure/profile, PATCH
 p, student_council_head, /api/v1/secure/profile, PATCH
 p, student_council_member, /api/v1/secure/profile, PATCH
+
 p, student, /api/v1/secure/notifications/:id/read, PUT
 p, admin, /api/v1/secure/notifications/:id/read, PUT
 p, faculty_dean_office, /api/v1/secure/notifications/:id/read, PUT
 p, dorm_manager, /api/v1/secure/notifications/:id/read, PUT
 p, student_council_head, /api/v1/secure/notifications/:id/read, PUT
 p, student_council_member, /api/v1/secure/notifications/:id/read, PUT
+
 p, student, /api/v1/secure/notifications/:id, DELETE
 p, admin, /api/v1/secure/notifications/:id, DELETE
 p, faculty_dean_office, /api/v1/secure/notifications/:id, DELETE
 p, dorm_manager, /api/v1/secure/notifications/:id, DELETE
 p, student_council_head, /api/v1/secure/notifications/:id, DELETE
 p, student_council_member, /api/v1/secure/notifications/:id, DELETE
+
 p, admin, /api/v1/secure/notifications, POST
 p, faculty_dean_office, /api/v1/secure/notifications, POST
 p, dorm_manager, /api/v1/secure/notifications, POST
+
 p, faculty_dean_office, /api/v1/faculties, GET
 p, dorm_manager, /api/v1/faculties, GET
 p, student_council_head, /api/v1/faculties, GET
 p, student_council_member, /api/v1/faculties, GET
+
 p, superadmin, /api/v1/faculties/:facultyId/groups, *
 p, superadmin, /api/v1/groups/:id, *
 p, admin, /api/v1/faculties/:facultyId/groups, *
@@ -133,6 +151,7 @@ p, admin, /api/v1/groups/:id, *
 p, faculty_dean_office, /api/v1/faculties/:facultyId/groups, *
 p, faculty_dean_office, /api/v1/groups/:id, *
 p, student, /api/v1/faculties/:facultyId/groups, GET
+
 p, superadmin, /api/v1/admin/dormitories, *
 p, superadmin, /api/v1/admin/dormitories/:id, *
 p, admin, /api/v1/admin/dormitories, GET
@@ -140,47 +159,37 @@ p, admin, /api/v1/admin/dormitories, POST
 p, admin, /api/v1/admin/dormitories/:id, GET
 p, admin, /api/v1/admin/dormitories/:id, PUT
 p, admin, /api/v1/admin/dormitories/:id, DELETE
+
 p, superadmin, /api/v1/dormitories/:dormitoryId/rooms, *
 p, superadmin, /api/v1/rooms/:id, *
 p, admin, /api/v1/dormitories/:dormitoryId/rooms, *
 p, admin, /api/v1/rooms/:id, *
 p, dorm_manager, /api/v1/dormitories/:dormitoryId/rooms, *
 p, dorm_manager, /api/v1/rooms/:id, *
+
 p, superadmin, /api/v1/faculty-dormitories, *
 p, superadmin, /api/v1/faculty-dormitories/:faculty_id/:dormitory_id, *
-p, admin, /api/v1/faculty-dormitories, GET
-p, admin, /api/v1/faculty-dormitories, POST
-p, admin, /api/v1/faculty-dormitories/:faculty_id/:dormitory_id, GET
-p, admin, /api/v1/faculty-dormitories/:faculty_id/:dormitory_id, PUT
-p, admin, /api/v1/faculty-dormitories/:faculty_id/:dormitory_id, DELETE
+
 p, student, /api/v1/faculty-dormitories, GET
 p, faculty_dean_office, /api/v1/faculty-dormitories, GET
 p, dorm_manager, /api/v1/faculty-dormitories, GET
 p, student_council_head, /api/v1/faculty-dormitories, GET
 p, student_council_member, /api/v1/faculty-dormitories, GET
+
 p, superadmin, /api/v1/users/all, GET
 p, superadmin, /api/v1/users/:id/role, PUT
 p, admin, /api/v1/users/all, GET
 p, admin, /api/v1/users/:id/role, PUT
-p, student, /api/v1/services/accommodation-application, POST
-p, superadmin, /api/v1/users/all, GET
-p, admin, /api/v1/users/all, GET
+
 p, superadmin, /api/v1/users/assign-faculty-dean-office, POST
 p, superadmin, /api/v1/auth/validate-token, GET
-p, superadmin, /api/v1/secure/profile, GET
-p, dorm_manager, /api/v1/auth/validate-token, GET
-p, dorm_manager, /api/v1/secure/profile, GET
-p, faculty_dean_office, /api/v1/auth/validate-token, GET
-p, faculty_dean_office, /api/v1/secure/profile, GET
-p, student_council_head, /api/v1/auth/validate-token, GET
-p, student_council_head, /api/v1/secure/profile, GET
-p, student_council_member, /api/v1/auth/validate-token, GET
-p, student_council_member, /api/v1/secure/profile, GET
-p, student, /api/v1/auth/validate-token, GET
-p, student, /api/v1/secure/profile, GET
-p, faculty_dean_office, /api/v1/secure/profile, GET
 
-# Dormitory Application Presets (using actual route paths)
+p, dorm_manager, /api/v1/auth/validate-token, GET
+p, faculty_dean_office, /api/v1/auth/validate-token, GET
+p, student_council_head, /api/v1/auth/validate-token, GET
+p, student_council_member, /api/v1/auth/validate-token, GET
+p, student, /api/v1/auth/validate-token, GET
+
 p, superadmin, /api/v1/application-presets, *
 p, superadmin, /api/v1/application-presets/:id, *
 p, admin, /api/v1/application-presets, *
@@ -188,3 +197,24 @@ p, admin, /api/v1/application-presets/:id, *
 p, faculty_dean_office, /api/v1/application-presets, *
 p, faculty_dean_office, /api/v1/application-presets/:id, *
 p, student, /api/v1/application-presets/dormitory/:dormitoryId, GET
+
+p, student, /api/v1/services/settlement-agreement, POST
+p, admin, /api/v1/services/settlement-agreement, POST
+p, faculty_dean_office, /api/v1/services/settlement-agreement, POST
+p, dorm_manager, /api/v1/services/settlement-agreement, POST
+p, student_council_head, /api/v1/services/settlement-agreement, POST
+p, student_council_member, /api/v1/services/settlement-agreement, POST
+
+# Room Reservation Permissions
+p, student, /api/v1/services/rooms/search, GET
+p, student, /api/v1/services/rooms/:roomId, GET
+p, student, /api/v1/services/rooms/:roomId/reserve, POST
+p, student, /api/v1/secure/my-reservations, GET
+p, student, /api/v1/secure/my-reservations/:reservationId, DELETE
+
+p, admin, /api/v1/admin/room-reservations, GET
+p, admin, /api/v1/admin/room-reservations/:reservationId/status, PUT
+p, dorm_manager, /api/v1/admin/room-reservations, GET
+p, dorm_manager, /api/v1/admin/room-reservations/:reservationId/status, PUT
+
+# Superadmin has access to admin room reservation routes too via /*

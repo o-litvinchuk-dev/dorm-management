@@ -2,8 +2,8 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import {
-    sendVerificationEmail,
-    sendPasswordResetEmail,
+  sendVerificationEmail,
+  sendPasswordResetEmail,
 } from "../utils/emailSender.js";
 import redisClient from "../config/redis.js";
 import pool from "../config/db.js";
@@ -15,695 +15,748 @@ import UserProfile from "../models/UserProfile.js";
 import { isProfileComplete } from "../utils/profileUtils.js";
 
 const validatePassword = (password) => {
-    if (!password) return false;
-    const minLength = parseInt(process.env.PASSWORD_MIN_LENGTH) || 8;
-    const hasUpperCase = process.env.PASSWORD_REQUIRE_UPPERCASE === 'true' ? /[A-Z]/.test(password) : true;
-    const hasNumber = process.env.PASSWORD_REQUIRE_NUMBERS === 'true' ? /[0-9]/.test(password) : true;
-    const hasSymbol = process.env.PASSWORD_REQUIRE_SYMBOLS === 'true' ? /[!@#$%^&*(),.?":{}|<>]/.test(password) : true;
-    
-    return password.length >= minLength && hasUpperCase && hasNumber && hasSymbol;
+  if (!password) return false;
+  const minLength = parseInt(process.env.PASSWORD_MIN_LENGTH) || 8;
+  const hasUpperCase =
+    process.env.PASSWORD_REQUIRE_UPPERCASE === "true"
+      ? /[A-Z]/.test(password)
+      : true;
+  const hasNumber =
+    process.env.PASSWORD_REQUIRE_NUMBERS === "true"
+      ? /[0-9]/.test(password)
+      : true;
+  const hasSymbol =
+    process.env.PASSWORD_REQUIRE_SYMBOLS === "true"
+      ? /[!@#$%^&*(),.?":{}|<>]/.test(password)
+      : true;
+  return (
+    password.length >= minLength && hasUpperCase && hasNumber && hasSymbol
+  );
 };
 
 const getPasswordRequirementsMessage = () => {
-    let message = `Пароль повинен містити мінімум ${process.env.PASSWORD_MIN_LENGTH || 8} символів`;
-    if (process.env.PASSWORD_REQUIRE_UPPERCASE === 'true') message += ", хоча б одну велику літеру";
-    if (process.env.PASSWORD_REQUIRE_NUMBERS === 'true') message += ", хоча б одну цифру";
-    if (process.env.PASSWORD_REQUIRE_SYMBOLS === 'true') message += ", хоча б один символ";
-    return message;
+  let message = `Пароль повинен містити мінімум ${
+    process.env.PASSWORD_MIN_LENGTH || 8
+  } символів`;
+  if (process.env.PASSWORD_REQUIRE_UPPERCASE === "true")
+    message += ", хоча б одну велику літеру";
+  if (process.env.PASSWORD_REQUIRE_NUMBERS === "true")
+    message += ", хоча б одну цифру";
+  if (process.env.PASSWORD_REQUIRE_SYMBOLS === "true")
+    message += ", хоча б один символ";
+  return message;
 };
 
-
 const validateEmail = (email) => {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return email && re.test(String(email).toLowerCase());
+  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return email && re.test(String(email).toLowerCase());
 };
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 async function verifyGoogleToken(token) {
-    try {
-        const ticket = await googleClient.verifyIdToken({
-            idToken: token,
-            audience: process.env.GOOGLE_CLIENT_ID,
-        });
-        return ticket.getPayload();
-    } catch (error) {
-        console.error("[GoogleSignIn] Помилка перевірки токена:", error.message);
-        throw new Error("Недійсний або прострочений Google ID-токен");
-    }
+  try {
+    const ticket = await googleClient.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    return ticket.getPayload();
+  } catch (error) {
+    console.error("[GoogleSignIn] Помилка перевірки токена:", error.message);
+    throw new Error("Недійсний або прострочений Google ID-токен");
+  }
 }
 
 export const googleSignIn = async (req, res) => {
-    try {
-        const { token } = req.body;
-        if (!token) {
-            return res.status(400).json({ error: "Токен відсутній" });
-        }
-        const payload = await verifyGoogleToken(token);
-        if (!payload.email) {
-            return res.status(400).json({ error: "Не вдалося отримати email" });
-        }
-        let user = await User.findByEmail(payload.email);
-        if (user) {
-            if (user.provider !== "google") {
-                return res.status(409).json({
-                    error: "Конфлікт акаунтів",
-                    code: "ACCOUNT_CONFLICT",
-                });
-            }
-            await User.incrementTokenVersion(user.id);
-            user = await User.findById(user.id);
-        } else {
-            const hashedPassword = await bcrypt.hash(
-                payload.email + process.env.JWT_SECRET,
-                12
-            );
-            user = await User.create({
-                email: payload.email,
-                password: hashedPassword,
-                name: payload.name,
-                avatar: payload.picture,
-                provider: "google",
-                google_id: payload.sub,
-                isVerified: true,
-                role: process.env.DEFAULT_ROLE || "student",
-                token_version: 0,
-            });
-            await pool.execute(
-                `INSERT INTO user_profiles (user_id) VALUES (?) ON DUPLICATE KEY UPDATE user_id = user_id`,
-                [user.id]
-            );
-        }
-
-        const accessToken = jwt.sign(
-            {
-                userId: user.id,
-                role: user.role,
-                tokenVersion: user.token_version,
-            },
-            process.env.JWT_SECRET,
-            { expiresIn: process.env.JWT_ACCESS_EXPIRES || "15m" }
-        );
-        const refreshToken = jwt.sign(
-            { userId: user.id },
-            process.env.JWT_SECRET,
-            { expiresIn: process.env.JWT_REFRESH_EXPIRES || "7d" }
-        );
-
-        let additionalFields = {};
-        if (user.role === "dorm_manager" && user.dormitory_id) {
-            const dormitory = await Dormitory.findById(user.dormitory_id);
-            additionalFields.dormitory_id = user.dormitory_id;
-            additionalFields.dormitory_name = dormitory?.name || null;
-        }
-        if (
-            ["student_council_head", "student_council_member", "faculty_dean_office"].includes(user.role) &&
-            user.faculty_id
-        ) {
-            const faculty = await Faculties.findById(user.faculty_id);
-            additionalFields.faculty_id = user.faculty_id;
-            additionalFields.faculty_name = faculty?.name || null;
-        }
-        
-        const isComplete = await isProfileComplete(user.id, user.role);
-        const userFromDbForCompletion = await User.findById(user.id);
-        const currentIsProfileCompleteInDB = userFromDbForCompletion?.is_profile_complete === 1;
-
-        if (currentIsProfileCompleteInDB !== isComplete) {
-            await pool.execute(
-                `UPDATE users SET is_profile_complete = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
-                [isComplete ? 1 : 0, user.id]
-            );
-        }
-
-        res.json({
-            accessToken,
-            refreshToken,
-            user: {
-                id: user.id,
-                email: user.email,
-                name: user.name,
-                avatar: user.avatar,
-                role: user.role,
-                is_profile_complete: isComplete,
-                ...additionalFields,
-            },
-        });
-    } catch (error) {
-        console.error("Помилка Google Sign-In:", error);
-        res.status(500).json({ error: "Внутрішня помилка сервера" });
+  try {
+    const { token } = req.body;
+    if (!token) {
+      return res.status(400).json({ error: "Токен відсутній" });
     }
-};
-
-export const register = async (req, res) => {
-    try {
-        const { email, password, name } = req.body;
-        if (!email || !validateEmail(email)) {
-            return res.status(400).json({ error: "Невірний формат email" });
-        }
-        if (!validatePassword(password)) {
-            return res.status(400).json({ error: getPasswordRequirementsMessage() });
-        }
-        const existingUser = await User.findByEmail(email);
-        if (existingUser) {
-            return res.status(409).json({
-                error: "Користувач з цією адресою вже зареєстрований",
-            });
-        }
-        const hashedPassword = await bcrypt.hash(password, 12);
-        const role = req.body.role || process.env.DEFAULT_ROLE || "student";
-        const user = await User.create({
-            email,
-            password: hashedPassword,
-            isVerified: false,
-            role,
-            name: name || null,
-        });
-
-        await pool.execute(
-            `INSERT INTO user_profiles (user_id) VALUES (?) ON DUPLICATE KEY UPDATE user_id = user_id`, 
-            [user.id]
-        );
-
-        if (!process.env.JWT_SECRET) {
-            return res.status(500).json({
-                error: "Помилка сервера: відсутній JWT_SECRET",
-            });
-        }
-        const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
-            expiresIn: "1h",
-        });
-
-        if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-            return res.status(500).json({
-                error: "Помилка сервера: відсутні поштові налаштування",
-            });
-        }
-
-        try {
-            await sendVerificationEmail(email, token);
-        } catch (emailError) {
-            console.error("[Register] Помилка відправки листа:", emailError);
-            return res.status(500).json({
-                error: "Не вдалося відправити лист",
-                details:
-                    process.env.NODE_ENV === "development"
-                        ? emailError.message
-                        : undefined,
-            });
-        }
-        const isComplete = await isProfileComplete(user.id, user.role);
-        return res.status(201).json({
-            message: "Лист з підтвердженням успішно відправлено",
-            user: {
-                id: user.id,
-                email: user.email,
-                name: user.name,
-                avatar: user.avatar,
-                role: user.role,
-                is_profile_complete: isComplete,
-            },
-        });
-    } catch (error) {
-        console.error("[Register] Критична помилка:", error);
-        return res.status(500).json({
-            error: "Внутрішня помилка сервера",
-            ...(process.env.NODE_ENV === "development" && {
-                details: error.message,
-            }),
-        });
+    const payload = await verifyGoogleToken(token);
+    if (!payload.email) {
+      return res.status(400).json({ error: "Не вдалося отримати email" });
     }
-};
 
-export const verifyEmail = async (req, res) => {
-    try {
-        const { token } = req.query;
-        if (!token) {
-            return res.redirect(
-                `${
-                    process.env.FRONTEND_URL
-                }/login?verified=error&message=${encodeURIComponent(
-                    "Токен відсутній"
-                )}`
-            );
-        }
-        try {
-            const decoded = jwt.verify(token, process.env.JWT_SECRET);
-            await User.verifyUser(decoded.userId);
-            return res.redirect(
-                `${process.env.FRONTEND_URL}/login?verified=success`
-            );
-        } catch (verifyError) {
-            console.error("[VerifyEmail] Помилка верифікації:", verifyError);
-            const errorMessage =
-                verifyError.name === "TokenExpiredError"
-                    ? "Час дії токену минув"
-                    : "Недійсний токен підтвердження";
-            return res.redirect(
-                `${
-                    process.env.FRONTEND_URL
-                }/login?verified=error&message=${encodeURIComponent(
-                    errorMessage
-                )}`
-            );
-        }
-    } catch (error) {
-        console.error("[VerifyEmail] Загальна помилка:", error);
-        return res.redirect(
-            `${
-                process.env.FRONTEND_URL
-            }/login?verified=error&message=${encodeURIComponent(
-                "Внутрішня помилка сервера"
-            )}`
-        );
+    let user = await User.findByEmail(payload.email);
+    if (user) {
+      if (user.provider !== "google") {
+        return res.status(409).json({
+          error: "Конфлікт акаунтів",
+          code: "ACCOUNT_CONFLICT",
+        });
+      }
+      await User.incrementTokenVersion(user.id);
+      user = await User.findById(user.id); // Re-fetch user to get new token_version
+    } else {
+      const hashedPassword = await bcrypt.hash(
+        payload.email + process.env.JWT_SECRET,
+        12
+      );
+      user = await User.create({
+        email: payload.email,
+        password: hashedPassword, // This password won't be used for Google sign-in
+        name: payload.name,
+        avatar: payload.picture,
+        provider: "google",
+        google_id: payload.sub,
+        isVerified: true, // Google emails are typically verified
+        role: process.env.DEFAULT_ROLE || "student",
+        token_version: 0,
+        gender: payload.gender || 'not_specified', // Attempt to get gender
+      });
+      await pool.execute(
+        `INSERT INTO user_profiles (user_id) VALUES (?) ON DUPLICATE KEY UPDATE user_id = user_id`,
+        [user.id]
+      );
     }
-};
 
-export const login = async (req, res) => {
-    try {
-        const { email, password } = req.body;
-        if (!email || !validateEmail(email)) {
-            return res.status(400).json({
-                error: "Невірний формат email",
-                code: "INVALID_EMAIL_FORMAT",
-            });
-        }
-        if (!password) { // Перевірка тільки на наявність пароля, валідація не потрібна при логіні
-            return res.status(400).json({
-                error: "Пароль обов'язковий",
-                code: "PASSWORD_REQUIRED",
-            });
-        }
-        const user = await User.findByEmail(email);
-        if (!user) {
-            return res.status(404).json({
-                error: "Акаунт не знайдено",
-                code: "USER_NOT_FOUND",
-            });
-        }
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-            return res.status(401).json({
-                error: "Невірний пароль",
-                code: "INVALID_PASSWORD",
-            });
-        }
-        if (!user.isVerified) {
-            return res.status(403).json({
-                error: "Електронну адресу не підтверджено",
-                code: "EMAIL_NOT_VERIFIED",
-            });
-        }
-        const newTokenVersion = await User.incrementTokenVersion(user.id);
-        const accessToken = jwt.sign(
-            {
-                userId: user.id,
-                role: user.role,
-                tokenVersion: newTokenVersion,
-            },
-            process.env.JWT_SECRET,
-            { expiresIn: process.env.JWT_ACCESS_EXPIRES || "15m" }
-        );
-        const refreshToken = jwt.sign(
-            { userId: user.id },
-            process.env.JWT_SECRET,
-            { expiresIn: process.env.JWT_REFRESH_EXPIRES || "7d" }
-        );
-        await redisClient.del(`refresh:${user.id}`);
-        await redisClient.setEx(`refresh:${user.id}`, parseInt(process.env.JWT_REFRESH_EXPIRES, 10) * 24 * 60 * 60 || 7 * 24 * 60 * 60, refreshToken);
-
-        let additionalFields = {};
-        if (user.role === "dorm_manager" && user.dormitory_id) {
-            const dormitory = await Dormitory.findById(user.dormitory_id);
-            additionalFields.dormitory_id = user.dormitory_id;
-            additionalFields.dormitory_name = dormitory?.name || null;
-        }
-        if (
-            ["student_council_head", "student_council_member", "faculty_dean_office"].includes(user.role) && // Додано faculty_dean_office
-            user.faculty_id
-        ) {
-            const faculty = await Faculties.findById(user.faculty_id);
-            additionalFields.faculty_id = user.faculty_id;
-            additionalFields.faculty_name = faculty?.name || null;
-        }
-        
-        const isComplete = await isProfileComplete(user.id, user.role);
-        const userFromDb = await User.findById(user.id);
-        const currentIsProfileCompleteInDB = userFromDb?.is_profile_complete === 1;
-
-        if (currentIsProfileCompleteInDB !== isComplete) {
-             await pool.execute(
-                `UPDATE users SET is_profile_complete = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
-                [isComplete ? 1 : 0, user.id]
-            );
-        }
-
-        res.json({
-            accessToken,
-            refreshToken,
-            user: {
-                id: user.id,
-                email: user.email,
-                name: user.name,
-                avatar: user.avatar,
-                role: user.role,
-                is_profile_complete: isComplete,
-                ...additionalFields,
-            },
-        });
-    } catch (error) {
-        console.error("[Login] Критична помилка:", {
-            message: error.message,
-            stack: error.stack,
-            requestBody: req.body,
-        });
-        res.status(500).json({
-            error: "Внутрішня помилка сервера",
-            code: "INTERNAL_SERVER_ERROR",
-        });
-    }
-};
-
-export const logout = async (req, res) => {
-    try {
-        const userId = req.user.userId;
-        await redisClient.del(`refresh:${userId}`);
-        await User.incrementTokenVersion(userId);
-        res.status(200).json({ success: true, message: "Вихід успішний" });
-    } catch (error) {
-        console.error("Помилка виходу:", error);
-        res.status(500).json({ error: "Internal Server Error" });
-    }
-};
-
-export const refreshToken = async (req, res) => {
-    try {
-        const token =
-            req.body.refreshToken || req.headers.authorization?.split(" ")[1];
-        if (!token) {
-            return res.status(401).json({ error: "Токен оновлення відсутній" });
-        }
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const storedToken = await redisClient.get(`refresh:${decoded.userId}`);
-        if (!storedToken || token !== storedToken) {
-            return res
-                .status(401)
-                .json({ error: "Недійсний або прострочений токен оновлення" });
-        }
-        const user = await User.findById(decoded.userId);
-        if (!user) {
-            return res.status(403).json({ error: "Користувача не знайдено для токена" });
-        }
-        const newAccessToken = jwt.sign(
-            {
-                userId: user.id,
-                role: user.role,
-                tokenVersion: user.token_version,
-            },
-            process.env.JWT_SECRET,
-            { expiresIn: process.env.JWT_ACCESS_EXPIRES || "15m" }
-        );
-        res.json({ accessToken: newAccessToken });
-    } catch (error) {
-        console.error("[RefreshToken] Помилка:", error);
-        res.status(403).json({ error: "Невірний або прострочений токен оновлення" });
-    }
-};
-
-export const validateToken = async (req, res) => {
-    try {
-        const userId = req.user.userId;
-        const userFromDb = await User.findById(userId);
-
-        if (!userFromDb) {
-            return res.status(404).json({ error: "Користувача не знайдено" });
-        }
-        
-        let facultyName = null;
-        let dormitoryName = null;
-
-        if (userFromDb.faculty_id) {
-            const faculty = await Faculties.findById(userFromDb.faculty_id);
-            facultyName = faculty?.name || null;
-        }
-        if (userFromDb.dormitory_id) {
-            const dormitory = await Dormitory.findById(userFromDb.dormitory_id);
-            dormitoryName = dormitory?.name || null;
-        }
-        
-        const isComplete = await isProfileComplete(userId, userFromDb.role);
-        const currentIsProfileCompleteInDB = userFromDb.is_profile_complete === 1;
-
-        if (currentIsProfileCompleteInDB !== isComplete) {
-             await pool.execute(
-                `UPDATE users SET is_profile_complete = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
-                [isComplete ? 1 : 0, userId]
-            );
-        }
-
-        res.json({
-            isValid: true,
-            user: {
-                id: userFromDb.id,
-                email: userFromDb.email,
-                name: userFromDb.name,
-                avatar: userFromDb.avatar,
-                role: userFromDb.role,
-                faculty_id: userFromDb.faculty_id || null,
-                faculty_name: facultyName,
-                dormitory_id: userFromDb.dormitory_id || null,
-                dormitory_name: dormitoryName,
-                is_profile_complete: isComplete,
-            },
-        });
-    } catch (error) {
-        console.error("[ValidateToken] Помилка:", error);
-        res.status(500).json({ error: "Помилка сервера" });
-    }
-};
-
-export const forgotPassword = async (req, res) => {
-    try {
-        const { email } = req.body;
-        if (!email) {
-            return res.status(400).json({ error: "Будь ласка, вкажіть email." });
-        }
-        const user = await User.findByEmail(email);
-        if (!user) {
-            return res.status(404).json({ error: "Користувача не знайдено" });
-        }
-
-        if (user.provider !== "local") {
-            return res.status(403).json({
-                error: "Цей акаунт зареєстровано через Google. Скидання паролю недоступне.",
-                code: "GOOGLE_ACCOUNT",
-            });
-        }
-
-        const resetToken = jwt.sign(
-            { userId: user.id },
-            process.env.JWT_SECRET,
-            { expiresIn: "1h" }
-        );
-
-        if (!redisClient.isOpen) {
-            await redisClient.connect().catch(err => {
-                console.error("[Redis] Помилка підключення в forgotPassword:", err);
-                throw new Error("Помилка Redis: не вдалося підключитися");
-            });
-        }
-
-        await redisClient.del(`reset:${user.id}`);
-        await redisClient.setEx(`reset:${user.id}`, 60 * 60, resetToken);
-        
-        const storedToken = await redisClient.get(`reset:${user.id}`);
-        if (!storedToken || storedToken !== resetToken) {
-            throw new Error("Невдалося зберегти токен для скидання пароля в Redis.");
-        }
-
-        const resetUrl = `${process.env.FRONTEND_URL}/new-password?token=${resetToken}`;
-
-        try {
-            await sendPasswordResetEmail(email, resetUrl);
-            res.json({ message: "Лист для скидання пароля відправлено." });
-        } catch (emailErr) {
-            console.error("[Email] Помилка відправки листа:", emailErr);
-            res.status(500).json({
-                error: "Помилка відправки листа для скидання пароля. Спробуйте пізніше.",
-            });
-        }
-    } catch (error) {
-        console.error("[ForgotPassword] Загальна помилка:", {
-            message: error.message,
-            stack: error.stack,
-        });
-        res.status(500).json({
-            error: "Помилка сервера при запиті на скидання пароля.",
-            details: process.env.NODE_ENV === "development" ? error.message : null,
-        });
-    }
-};
-
-export const resetPassword = async (req, res) => {
-    try {
-        const { token } = req.query;
-        const { password } = req.body;
-
-        if (!token) {
-            return res.status(401).json({ error: "Токен не надано", code: "TOKEN_MISSING" });
-        }
-        if (!token.match(/^[\w-]+\.[\w-]+\.[\w-_.+/=]*$/)) {
-            return res.status(401).json({ error: "Недійсний формат токена", code: "INVALID_TOKEN_FORMAT" });
-        }
-
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        if(!decoded || !decoded.userId) {
-            return res.status(401).json({ error: "Недійсний токен (немає userId)", code: "INVALID_TOKEN_PAYLOAD" });
-        }
-        
-        const storedToken = await redisClient.get(`reset:${decoded.userId}`);
-        if (!storedToken) {
-            return res.status(401).json({
-                error: "Токен вже використаний, недійсний або час життя минув",
-                code: "TOKEN_EXPIRED_OR_USED_REDIS"
-            });
-        }
-        if (token !== storedToken) {
-            return res.status(401).json({ error: "Недійсний токен (неспівпадіння з Redis)", code: "TOKEN_MISMATCH_REDIS" });
-        }
-        
-        await redisClient.del(`reset:${decoded.userId}`);
-
-        if (!validatePassword(password)) {
-            return res.status(400).json({
-                error: getPasswordRequirementsMessage(),
-                code: "INVALID_NEW_PASSWORD_FORMAT"
-            });
-        }
-        const hashedPassword = await bcrypt.hash(password, 12);
-        const result = await User.updatePassword(
-            decoded.userId,
-            hashedPassword
-        );
-
-        if (result.affectedRows === 0) {
-            throw new Error("Користувача не знайдено для оновлення пароля");
-        }
-        
-        res.json({
-            success: true,
-            message: "Пароль успішно оновлено. Увійдіть з новим паролем.",
-        });
-    } catch (error) {
-        console.error("[ResetPassword] Критична помилка:", {
-            name: error.name,
-            message: error.message,
-            stack: error.stack,
-            query: req.query,
-            body: req.body,
-        });
-
-        if (error.name === "TokenExpiredError") {
-            return res.status(401).json({ error: "Час дії токену минув", code: "JWT_TOKEN_EXPIRED" });
-        }
-        if (error.name === "JsonWebTokenError") {
-            return res.status(401).json({ error: "Недійсний токен (помилка верифікації)", code: "JWT_INVALID_SIGNATURE" });
-        }
-        if (error.message?.includes("Користувача не знайдено")) {
-            return res.status(404).json({ error: "Користувача не знайдено", code: "USER_NOT_FOUND_ON_UPDATE" });
-        }
-
-        res.status(500).json({
-            error: "Помилка сервера при скиданні пароля.",
-            details:
-                process.env.NODE_ENV === "development" ? error.message : null,
-        });
-    }
-};
-
-async function getProfileInternal(userId) {
-    const [userRows] = await pool.query(
-        `
-        SELECT
-            u.id, u.email, u.name, u.avatar, u.role, 
-            u.faculty_id AS user_table_faculty_id, 
-            u.dormitory_id AS user_table_dormitory_id, 
-            u.is_profile_complete,
-            up.birthday, up.phone, up.about_me, up.interests, up.room,
-            up.dormitory, up.instagram, up.telegram,
-            up.faculty_id AS profile_faculty_id, up.group_id, up.course,
-            f_user.name AS user_faculty_name, 
-            f_profile.name AS profile_faculty_name,
-            d.name AS dormitory_name,
-            g.name AS group_name
-        FROM users u
-        LEFT JOIN user_profiles up ON u.id = up.user_id
-        LEFT JOIN faculties f_user ON u.faculty_id = f_user.id 
-        LEFT JOIN faculties f_profile ON up.faculty_id = f_profile.id 
-        LEFT JOIN dormitories d ON u.dormitory_id = d.id
-        LEFT JOIN \`groups\` g ON up.group_id = g.id
-        WHERE u.id = ?
-        `,
-        [userId]
+    const accessToken = jwt.sign(
+      {
+        userId: user.id,
+        role: user.role,
+        tokenVersion: user.token_version,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_ACCESS_EXPIRES || "15m" }
     );
+    const refreshToken = jwt.sign(
+      { userId: user.id },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_REFRESH_EXPIRES || "7d" }
+    );
+    
+    await redisClient.del(`refresh:${user.id}`);
+    await redisClient.setEx(`refresh:${user.id}`, parseInt(process.env.JWT_REFRESH_EXPIRES, 10) * 24 * 60 * 60 || 7 * 24 * 60 * 60, refreshToken);
 
-    if (!userRows[0]) {
-        throw new Error("Користувача не знайдено при отриманні профілю");
+
+    let additionalFields = {};
+    if (user.role === "dorm_manager" && user.dormitory_id) {
+      const dormitory = await Dormitory.findById(user.dormitory_id);
+      additionalFields.dormitory_id = user.dormitory_id;
+      additionalFields.dormitory_name = dormitory?.name || null;
     }
-    const user = userRows[0];
-    const isComplete = await isProfileComplete(userId, user.role);
+    if (
+      ["student_council_head", "student_council_member", "faculty_dean_office"].includes(user.role) &&
+      user.faculty_id
+    ) {
+      const faculty = await Faculties.findById(user.faculty_id);
+      additionalFields.faculty_id = user.faculty_id;
+      additionalFields.faculty_name = faculty?.name || null;
+    }
 
-    const profile = {
+    const isComplete = await isProfileComplete(user.id, user.role);
+    const userFromDbForCompletion = await User.findById(user.id); // Use full user model
+    const currentIsProfileCompleteInDB = userFromDbForCompletion?.is_profile_complete === 1;
+
+    if (currentIsProfileCompleteInDB !== isComplete) {
+      await pool.execute(
+        `UPDATE users SET is_profile_complete = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+        [isComplete ? 1 : 0, user.id]
+      );
+    }
+
+    res.json({
+      accessToken,
+      refreshToken,
+      user: {
         id: user.id,
         email: user.email,
         name: user.name,
         avatar: user.avatar,
         role: user.role,
+        gender: user.gender,
         is_profile_complete: isComplete,
-        birthday: user.birthday ? new Date(user.birthday).toISOString().split("T")[0] : null,
-        phone: user.phone || null,
-        about_me: user.about_me || null,
-        interests: user.interests || null,
-        room: user.room || null,
-        dormitory: user.dormitory || null, 
-        instagram: user.instagram || null,
-        telegram: user.telegram || null,
-        dormitory_id: user.user_table_dormitory_id || null,
-        dormitory_name: user.dormitory_name || null,
-    };
+        ...additionalFields,
+      },
+    });
+  } catch (error) {
+    console.error("Помилка Google Sign-In:", error);
+    res.status(500).json({ error: "Внутрішня помилка сервера" });
+  }
+};
 
-    if (user.role === "student") {
-        profile.faculty_id = user.profile_faculty_id || null;
-        profile.faculty_name = user.profile_faculty_name || null;
-        profile.group_id = user.group_id || null;
-        profile.group_name = user.group_name || null;
-        profile.course = user.course || null;
-    } else if (["faculty_dean_office", "student_council_head", "student_council_member"].includes(user.role)) {
-        profile.faculty_id = user.user_table_faculty_id || null; 
-        profile.faculty_name = user.user_faculty_name || null; 
+export const register = async (req, res) => {
+  try {
+    const { email, password, name, gender } = req.body;
+
+    if (!email || !validateEmail(email)) {
+      return res.status(400).json({ error: "Невірний формат email" });
     }
-    return profile;
-}
+    if (!validatePassword(password)) {
+      return res.status(400).json({ error: getPasswordRequirementsMessage() });
+    }
+    if (!gender || !['male', 'female', 'other', 'not_specified'].includes(gender)) {
+        return res.status(400).json({ error: "Будь ласка, вкажіть стать" });
+    }
 
-export const getProfile = async (req, res) => {
+
+    const existingUser = await User.findByEmail(email);
+    if (existingUser) {
+      return res.status(409).json({
+        error: "Користувач з цією адресою вже зареєстрований",
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 12);
+    const role = req.body.role || process.env.DEFAULT_ROLE || "student";
+
+    const user = await User.create({
+      email,
+      password: hashedPassword,
+      isVerified: false,
+      role,
+      name: name || null,
+      gender: gender,
+    });
+
+    await pool.execute(
+      `INSERT INTO user_profiles (user_id) VALUES (?) ON DUPLICATE KEY UPDATE user_id = user_id`,
+      [user.id]
+    );
+
+    if (!process.env.JWT_SECRET) {
+      return res.status(500).json({
+        error: "Помилка сервера: відсутній JWT_SECRET",
+      });
+    }
+    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
+
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      return res.status(500).json({
+        error: "Помилка сервера: відсутні поштові налаштування",
+      });
+    }
     try {
-        const userId = req.user.userId;
-        const profileData = await getProfileInternal(userId);
-        
-        const userFromDb = await User.findById(userId); 
-        if (userFromDb && (userFromDb.is_profile_complete === 1) !== profileData.is_profile_complete) {
-            await pool.execute(
-                `UPDATE users SET is_profile_complete = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
-                [profileData.is_profile_complete ? 1 : 0, userId]
-            );
-        }
-        res.json(profileData);
+      await sendVerificationEmail(email, token);
+    } catch (emailError) {
+      console.error("[Register] Помилка відправки листа:", emailError);
+      return res.status(500).json({
+        error: "Не вдалося відправити лист",
+        details:
+          process.env.NODE_ENV === "development"
+            ? emailError.message
+            : undefined,
+      });
+    }
+    
+    const isComplete = await isProfileComplete(user.id, user.role);
+
+
+    return res.status(201).json({
+      message: "Лист з підтвердженням успішно відправлено",
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        avatar: user.avatar,
+        role: user.role,
+        gender: user.gender,
+        is_profile_complete: isComplete,
+      },
+    });
+  } catch (error) {
+    console.error("[Register] Критична помилка:", error);
+    return res.status(500).json({
+      error: "Внутрішня помилка сервера",
+      ...(process.env.NODE_ENV === "development" && {
+        details: error.message,
+      }),
+    });
+  }
+};
+
+export const verifyEmail = async (req, res) => {
+  try {
+    const { token } = req.query;
+    if (!token) {
+      return res.redirect(
+        `${
+          process.env.FRONTEND_URL
+        }/login?verified=error&message=${encodeURIComponent(
+          "Токен відсутній"
+        )}`
+      );
+    }
+
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      await User.verifyUser(decoded.userId);
+      return res.redirect(
+        `${process.env.FRONTEND_URL}/login?verified=success`
+      );
+    } catch (verifyError) {
+      console.error("[VerifyEmail] Помилка верифікації:", verifyError);
+      const errorMessage =
+        verifyError.name === "TokenExpiredError"
+          ? "Час дії токену минув"
+          : "Недійсний токен підтвердження";
+      return res.redirect(
+        `${
+          process.env.FRONTEND_URL
+        }/login?verified=error&message=${encodeURIComponent(errorMessage)}`
+      );
+    }
+  } catch (error) {
+    console.error("[VerifyEmail] Загальна помилка:", error);
+    return res.redirect(
+      `${
+        process.env.FRONTEND_URL
+      }/login?verified=error&message=${encodeURIComponent(
+        "Внутрішня помилка сервера"
+      )}`
+    );
+  }
+};
+
+export const login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !validateEmail(email)) {
+      return res.status(400).json({
+        error: "Невірний формат email",
+        code: "INVALID_EMAIL_FORMAT",
+      });
+    }
+    if (!password) {
+      return res.status(400).json({
+        error: "Пароль обов'язковий",
+        code: "PASSWORD_REQUIRED",
+      });
+    }
+
+    const user = await User.findByEmail(email); // Fetches full user data
+    if (!user) {
+      return res.status(404).json({
+        error: "Акаунт не знайдено",
+        code: "USER_NOT_FOUND",
+      });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({
+        error: "Невірний пароль",
+        code: "INVALID_PASSWORD",
+      });
+    }
+
+    if (!user.isVerified) {
+      return res.status(403).json({
+        error: "Електронну адресу не підтверджено",
+        code: "EMAIL_NOT_VERIFIED",
+      });
+    }
+
+    const newTokenVersion = await User.incrementTokenVersion(user.id);
+
+    const accessToken = jwt.sign(
+      {
+        userId: user.id,
+        role: user.role,
+        tokenVersion: newTokenVersion,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_ACCESS_EXPIRES || "15m" }
+    );
+    const refreshToken = jwt.sign(
+      { userId: user.id },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_REFRESH_EXPIRES || "7d" }
+    );
+    
+    await redisClient.del(`refresh:${user.id}`);
+    await redisClient.setEx(`refresh:${user.id}`, parseInt(process.env.JWT_REFRESH_EXPIRES, 10) * 24 * 60 * 60 || 7 * 24 * 60 * 60, refreshToken);
+
+
+    let additionalFields = {};
+    if (user.role === "dorm_manager" && user.dormitory_id) {
+      const dormitory = await Dormitory.findById(user.dormitory_id);
+      additionalFields.dormitory_id = user.dormitory_id;
+      additionalFields.dormitory_name = dormitory?.name || null;
+    }
+    if (
+      ["student_council_head", "student_council_member", "faculty_dean_office"].includes(user.role) &&
+      user.faculty_id
+    ) {
+      const faculty = await Faculties.findById(user.faculty_id);
+      additionalFields.faculty_id = user.faculty_id;
+      additionalFields.faculty_name = faculty?.name || null;
+    }
+    
+    const isComplete = await isProfileComplete(user.id, user.role);
+    const userFromDb = await User.findById(user.id); // Fetches full user model data
+    const currentIsProfileCompleteInDB = userFromDb?.is_profile_complete === 1;
+
+    if (currentIsProfileCompleteInDB !== isComplete) {
+        await pool.execute(
+            `UPDATE users SET is_profile_complete = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+            [isComplete ? 1 : 0, user.id]
+        );
+    }
+
+    res.json({
+      accessToken,
+      refreshToken,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        avatar: user.avatar,
+        role: user.role,
+        gender: user.gender,
+        is_profile_complete: isComplete,
+        ...additionalFields,
+      },
+    });
+  } catch (error) {
+    console.error("[Login] Критична помилка:", {
+      message: error.message,
+      stack: error.stack,
+      requestBody: req.body,
+    });
+    res.status(500).json({
+      error: "Внутрішня помилка сервера",
+      code: "INTERNAL_SERVER_ERROR",
+    });
+  }
+};
+
+export const logout = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    await redisClient.del(`refresh:${userId}`);
+    await User.incrementTokenVersion(userId);
+    res.status(200).json({ success: true, message: "Вихід успішний" });
+  } catch (error) {
+    console.error("Помилка виходу:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+export const refreshToken = async (req, res) => {
+  try {
+    const token =
+      req.body.refreshToken || req.headers.authorization?.split(" ")[1];
+    if (!token) {
+      return res.status(401).json({ error: "Токен оновлення відсутній" });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const storedToken = await redisClient.get(`refresh:${decoded.userId}`);
+
+    if (!storedToken || token !== storedToken) {
+      return res
+        .status(401)
+        .json({ error: "Недійсний або прострочений токен оновлення" });
+    }
+
+    const user = await User.findById(decoded.userId); // Fetches full user data
+    if (!user) {
+      return res.status(403).json({ error: "Користувача не знайдено для токена" });
+    }
+
+    const newAccessToken = jwt.sign(
+      {
+        userId: user.id,
+        role: user.role,
+        tokenVersion: user.token_version,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_ACCESS_EXPIRES || "15m" }
+    );
+
+    res.json({ accessToken: newAccessToken });
+  } catch (error) {
+    console.error("[RefreshToken] Помилка:", error);
+    res.status(403).json({ error: "Невірний або прострочений токен оновлення" });
+  }
+};
+
+export const validateToken = async (req, res) => {
+    try {
+      const userId = req.user.userId;
+      const userFromDb = await User.findById(userId); // Fetches full user model data
+      if (!userFromDb) {
+        return res.status(404).json({ error: "Користувача не знайдено" });
+      }
+  
+      let facultyName = null;
+      let dormitoryName = null;
+  
+      if (userFromDb.faculty_id) {
+        const faculty = await Faculties.findById(userFromDb.faculty_id);
+        facultyName = faculty?.name || null;
+      }
+      if (userFromDb.dormitory_id) {
+        const dormitory = await Dormitory.findById(userFromDb.dormitory_id);
+        dormitoryName = dormitory?.name || null;
+      }
+  
+      const isComplete = await isProfileComplete(userId, userFromDb.role);
+      const currentIsProfileCompleteInDB = userFromDb.is_profile_complete === 1;
+  
+      if (currentIsProfileCompleteInDB !== isComplete) {
+        await pool.execute(
+          `UPDATE users SET is_profile_complete = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+          [isComplete ? 1 : 0, userId]
+        );
+      }
+  
+      res.json({
+        isValid: true,
+        user: {
+          id: userFromDb.id,
+          email: userFromDb.email,
+          name: userFromDb.name,
+          avatar: userFromDb.avatar,
+          role: userFromDb.role,
+          gender: userFromDb.gender,
+          faculty_id: userFromDb.faculty_id || null,
+          faculty_name: facultyName,
+          dormitory_id: userFromDb.dormitory_id || null,
+          dormitory_name: dormitoryName,
+          is_profile_complete: isComplete,
+        },
+      });
     } catch (error) {
-        console.error("[GetProfile] Помилка:", error);
-        res.status(error.message.includes("Користувача не знайдено") ? 404 : 500).json({ error: error.message || "Помилка сервера" });
+      console.error("[ValidateToken] Помилка:", error);
+      res.status(500).json({ error: "Помилка сервера" });
     }
 };
 
+export const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: "Будь ласка, вкажіть email." });
+    }
+
+    const user = await User.findByEmail(email);
+    if (!user) {
+      return res.status(404).json({ error: "Користувача не знайдено" });
+    }
+    if (user.provider !== "local") {
+      return res.status(403).json({
+        error:
+          "Цей акаунт зареєстровано через Google. Скидання паролю недоступне.",
+        code: "GOOGLE_ACCOUNT",
+      });
+    }
+
+    const resetToken = jwt.sign(
+      { userId: user.id },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+    
+    if (!redisClient.isOpen) {
+        await redisClient.connect().catch(err => {
+            console.error("[Redis] Помилка підключення в forgotPassword:", err);
+            throw new Error("Помилка Redis: не вдалося підключитися");
+        });
+    }
+
+    await redisClient.del(`reset:${user.id}`);
+    await redisClient.setEx(`reset:${user.id}`, 60 * 60, resetToken); 
+
+    const storedToken = await redisClient.get(`reset:${user.id}`);
+    if (!storedToken || storedToken !== resetToken) {
+        throw new Error("Невдалося зберегти токен для скидання пароля в Redis.");
+    }
+
+    const resetUrl = `${process.env.FRONTEND_URL}/new-password?token=${resetToken}`;
+    try {
+      await sendPasswordResetEmail(email, resetUrl);
+      res.json({ message: "Лист для скидання пароля відправлено." });
+    } catch (emailErr) {
+      console.error("[Email] Помилка відправки листа:", emailErr);
+      res.status(500).json({
+        error:
+          "Помилка відправки листа для скидання пароля. Спробуйте пізніше.",
+      });
+    }
+  } catch (error) {
+    console.error("[ForgotPassword] Загальна помилка:", {
+      message: error.message,
+      stack: error.stack,
+    });
+    res.status(500).json({
+      error: "Помилка сервера при запиті на скидання пароля.",
+      details: process.env.NODE_ENV === "development" ? error.message : null,
+    });
+  }
+};
+
+export const resetPassword = async (req, res) => {
+  try {
+    const { token } = req.query;
+    const { password } = req.body;
+
+    if (!token) {
+      return res.status(401).json({ error: "Токен не надано", code: "TOKEN_MISSING" });
+    }
+    if (!token.match(/^[\w-]+\.[\w-]+\.[\w-_.+/=]*$/)) {
+        return res.status(401).json({ error: "Недійсний формат токена", code: "INVALID_TOKEN_FORMAT" });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if(!decoded || !decoded.userId) {
+        return res.status(401).json({ error: "Недійсний токен (немає userId)", code: "INVALID_TOKEN_PAYLOAD" });
+    }
+
+    const storedToken = await redisClient.get(`reset:${decoded.userId}`);
+    if (!storedToken) {
+        return res.status(401).json({ 
+            error: "Токен вже використаний, недійсний або час життя минув",
+            code: "TOKEN_EXPIRED_OR_USED_REDIS"
+        });
+    }
+    if (token !== storedToken) {
+        return res.status(401).json({ error: "Недійсний токен (неспівпадіння з Redis)", code: "TOKEN_MISMATCH_REDIS" });
+    }
+    await redisClient.del(`reset:${decoded.userId}`);
+
+
+    if (!validatePassword(password)) {
+      return res.status(400).json({
+        error: getPasswordRequirementsMessage(),
+        code: "INVALID_NEW_PASSWORD_FORMAT"
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 12);
+    const result = await User.updatePassword(
+      decoded.userId,
+      hashedPassword
+    );
+    if (result.affectedRows === 0) {
+      throw new Error("Користувача не знайдено для оновлення пароля");
+    }
+
+    res.json({
+      success: true,
+      message: "Пароль успішно оновлено. Увійдіть з новим паролем.",
+    });
+  } catch (error) {
+    console.error("[ResetPassword] Критична помилка:", {
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+      query: req.query,
+      body: req.body,
+    });
+    if (error.name === "TokenExpiredError") {
+      return res.status(401).json({ error: "Час дії токену минув", code: "JWT_TOKEN_EXPIRED" });
+    }
+    if (error.name === "JsonWebTokenError") {
+      return res.status(401).json({ error: "Недійсний токен (помилка верифікації)", code: "JWT_INVALID_SIGNATURE" });
+    }
+    if (error.message?.includes("Користувача не знайдено")) {
+        return res.status(404).json({ error: "Користувача не знайдено", code: "USER_NOT_FOUND_ON_UPDATE" });
+    }
+    res.status(500).json({
+      error: "Помилка сервера при скиданні пароля.",
+      details:
+        process.env.NODE_ENV === "development" ? error.message : null,
+    });
+  }
+};
+
+async function getProfileInternal(userId) {
+  const [userRows] = await pool.query(
+    `
+      SELECT 
+        u.id, u.email, u.name, u.avatar, u.role, u.gender,
+        u.faculty_id AS user_table_faculty_id, 
+        u.dormitory_id AS user_table_dormitory_id,
+        u.is_profile_complete,
+        up.birthday, up.phone, up.about_me, up.interests, up.room, 
+        up.dormitory, up.instagram, up.telegram,
+        up.faculty_id AS profile_faculty_id, up.group_id, up.course,
+        f_user.name AS user_faculty_name,
+        f_profile.name AS profile_faculty_name,
+        d.name AS dormitory_name,
+        g.name AS group_name
+      FROM users u
+      LEFT JOIN user_profiles up ON u.id = up.user_id
+      LEFT JOIN faculties f_user ON u.faculty_id = f_user.id
+      LEFT JOIN faculties f_profile ON up.faculty_id = f_profile.id
+      LEFT JOIN dormitories d ON u.dormitory_id = d.id
+      LEFT JOIN \`groups\` g ON up.group_id = g.id
+      WHERE u.id = ?
+    `,
+    [userId]
+  );
+
+  if (!userRows[0]) {
+    throw new Error("Користувача не знайдено при отриманні профілю");
+  }
+  const user = userRows[0];
+  const isComplete = await isProfileComplete(userId, user.role);
+
+  const profile = {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    avatar: user.avatar,
+    role: user.role,
+    gender: user.gender,
+    is_profile_complete: isComplete,
+    birthday: user.birthday
+      ? new Date(user.birthday).toISOString().split("T")[0]
+      : null,
+    phone: user.phone || null,
+    about_me: user.about_me || null,
+    interests: user.interests || null,
+    room: user.room || null,
+    dormitory: user.dormitory || null, // This seems to be from user_profiles.dormitory
+    instagram: user.instagram || null,
+    telegram: user.telegram || null,
+    dormitory_id: user.user_table_dormitory_id || null, // This is from users.dormitory_id
+    dormitory_name: user.dormitory_name || null,
+  };
+
+  if (user.role === "student") {
+    profile.faculty_id = user.profile_faculty_id || null;
+    profile.faculty_name = user.profile_faculty_name || null;
+    profile.group_id = user.group_id || null;
+    profile.group_name = user.group_name || null;
+    profile.course = user.course || null;
+  } else if (["faculty_dean_office", "student_council_head", "student_council_member"].includes(user.role)) {
+    profile.faculty_id = user.user_table_faculty_id || null;
+    profile.faculty_name = user.user_faculty_name || null;
+  }
+  // For dorm_manager, dormitory_id and dormitory_name are already set from users table.
+
+  return profile;
+}
+
+
+export const getProfile = async (req, res) => {
+    try {
+      const userId = req.user.userId;
+      const profileData = await getProfileInternal(userId);
+  
+      // Ensure is_profile_complete in users table is up-to-date
+      const userFromDb = await User.findById(userId); // Assuming User.findById fetches the 'users' table record
+      if (userFromDb && (userFromDb.is_profile_complete === 1) !== profileData.is_profile_complete) {
+        await pool.execute(
+          `UPDATE users SET is_profile_complete = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+          [profileData.is_profile_complete ? 1 : 0, userId]
+        );
+      }
+  
+      res.json(profileData);
+    } catch (error) {
+      console.error("[GetProfile] Помилка:", error);
+      res.status(error.message.includes("Користувача не знайдено") ? 404 : 500).json({ error: error.message || "Помилка сервера" });
+    }
+};
+  
 export const updateProfile = async (req, res) => {
     try {
         const userId = req.user.userId;
@@ -714,7 +767,8 @@ export const updateProfile = async (req, res) => {
             name: Joi.string().trim().max(255).optional().allow(null, '').messages({
                 'string.max': 'Ім\'я не може перевищувати 255 символів.'
             }),
-            birthday: Joi.date().max('now').optional().allow(null, '').messages({ // 'now' для Joi date
+            gender: Joi.string().valid('male', 'female', 'other', 'not_specified').optional().allow(null, ''),
+            birthday: Joi.date().max('now').optional().allow(null, '').messages({
                 'date.max': 'Дата народження не може бути в майбутньому.'
             }),
             phone: Joi.string().trim().pattern(/^\+380\d{9}$/).optional().allow(null, '').messages({
@@ -729,7 +783,7 @@ export const updateProfile = async (req, res) => {
             room: Joi.string().trim().max(10).optional().allow(null, '').messages({
                 'string.max': 'Номер кімнати не може перевищувати 10 символів.'
             }),
-            dormitory: Joi.string().trim().max(50).optional().allow(null, '').messages({
+            dormitory: Joi.string().trim().max(50).optional().allow(null, '').messages({ // This is user_profiles.dormitory
                 'string.max': 'Назва гуртожитку не може перевищувати 50 символів.'
             }),
             instagram: Joi.string().trim().pattern(/^([a-zA-Z0-9._]){1,30}$/).optional().allow(null, '').messages({
@@ -743,23 +797,24 @@ export const updateProfile = async (req, res) => {
         let roleSpecificSchema = {};
         if (role === 'student') {
             roleSpecificSchema = {
-                faculty_id: Joi.number().integer().positive().optional().allow(null),
+                faculty_id: Joi.number().integer().positive().optional().allow(null), // for user_profiles
                 group_id: Joi.number().integer().positive().optional().allow(null),
                 course: Joi.number().integer().min(1).max(6).optional().allow(null),
             };
         } else if (['faculty_dean_office', 'student_council_head', 'student_council_member'].includes(role)) {
             roleSpecificSchema = {
-                faculty_id: Joi.number().integer().positive().optional().allow(null),
+                faculty_id: Joi.number().integer().positive().optional().allow(null), // for users table
             };
         } else if (role === 'dorm_manager') {
             roleSpecificSchema = {
-                dormitory_id: Joi.number().integer().positive().optional().allow(null),
+                dormitory_id: Joi.number().integer().positive().optional().allow(null), // for users table
             };
         }
 
         const schema = Joi.object({ ...baseSchemaFields, ...roleSpecificSchema }).unknown(false);
 
         const { error, value: validatedProfileData } = schema.validate(profileData, { abortEarly: false, stripUnknown: true });
+
         if (error) {
             const errorDetails = error.details.map((detail) => ({
                 field: detail.path.join('.'),
@@ -771,8 +826,11 @@ export const updateProfile = async (req, res) => {
         const connection = await pool.getConnection();
         try {
             await connection.beginTransaction();
+
             const userUpdates = {};
             if (validatedProfileData.name !== undefined) userUpdates.name = validatedProfileData.name === "" ? null : validatedProfileData.name;
+            if (validatedProfileData.gender !== undefined) userUpdates.gender = validatedProfileData.gender === "" ? 'not_specified' : validatedProfileData.gender;
+
 
             if (["faculty_dean_office", "student_council_head", "student_council_member"].includes(role) && validatedProfileData.faculty_id !== undefined) {
                 if (validatedProfileData.faculty_id) {
@@ -804,13 +862,13 @@ export const updateProfile = async (req, res) => {
             if (validatedProfileData.aboutMe !== undefined) profileUpdates.about_me = validatedProfileData.aboutMe || null;
             if (validatedProfileData.interests !== undefined) profileUpdates.interests = validatedProfileData.interests || null;
             if (validatedProfileData.room !== undefined) profileUpdates.room = validatedProfileData.room || null;
-            if (validatedProfileData.dormitory !== undefined) profileUpdates.dormitory = validatedProfileData.dormitory || null;
-            if (validatedProfileData.instagram !== undefined) profileUpdates.instagram = validatedProfileData.instagram ? (validatedProfileData.instagram.startsWith('https://www.instagram.com/') ? validatedProfileData.instagram : `https://www.instagram.com/${validatedProfileData.instagram.replace('@', '')}`) : null;
-            if (validatedProfileData.telegram !== undefined) profileUpdates.telegram = validatedProfileData.telegram ? (validatedProfileData.telegram.startsWith('https://t.me/') ? validatedProfileData.telegram : `https://t.me/${validatedProfileData.telegram.replace('@', '')}`) : null;
+            if (validatedProfileData.dormitory !== undefined) profileUpdates.dormitory = validatedProfileData.dormitory || null; // user_profiles.dormitory
+            if (validatedProfileData.instagram !== undefined) profileUpdates.instagram = validatedProfileData.instagram ? (validatedProfileData.instagram.startsWith('https://') ? validatedProfileData.instagram : `https://instagram.com/${validatedProfileData.instagram.replace('@','')}`) : null;
+            if (validatedProfileData.telegram !== undefined) profileUpdates.telegram = validatedProfileData.telegram ? (validatedProfileData.telegram.startsWith('https://') ? validatedProfileData.telegram : `https://t.me/${validatedProfileData.telegram.replace('@','')}`) : null;
 
 
             if (role === "student") {
-                if (validatedProfileData.faculty_id !== undefined) {
+                if (validatedProfileData.faculty_id !== undefined) { // This faculty_id is for user_profiles
                     if (validatedProfileData.faculty_id) {
                         const [faculty] = await connection.execute(`SELECT id FROM faculties WHERE id = ?`, [validatedProfileData.faculty_id]);
                         if (!faculty[0]) throw new Error("Факультет не існує для user_profiles");
@@ -820,24 +878,24 @@ export const updateProfile = async (req, res) => {
                 if (validatedProfileData.group_id !== undefined) {
                     if (validatedProfileData.group_id) {
                         const [group] = await connection.execute(
-    `SELECT id, faculty_id FROM \`groups\` WHERE id = ?`, // ВИПРАВЛЕНО
-    [validatedProfileData.group_id]
-);
+                            `SELECT id, faculty_id FROM \`groups\` WHERE id = ?`,
+                            [validatedProfileData.group_id]
+                        );
                         if (!group[0]) throw new Error("Група не існує");
                         
                         const facultyIdForCheck = profileUpdates.faculty_id !== undefined 
-                            ? profileUpdates.faculty_id 
-                            : (await UserProfile.findByUserId(userId))?.faculty_id;
+                                                    ? profileUpdates.faculty_id 
+                                                    : (await UserProfile.findByUserId(userId))?.faculty_id;
 
                         if (facultyIdForCheck && group[0].faculty_id !== facultyIdForCheck) {
-                           throw new Error("Група не належить до обраного факультету");
+                            throw new Error("Група не належить до обраного факультету");
                         }
                     }
                     profileUpdates.group_id = validatedProfileData.group_id || null;
                 }
                 if (validatedProfileData.course !== undefined) profileUpdates.course = validatedProfileData.course || null;
             }
-
+            
             const existingProfile = await UserProfile.findByUserId(userId);
             if (existingProfile) {
                 if (Object.keys(profileUpdates).length > 0) {
@@ -846,21 +904,23 @@ export const updateProfile = async (req, res) => {
                     await connection.execute(`UPDATE user_profiles SET ${profileFields} WHERE user_id = ?`, profileValues);
                 }
             } else {
-                 const allProfileFieldsToInsert = { user_id: userId, ...profileUpdates };
-                 // Додаємо базові поля, якщо вони є і профіль створюється вперше і не були додані раніше
+                // Create profile if not exists and there's data to insert
+                const allProfileFieldsToInsert = { user_id: userId, ...profileUpdates };
+                 // Ensure all base fields are considered if provided, even if not role-specific for users table
                 for (const key in baseSchemaFields) {
                     const profileKey = key === 'aboutMe' ? 'about_me' : key;
                     if (validatedProfileData[key] !== undefined && allProfileFieldsToInsert[profileKey] === undefined) {
-                        allProfileFieldsToInsert[profileKey] = validatedProfileData[key] || null;
+                         allProfileFieldsToInsert[profileKey] = validatedProfileData[key] || null;
                     }
                 }
 
-                if (Object.keys(allProfileFieldsToInsert).length > 1) { // user_id завжди є
+                if (Object.keys(allProfileFieldsToInsert).length > 1) { // more than just user_id
                     const fieldNames = Object.keys(allProfileFieldsToInsert).map(f => `\`${f}\``).join(', ');
                     const placeholders = Object.keys(allProfileFieldsToInsert).map(() => '?').join(', ');
                     await connection.execute(`INSERT INTO user_profiles (${fieldNames}) VALUES (${placeholders})`, Object.values(allProfileFieldsToInsert));
                 }
             }
+
 
             const isComplete = await isProfileComplete(userId, role);
             await connection.execute(
@@ -870,46 +930,46 @@ export const updateProfile = async (req, res) => {
 
             await connection.commit();
             const finalProfileData = await getProfileInternal(userId);
-
             res.json({
                 message: "Профіль успішно оновлено",
                 user: finalProfileData,
             });
+
         } catch (error) {
             await connection.rollback();
             console.error("[UpdateProfile] Помилка транзакції:", error);
-            const isForeignKeyError = error.message.includes("Факультет не існує") ||
-                error.message.includes("Гуртожиток не існує") ||
-                error.message.includes("Група не існує") ||
-                error.message.includes("Група не належить до обраного факультету");
-            const fieldWithError = isForeignKeyError ?
-                (error.message.includes("Факультет") ? "faculty_id" :
-                    (error.message.includes("Гуртожиток") ? "dormitory_id" : "group_id"))
-                : "general";
-
-            res.status(400).json({
-                error: "Помилка при оновленні профілю",
+            const isForeignKeyError = error.message.includes("Факультет не існує") || 
+                                      error.message.includes("Гуртожиток не існує") ||
+                                      error.message.includes("Група не існує") ||
+                                      error.message.includes("Група не належить до обраного факультету");
+            const fieldWithError = isForeignKeyError ? 
+                                   (error.message.includes("Факультет") ? "faculty_id" : 
+                                   (error.message.includes("Гуртожиток") ? "dormitory_id" : "group_id")) 
+                                   : "general";
+            res.status(400).json({ 
+                error: "Помилка при оновленні профілю", 
                 details: [{ field: fieldWithError, message: error.message || "Помилка сервера" }],
             });
         } finally {
             connection.release();
         }
-    } catch (error) {
+    } catch (error) { // Catch for initial Joi validation or other pre-transaction errors
         console.error("[UpdateProfile] Помилка валідації або інша:", error);
         res.status(500).json({ error: "Помилка сервера", details: error.details || error.message });
     }
 };
 
+
 export default {
-    register,
-    verifyEmail,
-    login,
-    refreshToken,
-    forgotPassword,
-    resetPassword,
-    googleSignIn,
-    getProfile,
-    updateProfile,
-    logout,
-    validateToken,
+  register,
+  verifyEmail,
+  login,
+  refreshToken,
+  forgotPassword,
+  resetPassword,
+  googleSignIn,
+  getProfile,
+  updateProfile,
+  logout,
+  validateToken,
 };

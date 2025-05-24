@@ -1,0 +1,322 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+/* --- Загальні стилі сторінки --- */
+.layout {
+  display: flex;
+  min-height: 100vh;
+  background: var(--blue-gray-50, #f8fafc);
+  font-family: 'Roboto', sans-serif;
+}
+
+.mainContent {
+  flex: 1;
+  transition: margin-left 0.3s ease;
+  margin-left: calc(250px + 16px);
+  padding: calc(72px + 16px) 16px 16px 16px;
+  box-sizing: border-box;
+  min-height: 100vh;
+  overflow-y: auto;
+}
+
+.mainContent.sidebarCollapsed {
+  margin-left: calc(80px + 16px);
+}
+
+.pageContainer {
+  background: var(--white, #fff);
+  border: 1px solid var(--gray-300, #d1d5db);
+  border-radius: 12px;
+  padding: 24px;
+  margin-top: 16px;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - (72px + 16px + 16px + 16px));
+  overflow-y: auto;
+}
+
+.pageTitle {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 0.5rem 0;
+  display: flex;
+  align-items: center;
+}
+
+.titleIcon {
+  width: 26px;
+  height: 26px;
+  margin-right: 0.75rem;
+  color: var(--primary-color, #3b82f6);
+}
+
+.pageDescription {
+  font-size: 1rem;
+  color: var(--text-secondary, #4b5563);
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+/* --- Стилі для форми фільтрів --- */
+.filterForm {
+  background-color: #f9fafb;
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  border: 1px solid #e5e7eb;
+}
+
+.formRow {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.formGroup {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 200px;
+}
+
+.label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+}
+
+.labelIcon {
+  width: 16px;
+  height: 16px;
+  margin-right: 0.375rem;
+  color: #3b82f6;
+}
+
+.input,
+.select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  background-color: white;
+  color: #1f293b;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.input:focus,
+.select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+.searchButton {
+  background-color: #3b82f6;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.searchButton:hover {
+  background-color: #2563eb;
+}
+
+.searchButton:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.buttonIcon {
+    width: 20px;
+    height: 20px;
+}
+
+/* --- Стилі для результатів пошуку --- */
+.resultsContainer {
+  margin-top: 2rem;
+  flex-grow: 1;
+  overflow-y: auto;
+}
+
+.resultsTitle {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 0.5rem;
+}
+
+.roomGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.roomCard {
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  display: flex;
+  flex-direction: column;
+}
+
+.roomCard:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.roomCardImagePlaceholder {
+    width: 100%;
+    height: 150px;
+    background-color: #f0f4f8;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    color: #a0aec0;
+}
+.roomCardImagePlaceholder svg {
+    width: 60px;
+    height: 60px;
+}
+
+
+.roomCardContent h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #257BF4;
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+}
+
+.roomCardContent p {
+  font-size: 0.9rem;
+  color: #4b5563;
+  margin-bottom: 0.35rem;
+  line-height: 1.5;
+}
+.roomCardContent p strong {
+    color: #1f293b;
+}
+
+.roomCardButton {
+  background-color: #2ecc71; /* Green as an example */
+  color: white;
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  margin-top: auto; /* Pushes button to the bottom */
+  align-self: flex-start; /* Aligns button to the left */
+}
+
+.roomCardButton:hover {
+  background-color: #27ae60; /* Darker green */
+}
+
+.loadingSpinner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+    font-size: 1.2rem;
+    color: #6b7280;
+}
+
+.noResultsMessage {
+    text-align: center;
+    padding: 2rem;
+    font-size: 1.1rem;
+    color: #6b7280;
+    background-color: #f9fafb;
+    border-radius: 8px;
+    border: 1px dashed #e0e0e0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+.noResultsMessage svg {
+    width: 48px;
+    height: 48px;
+    color: #a0aec0;
+}
+
+
+@media (max-width: 1024px) {
+  .mainContent {
+    margin-left: calc(80px + 12px);
+    padding: calc(72px + 12px) 12px 12px 12px;
+  }
+  .mainContent.sidebarCollapsed {
+     margin-left: calc(80px + 12px);
+  }
+   .pageContainer {
+    height: calc(100vh - (72px + 12px + 12px + 12px));
+    padding: 20px;
+  }
+  .pageTitle {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .mainContent {
+    margin-left: 0 !important;
+    padding: calc(60px + 10px) 10px 10px 10px;
+  }
+  .pageContainer {
+    padding: 16px;
+    height: calc(100vh - (60px + 10px + 10px)); /* Adjust height */
+  }
+  .formRow {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .pageTitle {
+    font-size: 1.375rem;
+  }
+  .roomGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .pageTitle {
+    font-size: 1.25rem;
+  }
+  .input,
+  .select {
+    font-size: 0.875rem;
+  }
+  .searchButton {
+    font-size: 0.875rem;
+    padding: 0.6rem 1.2rem;
+  }
+}

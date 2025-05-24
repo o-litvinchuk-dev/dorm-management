@@ -20,34 +20,28 @@ const CompleteProfilePage = () => {
   const getInitialValues = useCallback(() => {
     if (!user) {
       return {
-        name: "", phone: "", faculty_id: "", group_id: "", course: "", dormitory_id: "", userRole: ""
+        name: "", phone: "", gender: "not_specified", faculty_id: "", group_id: "", course: "", dormitory_id: "", userRole: ""
       };
     }
-    // Початкове значення faculty_id беремо з user.faculty_id, якщо є, інакше порожній рядок.
-    // Це важливо, бо faculty_id для деканату може бути встановлено при створенні адміном
-    // або очікується вибір на цій сторінці.
-    let initialFacultyId = user.faculty_id || ""; 
-    // Аналогічно для гуртожитку
+    let initialFacultyId = user.faculty_id || "";
     let initialDormitoryId = user.dormitory_id || "";
 
-
-    // Якщо роль "student", але user.faculty_id з user_profiles (змінене поле в getProfile)
-    if (user.role === "student" && user.profile_faculty_id) {
-      initialFacultyId = user.profile_faculty_id;
+    if (user.role === "student" && user.faculty_id) { // Use user.faculty_id for student's profile faculty_id
+        initialFacultyId = user.faculty_id;
     }
-
-
+    
     return {
       name: user.name || "",
       phone: user.phone || "",
+      gender: user.gender || "not_specified",
       faculty_id: initialFacultyId,
-      group_id: user.group_id || "", 
+      group_id: user.group_id || "",
       course: user.course || "",
       dormitory_id: initialDormitoryId,
       userRole: user.role,
     };
   }, [user]);
-  
+
   const validationSchema = Yup.object().shape({
     name: Yup.string()
       .required("ПІБ обов'язкове")
@@ -56,7 +50,17 @@ const CompleteProfilePage = () => {
     phone: Yup.string()
       .matches(/^\+380\d{9}$/, "Формат телефону: +380XXXXXXXXX (наприклад, +380991234567)")
       .required("Телефон обов'язковий"),
-    faculty_id: Yup.number().when('userRole', { 
+    gender: Yup.string().oneOf(['male', 'female', 'other'], "Оберіть стать (чоловіча або жіноча є обов'язковими для студентів)")
+      .when('userRole', {
+          is: 'student',
+          then: schema => schema.test(
+              'student-gender-required',
+              'Для студентів стать (чоловіча/жіноча) є обов\'язковою',
+              value => value === 'male' || value === 'female'
+          ),
+          otherwise: schema => schema.optional() // not_specified is allowed for other roles
+      }),
+    faculty_id: Yup.number().when('userRole', {
       is: (userRole) => ["student", "faculty_dean_office", "student_council_head", "student_council_member"].includes(userRole),
       then: (schema) => schema.required("Факультет обов'язковий для вашої ролі").typeError("Виберіть факультет"),
       otherwise: (schema) => schema.nullable(),
@@ -92,30 +96,29 @@ const CompleteProfilePage = () => {
         const payload = {
           name: values.name,
           phone: values.phone,
+          gender: values.gender,
         };
 
-        // Включаємо role-specific поля в payload
         if (user?.role === "student") {
-          payload.faculty_id = values.faculty_id || null;
+          payload.faculty_id = values.faculty_id || null; // This is user_profiles.faculty_id
           payload.group_id = values.group_id || null;
           payload.course = values.course || null;
         } else if (["faculty_dean_office", "student_council_head", "student_council_member"].includes(user?.role)) {
-          payload.faculty_id = values.faculty_id || null; // Це має оновлювати users.faculty_id
+          payload.faculty_id = values.faculty_id || null; // This is users.faculty_id
         } else if (user?.role === "dorm_manager") {
-          payload.dormitory_id = values.dormitory_id || null; // Це має оновлювати users.dormitory_id
+          payload.dormitory_id = values.dormitory_id || null; // This is users.dormitory_id
         }
         
-        // Очищення порожніх рядків до null, щоб уникнути помилок з зовнішніми ключами
         Object.keys(payload).forEach(key => {
-          if (payload[key] === "") { 
-             payload[key] = null;
-          }
-        });
-        
+            if (payload[key] === "") {
+              payload[key] = null;
+            }
+          });
+
         await api.patch("/secure/profile", payload);
         ToastService.success("Профіль успішно оновлено!");
-        await refreshUser(); // Дуже важливо для оновлення is_profile_complete та інших даних в UserContext
-        // Перенаправлення на /dashboard має відбутися автоматично через AuthRequiredRoute
+        await refreshUser(); // This will re-fetch and update is_profile_complete
+        // Navigation will be handled by AuthRequiredRoute after refreshUser updates the context
       } catch (error) {
         ToastService.handleApiError(error);
       } finally {
@@ -126,9 +129,13 @@ const CompleteProfilePage = () => {
   
   useEffect(() => {
     if (user && formik.values.userRole !== user.role) {
-      formik.setFieldValue('userRole', user.role);
+        formik.setFieldValue('userRole', user.role);
     }
-  }, [user, formik]);
+    if (user && user.gender && formik.values.gender !== user.gender) {
+        formik.setFieldValue('gender', user.gender);
+    }
+}, [user, formik]);
+
 
   useEffect(() => {
     if (!userIsLoading && user && user.is_profile_complete) {
@@ -145,13 +152,12 @@ const CompleteProfilePage = () => {
       setDataLoading(true);
       try {
         const requests = [];
-        // Завантажуємо факультети, якщо роль потребує вибору факультету
         if (["student", "faculty_dean_office", "student_council_head", "student_council_member"].includes(user.role)) {
           requests.push(api.get("/faculties"));
         } else {
           requests.push(Promise.resolve({ data: [] })); 
         }
-        // Завантажуємо гуртожитки, якщо роль потребує вибору гуртожитку
+
         if (user.role === "dorm_manager") {
           requests.push(api.get("/dormitories"));
         } else {
@@ -159,10 +165,8 @@ const CompleteProfilePage = () => {
         }
         
         const [facultiesRes, dormitoriesRes] = await Promise.all(requests);
-        
         setFaculties(facultiesRes.data || []);
         setDormitories(dormitoriesRes.data || []);
-
       } catch (error) {
         ToastService.handleApiError(error);
       } finally {
@@ -170,76 +174,75 @@ const CompleteProfilePage = () => {
       }
     };
     fetchData();
-  }, [user]); // Перезавантажувати, якщо змінився об'єкт user
+  }, [user]);
 
   useEffect(() => {
     const facultyIdValue = formik.values.faculty_id;
     if (user?.role === "student" && facultyIdValue) {
-      setDataLoading(true);
-      api.get(`/faculties/${facultyIdValue}/groups`)
-        .then(response => {
-          const fetchedGroups = response.data || [];
-          setGroups(fetchedGroups);
-          
-          const currentGroupId = parseInt(formik.values.group_id, 10);
-          const groupInNewList = fetchedGroups.find(g => g.id === currentGroupId);
+        setDataLoading(true);
+        api.get(`/faculties/${facultyIdValue}/groups`)
+            .then(response => {
+                const fetchedGroups = response.data || [];
+                setGroups(fetchedGroups);
+                const currentGroupId = parseInt(formik.values.group_id, 10);
+                const groupInNewList = fetchedGroups.find(g => g.id === currentGroupId);
 
-          if (currentGroupId && groupInNewList) {
-            if (formik.values.course !== groupInNewList.course) {
-              formik.setFieldValue('course', groupInNewList.course, false); // false - не запускати валідацію зараз
-            }
-          } else { 
-             // Якщо користувач змінив факультет, скидаємо групу та курс
-            if(formik.dirty || formik.values.group_id){ // Якщо форма була змінена або group_id ще має старе значення
-              formik.setFieldValue('group_id', '', false);
-              formik.setFieldValue('course', '', false);
-            }
-          }
-        })
-        .catch(error => {
-          ToastService.handleApiError(error);
-          setGroups([]);
-          formik.setFieldValue('group_id', '', false);
-          formik.setFieldValue('course', '', false);
-        })
-        .finally(() => setDataLoading(false));
-    } else if (user?.role === "student") {
-      setGroups([]);
-      if (formik.values.group_id || formik.values.course) { // Очистити, тільки якщо були значення
-        formik.setFieldValue('group_id', '', false);
-        formik.setFieldValue('course', '', false);
-      }
+                if (currentGroupId && groupInNewList) {
+                    if (formik.values.course !== groupInNewList.course) {
+                        formik.setFieldValue('course', groupInNewList.course, false);
+                    }
+                } else {
+                    // If current group_id is not in new list, or no group_id was set, clear them
+                    if(formik.dirty || formik.values.group_id){ // Only clear if form was touched or group_id existed
+                        formik.setFieldValue('group_id', '', false);
+                        formik.setFieldValue('course', '', false);
+                    }
+                }
+            })
+            .catch(error => {
+                ToastService.handleApiError(error);
+                setGroups([]);
+                formik.setFieldValue('group_id', '', false);
+                formik.setFieldValue('course', '', false);
+            })
+            .finally(() => setDataLoading(false));
+    } else if (user?.role === "student") { // If faculty is not selected for student
+        setGroups([]);
+        if (formik.values.group_id || formik.values.course) { // If group/course were set, clear them
+            formik.setFieldValue('group_id', '', false);
+            formik.setFieldValue('course', '', false);
+        }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formik.values.faculty_id, user?.role]); 
+}, [formik.values.faculty_id, user?.role]); // Removed formik.values.group_id, formik.values.course from deps to avoid loops
 
-  const handleGroupChange = (event) => {
+const handleGroupChange = (event) => {
     const newGroupId = event.target.value;
     formik.setFieldValue('group_id', newGroupId);
     if (newGroupId) {
-      const selectedGroupObject = groups.find(g => g.id === parseInt(newGroupId, 10));
-      if (selectedGroupObject && typeof selectedGroupObject.course !== 'undefined') {
-        formik.setFieldValue('course', selectedGroupObject.course);
-      } else {
-        formik.setFieldValue('course', ''); 
-      }
+        const selectedGroupObject = groups.find(g => g.id === parseInt(newGroupId, 10));
+        if (selectedGroupObject && typeof selectedGroupObject.course !== 'undefined') {
+            formik.setFieldValue('course', selectedGroupObject.course);
+        } else {
+            formik.setFieldValue('course', ''); // Group might not have course, or not found
+        }
     } else {
-      formik.setFieldValue('course', ''); 
+        formik.setFieldValue('course', ''); // No group selected, clear course
     }
-  };
+};
 
-  if (userIsLoading || (dataLoading && user)) { 
+
+  if (userIsLoading || (dataLoading && user)) {
     return <div className={styles.loadingScreen}>Завантаження даних...</div>;
   }
-  
-  if (!user) { 
+
+  if (!user) {
     return <Navigate to="/login" replace />;
   }
-
+  
   return (
     <div className={styles.pageContainer}>
       <div className={styles.formWrapper}>
-      <div className={styles.logoContainer}>
+        <div className={styles.logoContainer}>
           <img src={logoImg} alt="Dorm Life Logo" className={styles.logoImage} />
           <h1 className={styles.logoText}>DORM LIFE</h1>
         </div>
@@ -282,9 +285,30 @@ const CompleteProfilePage = () => {
             )}
           </div>
 
+          <div className={styles.inputGroup}>
+            <label htmlFor="gender">Стать</label>
+            <select
+              id="gender"
+              name="gender"
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              value={formik.values.gender}
+              className={formik.touched.gender && formik.errors.gender ? styles.inputError : ""}
+            >
+              <option value="not_specified">Не вказано</option>
+              <option value="male">Чоловіча</option>
+              <option value="female">Жіноча</option>
+              <option value="other">Інша</option>
+            </select>
+            {formik.touched.gender && formik.errors.gender && (
+              <div className={styles.errorMessage}>{formik.errors.gender}</div>
+            )}
+          </div>
+
+
           {["student", "faculty_dean_office", "student_council_head", "student_council_member"].includes(user.role) && (
             <div className={styles.inputGroup}>
-              <label htmlFor="faculty_id">Факультет 
+              <label htmlFor="faculty_id">Факультет
                 {user.role === "faculty_dean_office" && " (Обов'язково для Деканату)"}
                 {(user.role === "student_council_head" || user.role === "student_council_member") && " (Обов'язково для Студ. ради)"}
                 {user.role === "student" && " (Обов'язково для Студента)"}
@@ -334,20 +358,19 @@ const CompleteProfilePage = () => {
                   <div className={styles.errorMessage}>{formik.errors.group_id}</div>
                 )}
               </div>
-
               <div className={styles.inputGroup}>
                 <label htmlFor="course">Курс (Автоматично)</label>
                 <input
                   id="course"
                   name="course"
                   type="number"
-                  onChange={formik.handleChange}
+                  onChange={formik.handleChange} // Keep for consistency, though readonly
                   onBlur={formik.handleBlur}
                   value={formik.values.course}
                   className={formik.touched.course && formik.errors.course ? styles.inputError : ""}
                   min="1"
                   max="6"
-                  readOnly 
+                  readOnly
                 />
                 {formik.touched.course && formik.errors.course && (
                   <div className={styles.errorMessage}>{formik.errors.course}</div>
@@ -355,8 +378,9 @@ const CompleteProfilePage = () => {
               </div>
             </>
           )}
-           {user.role === "dorm_manager" && (
-             <div className={styles.inputGroup}>
+
+          {user.role === "dorm_manager" && (
+            <div className={styles.inputGroup}>
               <label htmlFor="dormitory_id">Гуртожиток (Обов'язково для Коменданта)</label>
               <select
                 id="dormitory_id"
@@ -390,7 +414,7 @@ const CompleteProfilePage = () => {
           </a>{" "}
           та <a href="/terms-of-service" target="_blank" rel="noopener noreferrer" className={styles.termsLink}>
             Умовами надання послуг
-            </a>.
+          </a>.
         </p>
       </div>
     </div>

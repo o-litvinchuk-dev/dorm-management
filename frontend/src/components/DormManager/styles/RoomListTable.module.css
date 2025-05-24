@@ -1,0 +1,150 @@
+.tableContainer {
+  overflow-x: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background-color: white;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  margin-top: 1rem; 
+  flex-grow: 1; 
+}
+
+.roomsTable {
+  width: 100%;
+  min-width: 800px; 
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.roomsTable th,
+.roomsTable td {
+  border-bottom: 1px solid #e5e7eb;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.roomsTable th {
+  background-color: #f9fafb;
+  font-weight: 500;
+  color: #374151;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+}
+
+.roomsTable td:first-child,
+.roomsTable th:first-child {
+  padding-left: 1.5rem;
+}
+
+.roomsTable td:last-child,
+.roomsTable th:last-child {
+  padding-right: 1.5rem;
+}
+.actionsHeader {
+    text-align: center !important;
+}
+
+.roomsTable tbody tr:hover {
+  background-color: #f3f4f6;
+}
+
+.descriptionCell {
+  max-width: 200px; 
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: default; 
+}
+
+.actionsCell {
+  text-align: center; 
+  white-space: nowrap;
+}
+
+.actionButton {
+  background: transparent;
+  border: none;
+  padding: 0.375rem;
+  cursor: pointer;
+  color: #6b7280; 
+  transition: color 0.2s ease, transform 0.1s ease;
+  margin-left: 0.5rem; 
+}
+.actionButton:first-child {
+    margin-left: 0;
+}
+
+.actionButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.actionButton svg {
+  width: 1.125rem; 
+  height: 1.125rem;
+  stroke-width: 1.5;
+}
+
+.editButton:hover:not(:disabled) {
+  color: #16a34a; 
+}
+
+.deleteButton:hover:not(:disabled) {
+  color: #ef4444; 
+}
+
+.actionButton:disabled {
+  color: #d1d5db; 
+  cursor: not-allowed;
+}
+
+@media (max-width: 992px) {
+  .roomsTable {
+    min-width: 700px; 
+  }
+}
+
+@media (max-width: 768px) {
+  .roomsTable {
+    min-width: 100%;
+    font-size: 0.8125rem; 
+  }
+  .roomsTable th,
+  .roomsTable td {
+    padding: 0.625rem 0.75rem;
+    white-space: normal; 
+    word-break: break-word;
+  }
+  .roomsTable td:first-child,
+  .roomsTable th:first-child {
+    padding-left: 0.75rem; 
+  }
+  .roomsTable td:last-child,
+  .roomsTable th:last-child {
+    padding-right: 0.75rem; 
+    text-align: center; 
+  }
+  .actionsCell {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+  .actionButton {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 480px) {
+    .roomsTable th, .roomsTable td {
+        font-size: 0.75rem; 
+    }
+    .roomsTable td:first-child,
+    .roomsTable th:first-child {
+        padding-left: 0.5rem; 
+    }
+    .roomsTable td:last-child,
+    .roomsTable th:last-child {
+        padding-right: 0.5rem; 
+    }
+}

@@ -1,5 +1,5 @@
 import React from "react";
-import styles from "../../../../pages/Services/Settlement agreement/styles/SettlementApplicationPage.module.css";
+import styles from "../../../../pages/Services/Settlement agreement/styles/SettlementAgreementPage.module.css";
 
 const Page10Content = ({
   formData,

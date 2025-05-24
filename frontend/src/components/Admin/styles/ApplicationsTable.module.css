@@ -1,17 +1,16 @@
-/* frontend/src/components/Admin/ApplicationsTable.module.css */
 .tableContainer {
-  overflow-x: auto; /* Дозволяє горизонтальну прокрутку, якщо таблиця не вміщається */
+  overflow-x: auto;
   border: 1px solid #e5e7eb; /* Gray 200 */
   border-radius: 8px;
-  background-color: white; /* Фон для самої таблиці */
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); /* Тінь як у GroupsPage */
-  max-width: 100%; /* Щоб контейнер таблиці не виходив за межі батьківського блоку */
-  box-sizing: border-box; /* Враховує padding/border у загальну ширину */
+  background-color: white;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .table {
   width: 100%;
-  min-width: 900px; /* Мінімальна ширина для великих екранів, щоб колонки не стискалися занадто сильно */
+  min-width: 900px; /* Adjust as needed */
   border-collapse: collapse;
   font-size: 0.875rem; /* 14px */
 }
@@ -22,7 +21,7 @@
   padding: 0.75rem 1rem; /* 12px 16px */
   text-align: left;
   vertical-align: middle;
-  white-space: nowrap; /* Запобігає переносу тексту в комірках на великих екранах */
+  white-space: nowrap;
 }
 
 .table th {
@@ -36,15 +35,14 @@
 
 .table td:first-child,
 .table th:first-child {
-  padding-left: 1.5rem; /* Більший відступ для першої колонки */
+  padding-left: 1.5rem; /* 24px */
 }
 
 .table td:last-child,
 .table th:last-child {
-  padding-right: 1.5rem; /* Більший відступ для останньої колонки */
+  padding-right: 1.5rem; /* 24px */
   text-align: right;
 }
-
 
 .table tbody tr:hover {
   background-color: #f3f4f6; /* Gray 100 */
@@ -54,41 +52,43 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  user-select: none; /* Забороняє виділення тексту при кліку */
+  user-select: none;
 }
 
-.header[style*="cursor: pointer"]:hover { /* Стиль при наведенні тільки для клікабельних заголовків */
+.header[style*="cursor: pointer"]:hover {
   color: #3b82f6; /* Blue 500 */
 }
 
 .sortIcon {
   width: 1rem; /* 16px */
-  height: 1rem;
-  stroke-width: 2; /* Трохи товщі іконки */
+  height: 1rem; /* 16px */
+  stroke-width: 2;
   color: #9ca3af; /* Gray 400 */
 }
 
 .header[style*="cursor: pointer"]:hover .sortIcon {
-  color: #3b82f6;
+  color: #3b82f6; /* Blue 500 */
 }
 
 .status {
   padding: 0.25rem 0.625rem; /* 4px 10px */
-  border-radius: 9999px; /* Fully rounded */
+  border-radius: 9999px;
   font-size: 0.75rem; /* 12px */
   font-weight: 500;
-  display: inline-block; /* Щоб padding працював коректно */
+  display: inline-block;
   text-transform: capitalize;
 }
 
 .statusPending {
-  background-color: #fef3c7; /* Yellow 100 */
-  color: #92400e; /* Yellow 700 */
+  background-color: #fef3c7; /* Amber 100 */
+  color: #92400e; /* Amber 800 */
 }
+
 .statusApproved {
   background-color: #d1fae5; /* Green 100 */
   color: #065f46; /* Green 800 */
 }
+
 .statusRejected {
   background-color: #fee2e2; /* Red 100 */
   color: #991b1b; /* Red 800 */
@@ -103,11 +103,11 @@
   color: #3b82f6; /* Blue 500 */
   font-weight: 500;
   transition: all 0.2s ease;
-  white-space: nowrap; /* Щоб текст кнопки не переносився */
+  white-space: nowrap;
 }
 
 .actionButton:hover:not(:disabled) {
-  background-color: #3b82f6;
+  background-color: #3b82f6; /* Blue 500 */
   color: white;
 }
 
@@ -117,53 +117,53 @@
   cursor: not-allowed;
 }
 
-/* Адаптація для менших екранів */
-@media (max-width: 992px) { /* Більш ранній брейкпоінт для планшетів */
+/* Responsive adjustments */
+@media (max-width: 992px) {
   .table {
-    min-width: 768px; /* Зменшуємо мінімальну ширину для планшетів */
+    min-width: 768px;
   }
   .table th,
   .table td {
-    padding: 0.625rem 0.875rem; /* Трохи менші падінги */
+    padding: 0.625rem 0.875rem; /* 10px 14px */
   }
 }
 
 @media (max-width: 768px) {
   .table {
-    min-width: 100%; /* Дозволяє таблиці бути не ширше контейнера */
+    min-width: 100%;
   }
   .table th,
   .table td {
-    padding: 0.625rem 0.75rem; /* Зменшені падінги для мобільних */
+    padding: 0.625rem 0.75rem; /* 10px 12px */
     font-size: 0.8125rem; /* 13px */
-    white-space: normal; /* Дозволяє перенос тексту */
-    word-break: break-word; /* Дозволяє розривати довгі слова, щоб уникнути переповнення */
+    white-space: normal;
+    word-break: break-word;
   }
   .table td:first-child,
   .table th:first-child {
-    padding-left: 0.75rem; /* Зменшений відступ для першої колонки */
+    padding-left: 0.75rem; /* 12px */
   }
   .table td:last-child,
   .table th:last-child {
-    padding-right: 0.75rem; /* Зменшений відступ для останньої колонки */
-    text-align: left; /* Вирівнювання по лівому краю для останньої колонки на мобільних */
+    padding-right: 0.75rem; /* 12px */
+    text-align: left; /* Adjust for smaller screens */
   }
   .actionButton {
-    padding: 0.25rem 0.5rem; /* Менші кнопки на мобільних */
-    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem; /* 4px 8px */
+    font-size: 0.75rem; /* 12px */
   }
 }
 
 @media (max-width: 480px) {
     .table th, .table td {
-        font-size: 0.75rem; /* Ще менший шрифт для дуже малих екранів */
+        font-size: 0.75rem; /* 12px */
     }
-     .table td:first-child,
+    .table td:first-child,
     .table th:first-child {
-        padding-left: 0.5rem;
+        padding-left: 0.5rem; /* 8px */
     }
     .table td:last-child,
     .table th:last-child {
-        padding-right: 0.5rem;
+        padding-right: 0.5rem; /* 8px */
     }
 }
