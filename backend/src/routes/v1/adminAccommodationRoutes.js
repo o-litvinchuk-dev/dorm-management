@@ -5,28 +5,42 @@ import {
   updateApplicationStatus,
   addApplicationComment,
   getApplicationComments,
-} from "../../controllers/adminAccommodationController.js"; // Виправлено шлях імпорту
-import { authenticate } from "../../middlewares/auth.js";
+} from "../../controllers/adminAccommodationController.js";
+import { authenticate, authorize } from "../../middlewares/auth.js"; // Імпортуємо authorize
 
 const router = express.Router();
 
-// Middleware to check admin or dorm_admin role
-const authorizeAdmin = (req, res, next) => {
-  const allowedRoles = ["superadmin", "admin", "dorm_admin"];
-  if (!allowedRoles.includes(req.user.role)) {
-    return res.status(403).json({ error: "Доступ заборонено" });
-  }
-  next();
-};
+// Застосовуємо authenticate для всіх маршрутів цього роутера
+router.use(authenticate);
 
-// Apply authentication and authorization to all routes
-router.use(authenticate, authorizeAdmin);
+router.get(
+  "/",
+  authorize("GET", "/api/v1/admin/accommodation-applications"), // Використовуємо authorize з Casbin
+  getAccommodationApplications
+);
 
-// Routes
-router.get("/", getAccommodationApplications);
-router.get("/:id", getAccommodationApplicationById);
-router.put("/:id/status", updateApplicationStatus);
-router.post("/:id/comments", addApplicationComment);
-router.get("/:id/comments", getApplicationComments);
+router.get(
+  "/:id",
+  authorize("GET", "/api/v1/admin/accommodation-applications/:id"), // Використовуємо authorize з Casbin
+  getAccommodationApplicationById
+);
+
+router.put(
+  "/:id/status",
+  authorize("PUT", "/api/v1/admin/accommodation-applications/:id/status"), // Використовуємо authorize з Casbin
+  updateApplicationStatus
+);
+
+router.post(
+  "/:id/comments",
+  authorize("POST", "/api/v1/admin/accommodation-applications/:id/comments"), // Використовуємо authorize з Casbin
+  addApplicationComment
+);
+
+router.get(
+  "/:id/comments",
+  authorize("GET", "/api/v1/admin/accommodation-applications/:id/comments"), // Використовуємо authorize з Casbin
+  getApplicationComments
+);
 
 export default router;

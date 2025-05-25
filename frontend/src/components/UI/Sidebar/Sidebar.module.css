@@ -30,11 +30,11 @@
   border: 1px solid var(--gray-300);
   border-radius: 12px;
   transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: 100;
+  z-index: 100; 
   font-family: 'Roboto', sans-serif;
   margin: 0 16px 16px 0;
   will-change: width;
-  overflow: visible;
+  overflow: visible; 
 }
 
 .sidebarContainer.collapsed {
@@ -47,8 +47,12 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  position: relative;
-  z-index: 5;
+  position: relative; 
+  z-index: 5; 
+  flex-shrink: 0;
+  background: var(--white); 
+  border-top-left-radius: 12px; 
+  border-top-right-radius: 12px;
 }
 
 .logoContainer::after {
@@ -104,8 +108,8 @@
   padding: 6px;
   align-items: center;
   position: absolute;
-  z-index: 110;
-  right: -14px;
+  z-index: 110; 
+  right: -14px; 
   top: 77px;
   border-radius: 8px;
   border: 1px solid var(--gray-300);
@@ -128,18 +132,27 @@
   display: flex;
   flex-direction: column;
   flex: 1;
-  overflow: visible;
+  overflow: hidden; 
   position: relative;
-  z-index: 5;
+  z-index: 5; 
+  background: var(--white); 
+  border-bottom-left-radius: 12px; 
+  border-bottom-right-radius: 12px;
 }
 
 .sidebarScroll {
   flex: 1;
   overflow-y: auto;
-  max-height: calc(100vh - 280px); /* адаптивна висота з урахуванням шапки + кнопки */
   padding: 0 24px 24px;
   position: relative;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
+
+.sidebarScroll::-webkit-scrollbar {
+  display: none;
+}
+
 
 .sidebarContainer.collapsed .sidebarScroll {
   padding: 0 16px 16px;
@@ -205,6 +218,7 @@
   height: 20px;
   transition: color 0.1s ease;
   pointer-events: none;
+  flex-shrink: 0;
 }
 
 .menuItem.active .menuIcon {
@@ -215,6 +229,9 @@
   font-family: 'Roboto', sans-serif;
   font-weight: 400;
   pointer-events: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .sidebarContainer.collapsed .menuText {
@@ -227,11 +244,22 @@
   justify-content: flex-start;
   position: relative;
   z-index: 5;
+  flex-shrink: 0;
 }
 
 .sidebarContainer.collapsed .sectionHeader {
   justify-content: center;
 }
+.sidebarContainer.collapsed .sectionHeader .sectionTitle {
+  font-size: 0;
+  padding: 0;
+  margin: 0;
+  width: 20px;
+  height: 10px;
+  border-top: 1px solid var(--divider);
+  text-align: center;
+}
+
 
 .sectionTitle {
   font-family: 'Roboto', sans-serif;
@@ -247,6 +275,11 @@
   padding: 24px;
   position: relative;
   z-index: 5;
+  flex-shrink: 0;
+  margin-top: auto;
+  background: var(--white);
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
 }
 
 .bottomSection::before {
@@ -330,19 +363,24 @@
 
 @media (max-width: 768px) {
   .sidebarContainer {
-    width: calc(100% - 32px);
-    height: auto;
-    position: relative;
-    margin: 16px;
-    top: 0;
-    left: 0;
+    width: 250px;
+    height: 100vh;
+    top:0;
+    left:0;
+    margin:0;
+    border-radius: 0;
+    border-right: 1px solid var(--gray-300);
+    border-left: none;
+    border-top:none;
+    border-bottom:none;
   }
 
-  .logoContainer {
-    padding: 16px;
+  .sidebarContainer.collapsed {
+    width: 0; 
+    padding:0;
+    border:none;
   }
-
   .toggleButton {
-    top: 24px;
+    display: none; 
   }
 }

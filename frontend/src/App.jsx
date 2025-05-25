@@ -9,7 +9,7 @@ import LoginPage from "./pages/Auth/LoginPage";
 import UnauthorizedPage from "./pages/Error/UnauthorizedPage";
 import NotFoundPage from "./pages/Error/NotFoundPage";
 import routesConfig from "./routes/routes"; // Імпортуємо конфігурацію маршрутів
-
+import './styles/variables.css';
 // Ця функція буде використовуватися як елемент для шляху "/" в routesConfig
 // Вона визначає, куди перенаправити користувача на основі його стану аутентифікації.
 export function RootRedirect() { // Експортуємо, щоб можна було використати в routesConfig

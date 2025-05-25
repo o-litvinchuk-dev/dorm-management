@@ -1,0 +1,337 @@
+/* Variables are now expected to be in a global scope (e.g. :root in index.css or variables.css) */
+
+.layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--background-color);
+}
+.mainContent {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  transition: margin-left var(--transition-slow);
+  margin-left: var(--sidebar-width-expanded); 
+  padding-top: var(--navbar-height); 
+  box-sizing: border-box;
+}
+.mainContent.sidebarCollapsed {
+  margin-left: var(--sidebar-width-collapsed);
+}
+
+.pageContainer {
+  padding: var(--main-content-padding, 1.5rem); 
+  background-color: var(--card-background-color);
+  flex-grow: 1;
+  border-radius: var(--border-radius-xl);
+  margin: var(--page-container-margin-top, 1rem) var(--main-content-padding, 1.5rem) var(--main-content-padding, 1.5rem);
+  border: 1px solid var(--border-color);
+  display: flex; 
+  flex-direction: column; 
+}
+
+.pageTitle {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-top: 0; 
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color-light);
+}
+.titleIcon {
+  width: 26px;
+  height: 26px;
+  margin-right: 0.75rem;
+  color: var(--primary-color);
+}
+.loadingSpinner, .noResultsMessage {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem 1rem;
+  text-align: center;
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  flex-grow: 1; 
+}
+.noResultsMessage svg {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 1rem;
+  color: var(--primary-color-light);
+}
+
+.filterBar {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 0.75rem;
+  background-color: var(--background-light);
+  border-radius: var(--border-radius-lg);
+  border: 1px solid var(--border-color-light);
+}
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.filterGroup label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+.filterSelect {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border-color-dark);
+  border-radius: var(--border-radius-md);
+  font-size: 0.9rem;
+  background-color: var(--card-background-color);
+  color: var(--text-primary);
+  min-width: 180px;
+}
+.filterSelect:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb, 59, 130, 246), 0.2);
+}
+.filterButtonMobile { /* Кнопка для оновлення фільтрів на мобільних */
+    display: none; /* За замовчуванням прихована */
+    padding: 0.5rem 1rem;
+    background-color: var(--primary-color);
+    color: var(--text-on-primary);
+    border: none;
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    font-size: 0.9rem;
+    align-items: center;
+    gap: 0.5rem;
+}
+.filterButtonMobile svg {
+    width: 16px;
+    height: 16px;
+}
+
+.activitiesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  flex-grow: 1; 
+  align-content: start; 
+}
+
+.activityCard {
+  background-color: var(--card-background-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; 
+  cursor: pointer; /* Вказуємо, що картка клікабельна */
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+.activityCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-color-light);
+  background-color: var(--background-ultralight); 
+}
+
+.cardIcon {
+  width: 20px;
+  height: 20px;
+  color: var(--primary-color);
+  margin-right: 0.75rem;
+  flex-shrink: 0;
+}
+
+.cardTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cardBody {
+  padding: 1rem;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  flex-grow: 1;
+}
+.cardBody p {
+  margin: 0 0 0.5rem 0;
+}
+.cardBody p:last-child {
+  margin-bottom: 0;
+}
+.cardBody strong {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.statusBadge {
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--border-radius-full);
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: capitalize;
+  display: inline-block;
+  border: 1px solid; 
+}
+.statusPending, .statusPendingConfirmation, .statusPendingRoomRes { 
+  background-color: var(--warning-bg-light);
+  color: var(--warning-color-dark);
+  border-color: var(--warning-color);
+}
+.statusApproved, .statusApprovedByFaculty, .statusApprovedByDorm, .statusConfirmed, .statusCheckedIn, .statusApprovedRoomRes, .statusCheckedInRoomRes {
+  background-color: var(--success-bg-light);
+  color: var(--success-color-dark);
+  border-color: var(--success-color);
+}
+.statusRejected, .statusRejectedByFaculty, .statusRejectedByDorm, .statusCancelledByUser, .statusRejectedByAdmin, .statusExpired, .statusRejectedRoomRes, .statusCancelledRoomRes, .statusExpiredRoomRes {
+  background-color: var(--neutral-bg-light);
+  color: var(--neutral-color-dark);
+  border-color: var(--neutral-color);
+}
+.statusSettled, .statusCheckedOut, .statusSettledRoomRes, .statusCheckedOutRoomRes {
+  background-color: var(--primary-bg-light);
+  color: var(--primary-color-dark);
+  border-color: var(--primary-color);
+}
+.statusDefault {
+  background-color: var(--border-color-light);
+  color: var(--text-muted);
+  border-color: var(--border-color-dark);
+}
+
+.cardFooter {
+  padding: 0.75rem 1rem;
+  border-top: 1px solid var(--border-color-light);
+  background-color: var(--background-ultralight);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cardDate {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.detailsLink { /* Стиль для текстового "Детальніше" */
+  font-size: 0.85rem;
+  color: var(--primary-color);
+  font-weight: 500;
+  cursor: pointer;
+}
+.detailsLink:hover {
+  text-decoration: underline;
+  color: var(--primary-color-dark);
+}
+
+.loadingSpinner, .noResultsMessage {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem 1rem;
+  text-align: center;
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  flex-grow: 1; 
+}
+.noResultsMessage svg {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 1rem;
+  color: var(--primary-color-light);
+}
+
+/* Глобальні стилі для модального вікна, якщо вони не визначені в іншому місці */
+.modalOverlayGlobal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.65); /* Трохи темніше для кращого контрасту */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1100; /* Вищий z-index */
+  padding: 1rem; /* Відступи по краях екрану */
+}
+
+.modalContentGlobal {
+  background: var(--card-background-color);
+  border-radius: var(--border-radius-xl); /* Більший радіус */
+  width: 90%;
+  max-width: 700px; /* Збільшено ширину модалки */
+  max-height: 90vh; /* Обмеження по висоті */
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2); /* Виразніша тінь */
+  position: relative; /* Для позиціонування кнопки закриття */
+}
+
+.closeButtonIconGlobal {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: var(--text-muted);
+}
+.closeButtonIconGlobal svg {
+  width: 24px;
+  height: 24px;
+}
+.closeButtonIconGlobal:hover {
+  color: var(--text-primary);
+}
+@media (max-width: 768px) {
+  .pageContainer {
+    padding: 1rem;
+  }
+  .filterBar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .filterGroup {
+    width: 100%;
+  }
+  .filterSelect {
+    width: 100%;
+  }
+   .filterButtonMobile { 
+    display: inline-flex;
+    width: 100%;
+    justify-content: center;
+    margin-top: 0.5rem;
+  }
+  .activitiesGrid {
+    grid-template-columns: 1fr; 
+  }
+  .modalContentGlobal {
+    max-width: 95%;
+    padding: 1rem;
+  }
+}

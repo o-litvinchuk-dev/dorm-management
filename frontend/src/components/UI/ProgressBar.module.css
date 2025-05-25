@@ -1,23 +1,22 @@
 .progressContainer {
-    width: 100%;
-    height: 6px;
-    background-color: #e0e0e0;
-    border-radius: 3px;
-    position: relative;
-    margin-top: 8px;
-  }
-  
-  .progressBar {
-    height: 100%;
-    background-color: #006aff;
-    border-radius: 3px;
-    transition: width 0.3s ease;
-  }
-  
-  .progressText {
-    position: absolute;
-    right: 0;
-    top: -20px;
-    font-size: 0.75rem;
-    color: #666;
-  }
+  width: 100%;
+  height: 6px; /* Keep it slim */
+  background-color: var(--border-color-light, #e0e0e0); /* Lighter background for the track */
+  border-radius: var(--border-radius-full, 3px); /* Fully rounded */
+  position: relative;
+  margin-top: 8px;
+}
+.progressBar {
+  height: 100%;
+  background-color: var(--primary-color, #006aff); /* Use primary color for progress */
+  border-radius: var(--border-radius-full, 3px);
+  transition: width var(--transition-slow); /* Use variable for transition */
+}
+.progressText {
+  position: absolute;
+  right: 0;
+  top: -20px; /* Position above the bar */
+  font-size: 0.75rem;
+  color: var(--text-muted, #666);
+  font-family: var(--font-family-sans); /* Consistent font */
+}

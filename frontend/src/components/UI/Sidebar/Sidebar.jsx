@@ -15,12 +15,12 @@ import {
   ClipboardDocumentListIcon,
   ShieldCheckIcon,
   AcademicCapIcon,
-  WrenchScrewdriverIcon,
+  WrenchScrewdriverIcon, // Icon for Application Presets
   BuildingStorefrontIcon,
   BookmarkSquareIcon,
   HomeModernIcon,
   MagnifyingGlassCircleIcon,
-  BuildingLibraryIcon, // New for Manage Rooms
+  BuildingLibraryIcon,
 } from "@heroicons/react/24/outline";
 import {
   ChartBarIcon as ChartBarSolidIcon,
@@ -33,12 +33,12 @@ import {
   ClipboardDocumentListIcon as ClipboardDocumentListSolidIcon,
   ShieldCheckIcon as ShieldCheckSolidIcon,
   AcademicCapIcon as AcademicCapSolidIcon,
-  WrenchScrewdriverIcon as WrenchScrewdriverSolidIcon,
+  WrenchScrewdriverIcon as WrenchScrewdriverSolidIcon, // Icon for Application Presets
   BuildingStorefrontIcon as BuildingStorefrontSolidIcon,
   BookmarkSquareIcon as BookmarkSquareSolidIcon,
   HomeModernIcon as HomeModernSolidIcon,
   MagnifyingGlassCircleIcon as MagnifyingGlassCircleSolidIcon,
-  BuildingLibraryIcon as BuildingLibrarySolidIcon, // New
+  BuildingLibraryIcon as BuildingLibrarySolidIcon,
 } from "@heroicons/react/24/solid";
 import api from "../../../utils/api";
 
@@ -60,7 +60,7 @@ const Sidebar = ({ onToggle }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const isAdmin =
+  const isAdmin = // This check is for the whole admin section, individual items have role checks
     user &&
     [
       "admin",
@@ -75,23 +75,27 @@ const Sidebar = ({ onToggle }) => {
     const path = location.pathname.slice(1).split("/")[0] || "dashboard";
     const currentPath = location.pathname.slice(1);
 
+    // Update adminSubPaths to include the new route if it's namespaced under admin
+    // For "admin/application-presets", it's already included.
     const adminSubPaths = [
       "admin/management",
       "admin/accommodation-applications",
       "dean/groups",
-      "adminApplications",
-      "admin/application-presets",
+      "adminApplications", // Consider renaming or removing if it's old
+      "admin/application-presets", // This is the route for Application Presets
       "admin/room-reservations",
-      "dorm-manager/rooms", // Added
+      "dorm-manager/rooms",
     ];
 
     let matchedTab = path;
 
     if (adminSubPaths.some((subPath) => currentPath.startsWith(subPath))) {
+      // For nested admin routes, use the first two segments for active state
+      // e.g., "admin/management", "admin/application-presets"
       matchedTab = currentPath.split("/").slice(0, 2).join("/");
       if (
         !adminSubPaths.includes(matchedTab) &&
-        currentPath.startsWith("adminApplications")
+        currentPath.startsWith("adminApplications") // Legacy or specific case
       ) {
         matchedTab = "adminApplications";
       }
@@ -102,11 +106,11 @@ const Sidebar = ({ onToggle }) => {
     } else if (currentPath === "my-reservations"){
         matchedTab = "my-reservations";
     }
-
+    // Add other specific path checks if needed
 
     const allTabs = [
       "dashboard",
-      "applications",
+      "applications", // Student's own applications
       "my-accommodation-applications",
       "dormitories",
       "services",
@@ -122,11 +126,12 @@ const Sidebar = ({ onToggle }) => {
     if (allTabs.includes(matchedTab)) {
       setActiveTab(matchedTab);
     } else {
+      // Fallback to parent path if full matchedTab is not in allTabs
       const parentPath = currentPath.split("/")[0];
       if (allTabs.includes(parentPath)) {
         setActiveTab(parentPath);
       } else {
-        setActiveTab(path);
+        setActiveTab(path); // Default to the first segment
       }
     }
   }, [location.pathname]);
@@ -222,15 +227,15 @@ const Sidebar = ({ onToggle }) => {
       settings: isActive ? Cog6ToothSolidIcon : Cog6ToothIcon,
       help: isActive ? QuestionMarkCircleSolidIcon : QuestionMarkCircleIcon,
       logout: isActive ? ArrowLeftOnRectangleSolidIcon : ArrowLeftOnRectangleIcon,
-      adminApplications: isActive ? DocumentTextSolidIcon : DocumentTextIcon,
+      adminApplications: isActive ? DocumentTextSolidIcon : DocumentTextIcon, // Consider specific icon
       "admin/management": isActive ? ShieldCheckSolidIcon : ShieldCheckIcon,
       "admin/accommodation-applications": isActive ? ClipboardDocumentListSolidIcon : ClipboardDocumentListIcon,
       "dean/groups": isActive ? AcademicCapSolidIcon : AcademicCapIcon,
       "admin/application-presets": isActive ? WrenchScrewdriverSolidIcon : WrenchScrewdriverIcon,
       "admin/room-reservations": isActive ? BuildingStorefrontSolidIcon : BuildingStorefrontIcon,
-      "dorm-manager/rooms": isActive ? BuildingLibrarySolidIcon : BuildingLibraryIcon, // New Icon
+      "dorm-manager/rooms": isActive ? BuildingLibrarySolidIcon : BuildingLibraryIcon,
     };
-    const IconComponent = icons[iconName] || QuestionMarkCircleIcon;
+    const IconComponent = icons[iconName] || QuestionMarkCircleIcon; // Default icon
     return <IconComponent className={styles.menuIcon} />;
   }, []);
 
@@ -268,13 +273,17 @@ const Sidebar = ({ onToggle }) => {
       { name: "settlement", label: "Розклад поселення" },
     ],
     admin: [
-      { name: "adminApplications", label: "Адмін-заявки (старі)", roles: ["admin", "superadmin", "faculty_dean_office", "dorm_manager", "student_council_head", "student_council_member"] },
+      // { name: "adminApplications", label: "Адмін-заявки (старі)", roles: ["admin", "superadmin", "faculty_dean_office", "dorm_manager", "student_council_head", "student_council_member"] },
       { name: "admin/accommodation-applications", label: "Заявки на поселення", roles: ["admin", "superadmin", "faculty_dean_office", "dorm_manager", "student_council_head", "student_council_member"] },
       { name: "admin/room-reservations", label: "Бронювання Кімнат", roles: ["admin", "superadmin", "dorm_manager"] },
       { name: "admin/management", label: "Керування системою", roles: ["superadmin"] },
       { name: "dean/groups", label: "Управління групами", roles: ["faculty_dean_office", "admin", "superadmin"] },
-      { name: "admin/application-presets", label: "Налаштування Заяв", roles: ["admin", "superadmin", "faculty_dean_office"] },
-      { name: "dorm-manager/rooms", label: "Керування кімнатами", roles: ["dorm_manager", "admin", "superadmin"] }, // New Menu Item
+      { 
+        name: "admin/application-presets", 
+        label: "Налаштування Заяв", 
+        roles: ["admin", "superadmin", "faculty_dean_office", "dorm_manager"] // Додано dorm_manager
+      },
+      { name: "dorm-manager/rooms", label: "Керування кімнатами", roles: ["dorm_manager", "admin", "superadmin"] },
     ],
     settings: [{ name: "settings", label: "Налаштування" }],
     bottom: [
@@ -292,7 +301,7 @@ const Sidebar = ({ onToggle }) => {
     >
       <div className={styles.logoContainer}>
         <img
-          src="/logo2.svg"
+          src="/logo2.svg" // Переконайтесь, що цей шлях правильний
           alt="Dorm Life Logo"
           className={styles.logoImage}
         />
@@ -329,11 +338,11 @@ const Sidebar = ({ onToggle }) => {
               )}
             </div>
 
-            {isAdmin && (
+            {isAdmin && ( // Перевіряє, чи користувач має будь-яку з адмінських ролей
               <div className={styles.sidebarSection}>
                 {renderSectionHeader("Управління")}
                 {menuItems.admin
-                  .filter((item) => user && item.roles.includes(user.role))
+                  .filter((item) => user && item.roles.includes(user.role)) // Фільтруємо конкретні пункти меню
                   .map((item) => renderMenuItem(item.name, item.label))}
               </div>
             )}
@@ -360,7 +369,7 @@ const Sidebar = ({ onToggle }) => {
             top: `${tooltipData.top}px`,
             left: `${tooltipData.left}px`,
           }}
-          onClick={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()} // Запобігає закриттю тултіпа при кліку на нього
         >
           <div className={styles.tooltipArrow}></div>
           <div className={styles.tooltipContent}>{tooltipData.content}</div>

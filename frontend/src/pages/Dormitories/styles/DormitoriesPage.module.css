@@ -1,33 +1,68 @@
+/* Variables are now expected to be in a global scope (e.g. :root in index.css or variables.css) */
+
 .layout {
-    display: flex;
-    min-height: 100vh;
-  }
-  
-  .mainContent {
-    flex: 1;
-    padding: 20px;
-    transition: margin-left 0.3s ease;
-  }
-  
-  .sidebarCollapsed {
-    margin-left: 80px;
-  }
-  
-  .container {
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-  
-  h2 {
-    font-size: 24px;
-    margin-bottom: 20px;
-  }
-  
-  ul {
-    list-style: none;
-    padding: 0;
-  }
-  
-  li {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--background-color); /* Standard page background */
+}
+.mainContent {
+  flex: 1;
+  padding: calc(var(--navbar-height) + var(--main-content-padding)) var(--main-content-padding) var(--main-content-padding); /* Consistent with other pages */
+  transition: margin-left var(--transition-slow);
+  margin-left: calc(var(--sidebar-width-expanded) + var(--main-content-padding)); /* Consistent with other pages */
+  box-sizing: border-box;
+}
+.mainContent.sidebarCollapsed {
+  margin-left: calc(var(--sidebar-width-collapsed) + var(--main-content-padding)); /* Consistent with other pages */
+}
+.container {
+    background: var(--card-background-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-xl);
+    padding: 24px;
+    margin-top: var(--page-container-margin-top); /* Consistent with pageContainer */
+    width: 100%;
+    box-sizing: border-box;
+    min-height: calc(100vh - var(--navbar-height) - (var(--page-container-margin-top) * 2) - var(--main-content-padding)); /* Adjusted height */
+}
+h2 {
+    font-size: 1.75rem; /* Consistent with pageTitle */
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 1.5rem 0;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color-light);
+}
+ul {
+  list-style: none;
+  padding: 0;
+}
+li {
     padding: 10px;
+    border-bottom: 1px solid var(--border-color-light);
+}
+li:last-child {
+    border-bottom: none;
+}
+
+@media (max-width: 1024px) {
+  .mainContent {
+    margin-left: calc(var(--sidebar-width-collapsed) + 12px);
+    padding: calc(var(--navbar-height) + 12px) 12px 12px;
   }
+  .mainContent.sidebarCollapsed {
+     margin-left: calc(var(--sidebar-width-collapsed) + 12px);
+  }
+   .container {
+    height: calc(100vh - var(--navbar-height) - (12px*3) );
+  }
+}
+@media (max-width: 768px) {
+  .mainContent {
+    margin-left: 0 !important;
+    padding: calc(var(--navbar-height) + 10px) 10px 10px;
+  }
+  .container {
+    height: calc(100vh - var(--navbar-height) - (10px*3) );
+  }
+}

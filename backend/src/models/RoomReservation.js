@@ -5,8 +5,7 @@ class RoomReservation {
     {
       room_id,
       user_id,
-      reservation_start_date,
-      reservation_end_date,
+      academic_year, // Додано academic_year
       status = "pending_confirmation",
       notes_student = null,
       accommodation_application_id = null,
@@ -15,15 +14,14 @@ class RoomReservation {
   ) {
     const query = `
       INSERT INTO room_reservations
-      (room_id, user_id, reservation_start_date, reservation_end_date, status, notes_student, accommodation_application_id, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+      (room_id, user_id, academic_year, status, notes_student, accommodation_application_id, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())
     `;
     try {
       const [result] = await connection.execute(query, [
         room_id,
         user_id,
-        reservation_start_date,
-        reservation_end_date,
+        academic_year, // Використовуємо academic_year
         status,
         notes_student,
         accommodation_application_id,
@@ -37,7 +35,8 @@ class RoomReservation {
 
   static async findById(id, connection = pool) {
     const query = `
-      SELECT rr.*, r.number as room_number, r.dormitory_id, d.name as dormitory_name,
+      SELECT rr.id, rr.room_id, rr.user_id, rr.academic_year, rr.status, rr.notes_student, rr.notes_admin, rr.admin_id, rr.created_at, rr.updated_at, rr.accommodation_application_id, 
+             r.number as room_number, r.dormitory_id, d.name as dormitory_name,
              u.email as user_email, u.name as user_name, u.gender as user_gender
       FROM room_reservations rr
       JOIN rooms r ON rr.room_id = r.id
@@ -51,7 +50,8 @@ class RoomReservation {
 
   static async findByUserId(user_id, connection = pool) {
     const query = `
-      SELECT rr.*, r.number as room_number, d.name as dormitory_name
+      SELECT rr.id, rr.room_id, rr.user_id, rr.academic_year, rr.status, rr.notes_student, rr.notes_admin, rr.admin_id, rr.created_at, rr.updated_at, rr.accommodation_application_id, 
+             r.number as room_number, d.name as dormitory_name
       FROM room_reservations rr
       JOIN rooms r ON rr.room_id = r.id
       JOIN dormitories d ON r.dormitory_id = d.id
@@ -75,10 +75,9 @@ class RoomReservation {
     connection = pool
   ) {
     const offset = (page - 1) * limit;
-
     let baseQuery = `
-      SELECT rr.id, rr.room_id, rr.user_id, rr.reservation_start_date, rr.reservation_end_date, rr.status, rr.notes_student, rr.notes_admin, rr.admin_id, rr.created_at, rr.updated_at,
-             r.number as room_number, d.name as dormitory_name, r.dormitory_id as room_dormitory_id, 
+      SELECT rr.id, rr.room_id, rr.user_id, rr.academic_year, rr.status, rr.notes_student, rr.notes_admin, rr.admin_id, rr.created_at, rr.updated_at, rr.accommodation_application_id,
+             r.number as room_number, d.name as dormitory_name, r.dormitory_id as room_dormitory_id,
              u.email as user_email, u.name as user_name
       FROM room_reservations rr
       JOIN rooms r ON rr.room_id = r.id
@@ -92,16 +91,14 @@ class RoomReservation {
       JOIN dormitories d ON r.dormitory_id = d.id
       JOIN users u ON rr.user_id = u.id
     `;
-
     const whereClauses = [];
     const params = [];
-
     if (search) {
       whereClauses.push(
-        `(u.name LIKE ? OR u.email LIKE ? OR r.number LIKE ? OR CAST(rr.id AS CHAR) LIKE ?)`
+        `(u.name LIKE ? OR u.email LIKE ? OR r.number LIKE ? OR CAST(rr.id AS CHAR) LIKE ? OR rr.academic_year LIKE ?)`
       );
       const searchTerm = `%${search}%`;
-      params.push(searchTerm, searchTerm, searchTerm, searchTerm);
+      params.push(searchTerm, searchTerm, searchTerm, searchTerm, searchTerm);
     }
     if (status) {
       whereClauses.push(`rr.status = ?`);
@@ -111,36 +108,31 @@ class RoomReservation {
       whereClauses.push(`d.id = ?`);
       params.push(dormitory_id);
     }
-
     if (whereClauses.length > 0) {
       const whereString = ` WHERE ${whereClauses.join(" AND ")}`;
       baseQuery += whereString;
       countBaseQuery += whereString;
     }
-
     const validSortFields = {
       id: "rr.id",
       user_name: "u.name",
       room_number: "r.number",
-      reservation_start_date: "rr.reservation_start_date",
+      academic_year: "rr.academic_year", // Оновлено поле для сортування
       status: "rr.status",
       created_at: "rr.created_at",
     };
     let safeSortBy = validSortFields[sortBy] || "rr.created_at";
-
     baseQuery += ` ORDER BY ${safeSortBy} ${
       sortOrder.toUpperCase() === "ASC" ? "ASC" : "DESC"
     } LIMIT ? OFFSET ?`;
-    const queryParams = [...params, limit, offset];
-
+    const queryParams = [...params, Number(limit), Number(offset)];
     const [rows] = await connection.query(baseQuery, queryParams);
     const [[{ total }]] = await connection.query(countBaseQuery, params);
-
     return {
       reservations: rows,
       total,
-      page,
-      limit,
+      page: Number(page),
+      limit: Number(limit),
     };
   }
 
@@ -163,10 +155,8 @@ class RoomReservation {
     if (!validStatuses.includes(status)) {
       throw new Error(`Invalid reservation status: ${status}`);
     }
-
     let query = `UPDATE room_reservations SET status = ?, updated_at = NOW()`;
     const params = [status];
-
     if (admin_id !== null) {
       query += `, admin_id = ?`;
       params.push(admin_id);
@@ -175,10 +165,8 @@ class RoomReservation {
       query += `, notes_admin = ?`;
       params.push(notes_admin === "" ? null : notes_admin);
     }
-
     query += ` WHERE id = ?`;
     params.push(id);
-
     const [result] = await connection.execute(query, params);
     return result.affectedRows > 0;
   }

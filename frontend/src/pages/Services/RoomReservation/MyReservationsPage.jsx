@@ -8,8 +8,7 @@ import styles from './styles/MyReservationsPage.module.css';
 import { BookmarkSquareIcon, TrashIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
 
 const ReservationCard = ({ reservation, onCancel }) => {
-  const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('uk-UA', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A';
-  
+  const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('uk-UA', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A';
   const statusLabels = {
     pending_confirmation: "Очікує підтвердження",
     confirmed: "Підтверджено",
@@ -44,7 +43,7 @@ const ReservationCard = ({ reservation, onCancel }) => {
         </span>
       </div>
       <p><strong>Гуртожиток:</strong> {reservation.dormitory_name}</p>
-      <p><strong>Дати:</strong> {formatDate(reservation.reservation_start_date)} - {formatDate(reservation.reservation_end_date)}</p>
+      <p><strong>Навчальний рік:</strong> {reservation.academic_year || 'N/A'}</p> {/* Відображаємо academic_year */}
       {reservation.notes_student && <p><strong>Ваші нотатки:</strong> {reservation.notes_student}</p>}
       {reservation.notes_admin && <p><strong>Нотатки адміністрації:</strong> {reservation.notes_admin}</p>}
       <p className={styles.createdDate}>Створено: {formatDate(reservation.created_at)}</p>

@@ -1,46 +1,46 @@
+/* Variables are now expected to be in a global scope (e.g. :root in index.css or variables.css) */
+
 .layout {
   display: flex;
   min-height: 100vh;
-  background-color: #f4f7f6; /* Light gray-blue background */
+  background-color: var(--background-color);
 }
-
 .mainContent {
   flex-grow: 1;
   display: flex;
   flex-direction: column;
-  transition: margin-left 0.3s ease-in-out;
-  margin-left: 260px; /* Default sidebar width + some margin */
+  transition: margin-left var(--transition-slow);
+  margin-left: calc(var(--sidebar-width-expanded) + var(--main-content-padding));
+  padding: calc(var(--navbar-height) + var(--main-content-padding)) var(--main-content-padding) var(--main-content-padding);
+  box-sizing: border-box;
 }
-
 .mainContent.sidebarCollapsed {
-  margin-left: 80px; /* Collapsed sidebar width + some margin */
+  margin-left: calc(var(--sidebar-width-collapsed) + var(--main-content-padding));
 }
-
 .pageContainer {
   padding: 2rem;
-  background-color: var(--background-color, #ffffff);
+  background-color: var(--card-background-color);
   flex-grow: 1;
-  border-radius: 8px;
-  margin: 1rem; /* Margin around the main content area */
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  border-radius: var(--border-radius-xl);
+  margin-top: var(--page-container-margin-top);
+  border: 1px solid var(--border-color);
 }
-
 .pageTitle {
   font-size: 2rem;
   font-weight: 700;
-  color: var(--text-primary, #2c3e50);
+  color: var(--text-primary);
   margin-bottom: 1.5rem;
   display: flex;
   align-items: center;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color-light);
 }
-
 .titleIcon {
   width: 28px;
   height: 28px;
   margin-right: 0.75rem;
-  color: var(--primary-color, #257BF4);
+  color: var(--primary-color);
 }
-
 .loadingSpinner, .noReservations {
   display: flex;
   flex-direction: column;
@@ -49,128 +49,132 @@
   padding: 3rem 1rem;
   text-align: center;
   font-size: 1.1rem;
-  color: var(--text-secondary, #777);
+  color: var(--text-secondary);
 }
 .noReservations svg {
-    width: 48px;
-    height: 48px;
-    margin-bottom: 1rem;
-    color: var(--primary-color-light, #a0c7f0);
+  width: 48px;
+  height: 48px;
+  margin-bottom: 1rem;
+  color: var(--primary-color-light);
 }
-
 .findRoomButton {
-    margin-top: 1rem;
-    padding: 0.6rem 1.2rem;
-    background-color: var(--primary-color, #257BF4);
-    color: white;
-    border: none;
-    border-radius: 6px;
-    font-size: 0.95rem;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
+  margin-top: 1rem;
+  padding: 0.6rem 1.2rem;
+  background-color: var(--primary-color);
+  color: var(--text-on-primary);
+  border: none;
+  border-radius: var(--border-radius-md);
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color var(--transition-base);
 }
 .findRoomButton:hover {
-    background-color: var(--primary-color-dark, #1c62c5);
+  background-color: var(--primary-color-dark);
 }
-
 .reservationsList {
   display: grid;
   gap: 1.5rem;
 }
-
 .reservationCard {
-  background-color: var(--background-light, #f9fafb);
-  border: 1px solid var(--border-color-light, #e5e7eb);
-  border-radius: 8px;
+  background-color: var(--background-light);
+  border: 1px solid var(--border-color-light);
+  border-radius: var(--border-radius-lg);
   padding: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.07);
 }
-
 .cardHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
   padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--border-color, #ddd);
+  border-bottom: 1px solid var(--border-color);
 }
 .cardHeader h3 {
   font-size: 1.25rem;
   font-weight: 600;
-  color: var(--text-primary, #333);
+  color: var(--text-primary);
   margin: 0;
 }
-
 .statusBadge {
   padding: 0.25rem 0.75rem;
-  border-radius: 12px;
+  border-radius: var(--border-radius-full);
   font-size: 0.8rem;
   font-weight: 500;
   text-transform: capitalize;
+  border: 1px solid; /* Add border to all status badges for consistency */
 }
-
 .statusPending {
-  background-color: var(--warning-bg-light, #fff3cd);
-  color: var(--warning-color-dark, #856404);
-  border: 1px solid var(--warning-color, #ffeeba);
+  background-color: var(--warning-bg-light);
+  color: var(--warning-color-dark);
+  border-color: var(--warning-color);
 }
 .statusConfirmed {
-  background-color: var(--success-bg-light, #d4edda);
-  color: var(--success-color-dark, #155724);
-  border: 1px solid var(--success-color, #c3e6cb);
+  background-color: var(--success-bg-light);
+  color: var(--success-color-dark);
+  border-color: var(--success-color);
 }
-.statusCancelled { /* Generic for user/admin cancelled, rejected, expired */
-  background-color: var(--neutral-bg-light, #e2e3e5);
-  color: var(--neutral-color-dark, #383d41);
-  border: 1px solid var(--neutral-color, #d6d8db);
+.statusCancelled {
+  background-color: var(--neutral-bg-light);
+  color: var(--neutral-color-dark);
+  border-color: var(--neutral-color);
 }
-
 .reservationCard p {
   font-size: 0.95rem;
-  color: var(--text-secondary, #555);
+  color: var(--text-secondary);
   margin-bottom: 0.5rem;
   line-height: 1.5;
 }
 .reservationCard p strong {
-    color: var(--text-primary, #333);
+  color: var(--text-primary);
 }
 .createdDate {
-    font-size: 0.8rem;
-    color: var(--text-secondary-light, #888);
-    margin-top: 1rem;
-    text-align: right;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 1rem;
+  text-align: right;
 }
-
 .cancelButton {
-  background-color: var(--error-color, #dc3545);
-  color: white;
+  background-color: var(--error-color);
+  color: var(--text-on-primary);
   padding: 0.5rem 1rem;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--border-radius-md);
   font-size: 0.85rem;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: background-color var(--transition-base);
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
   margin-top: 1rem;
 }
 .cancelButton svg {
-    width: 16px;
-    height: 16px;
+  width: 16px;
+  height: 16px;
 }
 .cancelButton:hover {
-  background-color: var(--error-color-dark, #c82333);
+  background-color: var(--error-color-dark);
 }
 
+@media (max-width: 1024px) {
+  .mainContent {
+    margin-left: calc(var(--sidebar-width-collapsed) + 12px);
+  }
+  .mainContent.sidebarCollapsed {
+     margin-left: calc(var(--sidebar-width-collapsed) + 12px);
+  }
+   .pageContainer {
+    height: calc(100vh - var(--navbar-height) - (12px*3) );
+  }
+}
 @media (max-width: 768px) {
   .mainContent {
-    margin-left: 80px;
+    margin-left: var(--sidebar-width-collapsed);
   }
   .mainContent.sidebarCollapsed {
     margin-left: 0;
   }
   .pageContainer {
     padding: 1rem;
+    height: calc(100vh - var(--navbar-height) - (10px*3) );
   }
 }

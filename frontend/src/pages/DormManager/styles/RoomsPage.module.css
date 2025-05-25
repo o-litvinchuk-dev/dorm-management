@@ -1,95 +1,123 @@
-/* This file is for the old RoomsPage.jsx, the new one is ManageRoomsPage.module.css */
+/* Variables are now expected to be in a global scope (e.g. :root in index.css or variables.css) */
+
 .container {
-    padding: 20px;
+  padding: 24px; /* Standardized padding */
+  background: var(--card-background-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-xl);
+  margin-top: var(--page-container-margin-top);
+  min-height: calc(100vh - var(--navbar-height) - (var(--page-container-margin-top)*2) - (var(--main-content-padding)*2) ); /* Rough height if nested */
+  width: 100%;
+  box-sizing: border-box;
 }
-
 .addButton {
-    background-color: #4CAF50; /* Green */
-    border: none;
-    color: white;
-    padding: 10px 20px;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    font-size: 16px;
-    margin: 10px 0;
-    cursor: pointer;
-    border-radius: 4px;
+  background-color: var(--success-color); /* Use variable */
+  border: none;
+  color: var(--text-on-primary);
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 10px 0;
+  cursor: pointer;
+  border-radius: var(--border-radius-md);
+  transition: background-color var(--transition-base);
 }
-
+.addButton:hover {
+  background-color: var(--success-color-dark);
+}
 .table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  border: 1px solid var(--border-color); /* Add border to table itself */
+  border-radius: var(--border-radius-lg); /* Radius for the table */
+  overflow: hidden; /* To make radius work with cells */
 }
-
 .table th, .table td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: left;
+  border-bottom: 1px solid var(--border-color-light); /* Lighter border for inner cells */
+  padding: 12px 16px; /* Increased padding */
+  text-align: left;
 }
-
 .table th {
-    background-color: #f2f2f2;
+  background-color: var(--background-light);
+  font-weight: 500; /* Standard header weight */
+  color: var(--text-primary);
 }
-
+.table tr:last-child td {
+  border-bottom: none; /* Remove bottom border for last row */
+}
 .editButton, .deleteButton {
-    padding: 5px 10px;
-    margin-right: 5px;
-    border-radius: 4px;
-    border: 1px solid transparent;
-    cursor: pointer;
+  padding: 6px 12px; /* Slightly larger padding */
+  margin-right: 8px;
+  border-radius: var(--border-radius-sm);
+  border: none; /* Removed border, will rely on bg for distinction */
+  cursor: pointer;
+  font-size: 0.875rem; /* Standardized font size */
+  transition: background-color var(--transition-base);
 }
-
 .editButton {
-    background-color: #007bff; /* Blue */
-    color: white;
+  background-color: var(--primary-color);
+  color: var(--text-on-primary);
 }
-
+.editButton:hover {
+  background-color: var(--primary-color-dark);
+}
 .deleteButton {
-    background-color: #dc3545; /* Red */
-    color: white;
+  background-color: var(--error-color);
+  color: var(--text-on-primary);
 }
-
-/* Styles for modal (can be in a separate file or here) */
+.deleteButton:hover {
+  background-color: var(--error-color-dark);
+}
 .modal {
-    /* Basic modal styling, adjust as needed */
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    z-index: 1000;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: var(--card-background-color);
+  padding: 24px 32px; /* Consistent modal padding */
+  border-radius: var(--border-radius-xl); /* Consistent modal radius */
+  border: 1px solid var(--border-color); /* Add border, remove shadow */
+  z-index: 1000;
+  max-width: 500px; /* Consistent modal width */
+  width: 90%; /* Responsive width */
 }
-
 .modal .form div {
-    margin-bottom: 10px;
+  margin-bottom: 12px; /* Increased gap */
 }
 .modal .form label {
-    display: block;
-    margin-bottom: 5px;
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+  color: var(--text-secondary);
 }
 .modal .form input, .modal .form textarea {
-    width: 100%;
-    padding: 8px;
-    box-sizing: border-box;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+  width: 100%;
+  padding: 10px; /* Increased padding */
+  box-sizing: border-box;
+  border: 1px solid var(--border-color-dark);
+  border-radius: var(--border-radius-md);
+  font-size: 0.9rem;
+}
+.modal .form input:focus, .modal .form textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
 }
 .modal .form .errorInput {
-    border-color: red;
+  border-color: var(--error-color);
 }
 .modal .form .error {
-    color: red;
-    font-size: 0.8em;
+  color: var(--error-color);
+  font-size: 0.8em;
+  margin-top: 4px; /* Added margin */
 }
 .modal .buttons {
-    margin-top: 15px;
-    text-align: right;
+  margin-top: 20px; /* Increased margin */
+  text-align: right;
 }
 .modal .buttons button {
-    margin-left: 10px;
+  margin-left: 10px;
+  /* Styling for buttons inside modal can be similar to .submitButton / .cancelButton */
 }

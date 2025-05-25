@@ -13,8 +13,8 @@ const User = {
     token_version = 0,
     faculty_id = null,
     dormitory_id = null,
+    gender = "not_specified", // Додано gender з дефолтним значенням
   }) {
-    // Validate role
     const validRoles = [
       "student",
       "admin",
@@ -29,8 +29,8 @@ const User = {
     }
 
     const [result] = await pool.execute(
-      `INSERT INTO users (email, password, role, isVerified, name, avatar, provider, google_id, token_version, faculty_id, dormitory_id) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO users (email, password, role, isVerified, name, avatar, provider, google_id, token_version, faculty_id, dormitory_id, gender) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, // Додано gender в VALUES
       [
         email,
         password,
@@ -43,6 +43,7 @@ const User = {
         token_version,
         faculty_id,
         dormitory_id,
+        gender, // Додано gender сюди
       ]
     );
 
@@ -50,11 +51,11 @@ const User = {
 
     if (!name) {
       await pool.execute(`UPDATE users SET name = ? WHERE id = ?`, [
-        userId.toString(),
+        userId.toString(), // Не зовсім зрозуміло, навіщо тут userId.toString(), але залишаю як було
         userId,
       ]);
     }
-
+    // Повертаємо повний об'єкт користувача, включаючи стать та is_profile_complete
     return await this.findById(userId);
   },
 
@@ -76,8 +77,8 @@ const User = {
 
   async findByFacultyId(faculty_id) {
     const [rows] = await pool.execute(
-      `SELECT id, email, role, name, avatar, token_version, faculty_id, dormitory_id 
-       FROM users WHERE faculty_id = ?`,
+      `SELECT id, email, role, name, avatar, token_version, faculty_id, dormitory_id, gender, is_profile_complete 
+       FROM users WHERE faculty_id = ?`, // Додано gender, is_profile_complete
       [faculty_id]
     );
     return rows;
@@ -86,33 +87,36 @@ const User = {
   async findByEmail(email) {
     try {
       const [rows] = await pool.execute(
-        `SELECT id, email, password, role, isVerified, name, avatar, provider, google_id, token_version, faculty_id, dormitory_id 
-         FROM users WHERE email = ?`,
+        `SELECT id, email, password, role, isVerified, name, avatar, provider, google_id, token_version, faculty_id, dormitory_id, gender, is_profile_complete 
+         FROM users WHERE email = ?`, // Додано gender, is_profile_complete
         [email]
       );
+      console.log(`[User.findByEmail] Found user for email ${email}:`, rows[0] ? { ...rows[0], password: '***' } : null);
       return rows[0] || null;
     } catch (error) {
-      console.error("Помилка пошуку користувача:", error);
+      console.error("Помилка пошуку користувача за email:", error);
       throw error;
     }
   },
 
-  async findById(id) {
-    const [rows] = await pool.execute(
-      `SELECT id, email, role, name, avatar, token_version, faculty_id, dormitory_id 
-       FROM users WHERE id = ?`,
+  async findById(id, connection = pool) { // Дозволяємо передавати connection
+    const [rows] = await connection.execute( // Використовуємо передане connection або pool
+      `SELECT id, email, password, role, isVerified, name, avatar, provider, google_id, token_version, faculty_id, dormitory_id, gender, is_profile_complete 
+       FROM users WHERE id = ?`, // Додано gender, is_profile_complete
       [id]
     );
+    console.log(`[User.findById] Found user for ID ${id}:`, rows[0] ? { ...rows[0], password: '***' } : null);
     return rows[0] || null;
   },
 
   async findByGoogleId(google_id) {
     try {
       const [rows] = await pool.execute(
-        `SELECT id, email, role, isVerified, name, avatar, provider, google_id, faculty_id, dormitory_id 
-         FROM users WHERE google_id = ?`,
+        `SELECT id, email, role, isVerified, name, avatar, provider, google_id, faculty_id, dormitory_id, gender, is_profile_complete 
+         FROM users WHERE google_id = ?`, // Додано gender, is_profile_complete
         [google_id]
       );
+      console.log(`[User.findByGoogleId] Found user for Google ID ${google_id}:`, rows[0]);
       return rows[0];
     } catch (error) {
       console.error("Помилка пошуку користувача через Google ID:", error);
@@ -123,7 +127,7 @@ const User = {
   async verifyUser(id) {
     try {
       await pool.execute(
-        `UPDATE users SET isVerified = 1 WHERE id = ?`,
+        `UPDATE users SET isVerified = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?`, // Додано updated_at
         [id]
       );
       return true;

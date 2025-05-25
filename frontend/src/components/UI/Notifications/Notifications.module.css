@@ -1,133 +1,147 @@
 .notificationsContainer {
-    position: relative;
-  }
-  
-  .bellButton {
-    background: none;
-    border: none;
-    cursor: pointer;
-    position: relative;
-    padding: 8px;
-  }
-  
-  .bellIcon {
-    width: 24px;
-    height: 24px;
-    color: #333;
-  }
-  
-  .badge {
-    position: absolute;
-    top: 2px;
-    right: 2px;
-    width: 10px;
-    height: 10px;
-    background-color: #ff4d4f;
-    border-radius: 50%;
-  }
-  
-  .notificationsDropdown {
-    position: absolute;
-    top: 40px;
-    right: 0;
-    width: 320px;
-    background-color: #fff;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    z-index: 1000;
-  }
-  
-  .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px;
-    border-bottom: 1px solid #eee;
-  }
-  
-  .header h3 {
-    margin: 0;
-    font-size: 16px;
-    font-weight: 600;
-  }
-  
-  .closeButton {
-    background: none;
-    border: none;
-    cursor: pointer;
-  }
-  
-  .closeIcon {
-    width: 18px;
-    height: 18px;
-    color: #666;
-  }
-  
-  .notificationsList {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    max-height: 300px;
-    overflow-y: auto;
-  }
-  
-  .notificationItem {
-    padding: 12px;
-    border-bottom: 1px solid #eee;
-    transition: background-color 0.2s;
-  }
-  
-  .notificationItem.read {
-    background-color: #f9f9f9;
-  }
-  
-  .notificationItem:hover {
-    background-color: #f5f5f5;
-  }
-  
-  .notificationContent h4 {
-    margin: 0;
-    font-size: 14px;
-    font-weight: 500;
-  }
-  
-  .notificationContent p {
-    margin: 4px 0;
-    font-size: 12px;
-    color: #666;
-  }
-  
-  .timestamp {
-    font-size: 10px;
-    color: #999;
-  }
-  
-  .actions {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: 8px;
-  }
-  
-  .readButton,
-  .deleteButton {
-    background: none;
-    border: none;
-    color: #006aff;
-    cursor: pointer;
-    font-size: 12px;
-    margin-left: 12px;
-    padding: 0;
-  }
-  
-  .readButton:hover,
-  .deleteButton:hover {
-    text-decoration: underline;
-  }
-  
-  .noNotifications {
-    padding: 12px;
-    text-align: center;
-    color: #666;
-    font-size: 14px;
-  }
+  position: relative;
+}
+.bellButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  padding: 8px; /* Standard padding for icon buttons */
+  border-radius: var(--border-radius-full); /* Circular */
+  transition: background-color var(--transition-fast);
+}
+.bellButton:hover {
+  background-color: var(--background-light);
+}
+.bellIcon {
+  width: 24px;
+  height: 24px;
+  color: var(--text-secondary, #333);
+}
+.badge {
+  position: absolute;
+  top: 4px; /* Adjusted for better placement */
+  right: 4px;
+  width: 10px;
+  height: 10px;
+  background-color: var(--error-color, #ff4d4f); /* Use error color for notification dot */
+  border-radius: var(--border-radius-full);
+  border: 1px solid var(--card-background-color); /* Make dot stand out */
+}
+.notificationsDropdown {
+  position: absolute;
+  top: calc(100% + 8px); /* Position below the button */
+  right: 0;
+  width: 320px;
+  background-color: var(--card-background-color, #fff);
+  border: 1px solid var(--border-color, #e0e0e0);
+  border-radius: var(--border-radius-lg, 8px);
+  z-index: 1000;
+  overflow: hidden; /* To make border-radius apply to children */
+}
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px; /* Consistent padding */
+  border-bottom: 1px solid var(--border-color-light, #eee);
+}
+.header h3 {
+  margin: 0;
+  font-size: 1rem; /* Standardized size */
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.closeButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px; /* Clickable area */
+  border-radius: var(--border-radius-full);
+  transition: background-color var(--transition-fast);
+}
+.closeButton:hover {
+  background-color: var(--background-light);
+}
+.closeIcon {
+  width: 18px;
+  height: 18px;
+  color: var(--text-muted, #666);
+}
+.notificationsList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 300px;
+  overflow-y: auto;
+}
+.notificationItem {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-color-light, #eee);
+  transition: background-color var(--transition-base);
+}
+.notificationItem:last-child {
+  border-bottom: none;
+}
+.notificationItem.read {
+  background-color: var(--background-light, #f9f9f9); /* Subtle read state */
+  opacity: 0.7; /* Dim read notifications */
+}
+.notificationItem:hover {
+  background-color: var(--primary-bg-light, #f5f5f5);
+}
+.notificationContent h4 {
+  margin: 0 0 4px 0; /* Adjusted margin */
+  font-size: 0.9rem; /* Standardized size */
+  font-weight: 500;
+  color: var(--text-primary);
+}
+.notificationContent p {
+  margin: 0; /* Removed default margin */
+  font-size: 0.8rem;
+  color: var(--text-secondary, #666);
+  line-height: 1.4;
+}
+.timestamp {
+  font-size: 0.7rem; /* Smaller timestamp */
+  color: var(--text-muted, #999);
+  display: block; /* Ensure it's on its own line or properly spaced */
+  margin-top: 6px;
+}
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center; /* Vertically align buttons */
+  margin-top: 8px;
+  gap: 8px; /* Add gap between action buttons */
+}
+.readButton,
+.deleteButton {
+  background: none;
+  border: 1px solid transparent; /* Base border for consistent height */
+  color: var(--primary-color, #006aff);
+  cursor: pointer;
+  font-size: 0.75rem; /* Smaller action text */
+  padding: 4px 8px; /* Consistent padding */
+  border-radius: var(--border-radius-sm);
+  transition: color var(--transition-base), background-color var(--transition-base), border-color var(--transition-base);
+}
+.readButton:hover {
+  background-color: var(--primary-bg-light);
+  border-color: var(--primary-color-light);
+  color: var(--primary-color-dark);
+}
+.deleteButton {
+  color: var(--error-color, #dc3545);
+}
+.deleteButton:hover {
+  background-color: var(--error-bg-light);
+  border-color: var(--error-color);
+  color: var(--error-color-dark);
+}
+.noNotifications {
+  padding: 16px; /* Increased padding */
+  text-align: center;
+  color: var(--text-muted, #666);
+  font-size: 0.9rem; /* Standardized size */
+}

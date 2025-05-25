@@ -1,87 +1,78 @@
+/* Variables are now expected to be in a global scope (e.g. :root in index.css or variables.css) */
+
 .mainContent {
   flex: 1;
-  transition: margin-left 0.3s ease;
-  margin-left: calc(250px + 16px);
-  padding: calc(72px + 16px) 16px 16px 16px;
+  transition: margin-left var(--transition-slow);
+  margin-left: calc(var(--sidebar-width-expanded) + var(--main-content-padding));
+  padding: calc(var(--navbar-height) + var(--main-content-padding)) var(--main-content-padding) var(--main-content-padding);
   box-sizing: border-box;
   min-height: 100vh;
 }
-
 .mainContent.sidebarCollapsed {
-  margin-left: calc(80px + 16px);
+  margin-left: calc(var(--sidebar-width-collapsed) + var(--main-content-padding));
 }
-
-/* Контейнер профілю */
-/* .profileContainer {
-  background: var(--white);
-  border: 1px solid var(--gray-300);
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+/* .profileContainer is the pageContainer in this context */
+.profileContainer {
+  background: var(--card-background-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-xl);
   padding: 24px;
-  margin-top: 16px;
+  margin-top: var(--page-container-margin-top);
   width: 100%;
-  height: calc(100vh - 120px);
+  height: calc(100vh - var(--navbar-height) - (var(--page-container-margin-top) * 2) - var(--main-content-padding) );
   box-sizing: border-box;
-  font-family: "Roboto", sans-serif;
-  position: relative;
-  overflow-y: auto;
-} */
-
-/* Відступи між елементами */
+  position: relative; /* For potential absolute positioned children if any */
+  overflow-y: auto; /* If content exceeds height */
+}
 .profileContainer > *:not(:last-child) {
   margin-bottom: 16px;
 }
-
 .profileContent {
-  height: 100%;
-  overflow-y: auto;
+  height: 100%; /* Ensure UserProfile component takes full height if needed */
+  overflow-y: auto; /* Only UserProfile should scroll if its content is too long */
 }
-
-/* Завантаження та помилки */
 .loading {
   text-align: center;
   padding: 20px;
   font-size: 1.2rem;
-  color: #64748b;
+  color: var(--text-muted);
 }
-
 .errorMessage {
   text-align: center;
   font-size: 1.1rem;
-  color: #d14343;
+  color: var(--error-color);
   padding: 20px;
-  background: rgba(209, 67, 67, 0.1);
-  border-radius: 8px;
+  background: var(--error-bg-light);
+  border-radius: var(--border-radius-md);
   margin-bottom: 20px;
+  border: 1px solid var(--error-color);
 }
 
-/* Адаптивність */
 @media (max-width: 1024px) {
   .mainContent {
-    margin-left: calc(80px + 16px);
-    padding-left: 16px;
-    padding-right: 16px;
+    margin-left: calc(var(--sidebar-width-collapsed) + 12px);
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+   .profileContainer {
+    height: calc(100vh - var(--navbar-height) - (12px*3) );
   }
 }
-
 @media (max-width: 768px) {
   .mainContent {
     margin-left: 0 !important;
-    padding: calc(72px + 16px) 16px 16px 16px;
+    padding: calc(var(--navbar-height) + 10px) 10px 10px;
   }
-  
   .profileContainer {
-    height: calc(100vh - 100px);
+    height: calc(100vh - var(--navbar-height) - (10px*3) );
     padding: 16px;
-    margin-top: 8px;
+    margin-top: 10px;
   }
 }
-
 @media (max-width: 480px) {
   .mainContent {
-    padding: calc(72px + 8px) 8px 8px 8px;
+    padding: calc(var(--navbar-height) + 8px) 8px 8px;
   }
-  
   .profileContainer {
     padding: 12px;
     margin-top: 8px;

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useUser } from "../../contexts/UserContext";
 import api from "../../utils/api";
 import { ToastService } from "../../utils/toastConfig";
-import styles from "./styles/ApplicationDetailModal.module.css"; // Використовуємо новий CSS модуль
+import styles from "./styles/ApplicationDetailModal.module.css";
 import {
   UserCircleIcon,
   AcademicCapIcon,
@@ -14,51 +14,57 @@ import {
   PlusCircleIcon,
   ExclamationTriangleIcon,
   NoSymbolIcon,
-  InformationCircleIcon, // Додано для додаткової інформації
-  ClockIcon // Для міток часу
+  InformationCircleIcon,
+  ClockIcon,
+  XCircleIcon,
+  BookmarkSquareIcon // Іконка для бронювання
 } from "@heroicons/react/24/outline";
 
 const ApplicationDetailModal = ({ application, onClose, onStatusUpdate, onAddComment, isModalLoading }) => {
   const { user } = useUser();
   const [comments, setComments] = useState([]);
-  const [newComment, setNewComment] = useState("");
-  const [newStatus, setNewStatus] = useState(application.status);
+  const [newAdminComment, setNewAdminComment] = useState(""); 
+  const [newStatusToSet, setNewStatusToSet] = useState(""); 
+  
   const [selectedRoomId, setSelectedRoomId] = useState(application.room_id || "");
   const [rooms, setRooms] = useState([]);
 
   const [isLoadingComments, setIsLoadingComments] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [isAddingComment, setIsAddingComment] = useState(false);
+  const [isEditingStatus, setIsEditingStatus] = useState(false);
 
   const modalContentRef = useRef(null);
 
-  const canUpdateStatus = onStatusUpdate && !["student_council_head", "student_council_member"].includes(user?.role);
-  const canAddComment = onAddComment && !["student_council_member"].includes(user?.role);
+  const canReallyUpdateStatus = onStatusUpdate && !["student_council_head", "student_council_member"].includes(user?.role);
+  const canReallyAddComment = onAddComment;
+
+  // Отримуємо інформацію про активне бронювання з пропса application
+  const activeRoomReservation = application.activeRoomReservation || null; 
 
   useEffect(() => {
-    setNewStatus(application.status);
     setSelectedRoomId(application.room_id || "");
+    setNewAdminComment(""); 
+    setIsEditingStatus(false); 
+    setNewStatusToSet(application.status); 
   }, [application]);
 
   useEffect(() => {
-    if (user?.role === "dorm_manager" && newStatus === "settled" && application?.dormitory_id) {
+    if (user?.role === "dorm_manager" && newStatusToSet === "settled" && application?.dormitory_id) {
       const fetchRooms = async () => {
-        setIsUpdatingStatus(true);
         try {
           const response = await api.get(`/dormitories/${application.dormitory_id}/rooms`);
           setRooms(response.data || []);
         } catch (error) {
           ToastService.handleApiError(error);
           setRooms([]);
-        } finally {
-            setIsUpdatingStatus(false);
         }
       };
       fetchRooms();
     } else {
       setRooms([]);
     }
-  }, [user?.role, application?.dormitory_id, newStatus]);
+  }, [user?.role, application?.dormitory_id, newStatusToSet]);
 
   const formatDate = (dateString) => {
     if (!dateString) return <span className={styles.notAvailableData}><NoSymbolIcon className={styles.inlineIconXs} />Н/Д</span>;
@@ -94,35 +100,64 @@ const ApplicationDetailModal = ({ application, onClose, onStatusUpdate, onAddCom
     }
   }, [application?.id, fetchComments]);
 
-  const handleStatusChange = async () => {
-    if (newStatus === application.status && (newStatus !== 'settled' || selectedRoomId === application.room_id)) return;
-    if (newStatus === "settled" && user?.role === "dorm_manager" && !selectedRoomId) {
-      ToastService.error("Для статусу 'Поселено' необхідно обрати кімнату.");
+  const handleConfirmStatusChange = async () => {
+    const isStatusActuallyChanged = newStatusToSet !== "" && newStatusToSet !== application.status;
+    const isCommentAdded = newAdminComment.trim() !== "";
+
+    if (!isStatusActuallyChanged && !isCommentAdded) {
+      ToastService.info("Немає змін для збереження (статус не змінено, коментар порожній).");
+      setIsEditingStatus(false);
+      setNewStatusToSet(application.status); 
       return;
     }
+    
     setIsUpdatingStatus(true);
+    let statusUpdatedSuccessfully = false;
     try {
-      const updatePayload = {
-        status: newStatus,
-        ...(newStatus === "settled" && selectedRoomId && { room_id: parseInt(selectedRoomId) })
-      };
-      await onStatusUpdate(application.id, updatePayload.status, updatePayload.room_id ? { room_id: updatePayload.room_id } : {});
-    } finally {
+      if (isStatusActuallyChanged) {
+        await onStatusUpdate(application.id, newStatusToSet, {});
+        statusUpdatedSuccessfully = true; 
+      }
+
+      if (isCommentAdded) {
+        const addedComment = await onAddComment(application.id, newAdminComment.trim());
+        if (addedComment) {
+          setComments((prevComments) => [addedComment, ...prevComments]);
+            if (modalContentRef.current) {
+                setTimeout(() => {
+                    const commentListElement = modalContentRef.current.querySelector(`.${styles.commentListWrapper} ul li:first-child`);
+                    if (commentListElement) {
+                        commentListElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }
+                }, 100);
+            }
+        }
+      }
+      
+      setNewAdminComment("");
+      setIsEditingStatus(false); 
+      if (!statusUpdatedSuccessfully) {
+          setNewStatusToSet(application.status);
+      }
+    } catch(err) {
+        // Обробка помилки вже має бути в onStatusUpdate або onAddComment
+    } 
+    finally {
       setIsUpdatingStatus(false);
     }
   };
 
-  const handleCommentSubmit = async () => {
-    if (!newComment.trim()) {
+  const handleIndependentCommentSubmit = async () => {
+    if (!newAdminComment.trim()) {
       ToastService.error("Коментар не може бути порожнім.");
       return;
     }
     setIsAddingComment(true);
     try {
-      const addedComment = await onAddComment(application.id, newComment);
+      const addedComment = await onAddComment(application.id, newAdminComment.trim());
       if (addedComment) {
         setComments((prevComments) => [addedComment, ...prevComments]);
-        setNewComment("");
+        setNewAdminComment(""); 
         if (modalContentRef.current) {
             setTimeout(() => {
                 const commentListElement = modalContentRef.current.querySelector(`.${styles.commentListWrapper} ul li:first-child`);
@@ -145,12 +180,26 @@ const ApplicationDetailModal = ({ application, onClose, onStatusUpdate, onAddCom
   };
   const getStatusDisplayName = (statusKey) => statusLabels[statusKey] || statusKey;
 
+  const roomReservationStatusLabels = {
+    pending_confirmation: "Очікує підтвердження",
+    confirmed: "Підтверджено",
+    cancelled_by_user: "Скасовано студентом",
+    rejected_by_admin: "Відхилено адміністрацією",
+    checked_in: "Заселено",
+    checked_out: "Виселено",
+    expired: "Термін минув"
+  };
+  const getRoomReservationStatusDisplayName = (statusKey) => roomReservationStatusLabels[statusKey] || statusKey;
+
+
   const statusOptionsConfig = {
     admin: [
-      { value: "pending", label: "Очікує" }, { value: "approved", label: "Затверджено" },
-      { value: "rejected", label: "Відхилено" }, { value: "approved_by_faculty", label: "Затв. деканатом" },
-      { value: "rejected_by_faculty", label: "Відх. деканатом" }, { value: "approved_by_dorm", label: "Затв. гуртожитком" },
-      { value: "rejected_by_dorm", label: "Відх. гуртожитком" }, { value: "settled", label: "Поселено" },
+      { value: "approved", label: "Затверджено" },
+      { value: "rejected", label: "Відхилено" }, 
+      { value: "approved_by_faculty", label: "Затв. деканатом" },
+      { value: "rejected_by_faculty", label: "Відх. деканатом" }, 
+      { value: "approved_by_dorm", label: "Затв. гуртожитком" },
+      { value: "rejected_by_dorm", label: "Відх. гуртожитком" }, 
     ],
     superadmin: [],
     faculty_dean_office: [
@@ -160,11 +209,13 @@ const ApplicationDetailModal = ({ application, onClose, onStatusUpdate, onAddCom
     dorm_manager: [
       { value: "approved_by_dorm", label: "Затвердити від гуртожитку" },
       { value: "rejected_by_dorm", label: "Відхилити від гуртожитку" },
-      { value: "settled", label: "Поселено" },
     ],
   };
   statusOptionsConfig.superadmin = [...statusOptionsConfig.admin];
-  const availableStatusOptions = statusOptionsConfig[user?.role] || [];
+  
+  let availableStatusOptions = (statusOptionsConfig[user?.role] || []);
+  availableStatusOptions = availableStatusOptions.filter(opt => opt.value !== application.status);
+  availableStatusOptions = availableStatusOptions.filter(opt => opt.value !== 'pending');
 
   if (!application) return null;
 
@@ -172,24 +223,34 @@ const ApplicationDetailModal = ({ application, onClose, onStatusUpdate, onAddCom
   const applicantNameFromForm = application.full_name || "Н/Д";
   const isNameMismatch = application.applicant_full_name && application.full_name && application.applicant_full_name !== application.full_name;
 
-  const getStatusClass = (status) => {
+  const getStatusClass = (status, isRoomReservation = false) => {
     if (!status) return styles.statusDefault;
     const baseClass = styles.statusBadge;
+    const suffix = isRoomReservation ? "RoomRes" : ""; 
+
     switch (status.toLowerCase()) {
-        case 'pending': return `${baseClass} ${styles.statusPending}`;
+        case 'pending': 
+        case 'pending_confirmation':
+            return `${baseClass} ${styles[`statusPending${suffix}`] || styles.statusPending}`;
         case 'approved':
         case 'approved_by_faculty':
         case 'approved_by_dorm':
-             return `${baseClass} ${styles.statusApproved}`;
+        case 'confirmed': 
+        case 'checked_in': 
+             return `${baseClass} ${styles[`statusApproved${suffix}`] || styles.statusApproved}`;
         case 'rejected':
         case 'rejected_by_faculty':
         case 'rejected_by_dorm':
-            return `${baseClass} ${styles.statusRejected}`;
-        case 'settled': return `${baseClass} ${styles.statusSettled}`;
+        case 'cancelled_by_user': 
+        case 'rejected_by_admin': 
+        case 'expired': 
+            return `${baseClass} ${styles[`statusRejected${suffix}`] || styles.statusRejected}`;
+        case 'settled': 
+        case 'checked_out': 
+            return `${baseClass} ${styles[`statusSettled${suffix}`] || styles.statusSettled}`;
         default: return `${baseClass} ${styles.statusDefault}`;
     }
 };
-
 
   return (
     <div className={styles.modalInnerContent} ref={modalContentRef}>
@@ -202,7 +263,7 @@ const ApplicationDetailModal = ({ application, onClose, onStatusUpdate, onAddCom
 
       <div className={styles.modalBody}>
         <div className={styles.contentGrid}>
-          {/* Block: Applicant Info */}
+          {/* Інформація про заявника */}
           <div className={styles.infoBlock}>
             <div className={styles.blockHeader}>
               <UserCircleIcon className={styles.blockIcon} />
@@ -218,7 +279,7 @@ const ApplicationDetailModal = ({ application, onClose, onStatusUpdate, onAddCom
             </div>
           </div>
 
-          {/* Block: Academic Info */}
+          {/* Навчальна інформація */}
           <div className={styles.infoBlock}>
             <div className={styles.blockHeader}>
               <AcademicCapIcon className={styles.blockIcon} />
@@ -231,28 +292,28 @@ const ApplicationDetailModal = ({ application, onClose, onStatusUpdate, onAddCom
             </div>
           </div>
 
-          {/* Block: Accommodation Details */}
+          {/* Деталі заявки на поселення */}
           <div className={styles.infoBlock}>
             <div className={styles.blockHeader}>
               <HomeModernIcon className={styles.blockIcon} />
-              <h3 className={styles.blockTitle}>Деталі поселення</h3>
+              <h3 className={styles.blockTitle}>Деталі заявки на поселення</h3>
             </div>
             <div className={styles.blockContent}>
               <p><strong>Гуртожиток:</strong> {application.dormitory_name || <span className={styles.notAvailableData}><NoSymbolIcon className={styles.inlineIconSmall} />Н/Д</span>}</p>
-              <p><strong>Бажана кімната:</strong> {application.preferred_room || <span className={styles.notAvailableData}>Не вказано</span>}</p>
-              <p><strong>Кімната (профіль):</strong> {application.room_number || <span className={styles.notAvailableData}>Не вказано</span>}</p>
+              <p><strong>Дата подачі:</strong> {formatDate(application.application_date)}</p>
+              <p><strong>Термін проживання:</strong> {formatDate(application.start_date)} - {formatDate(application.end_date)}</p>
+               {/* Відображаємо display_room_info замість preferred_room */}
+              <p><strong>Бажана/поточна кімната:</strong> {application.display_room_info || <span className={styles.notAvailableData}>Не вказано</span>}</p>
             </div>
           </div>
-
-          {/* Block: Dates and Status */}
+          
+          {/* Статус заявки на поселення */}
           <div className={styles.infoBlock}>
             <div className={styles.blockHeader}>
               <CalendarDaysIcon className={styles.blockIcon} />
-              <h3 className={styles.blockTitle}>Терміни та статус</h3>
+              <h3 className={styles.blockTitle}>Статус заявки на поселення</h3>
             </div>
             <div className={styles.blockContent}>
-              <p><strong>Дата подачі:</strong> {formatDate(application.application_date)}</p>
-              <p><strong>Термін проживання:</strong> {formatDate(application.start_date)} - {formatDate(application.end_date)}</p>
               <p><strong>Статус:</strong> <span className={getStatusClass(application.status)}>{getStatusDisplayName(application.status)}</span></p>
               <div className={styles.timestamps}>
                   <p><ClockIcon className={styles.inlineIconXs}/><strong>Створено:</strong> {formatDate(application.created_at)}</p>
@@ -260,14 +321,37 @@ const ApplicationDetailModal = ({ application, onClose, onStatusUpdate, onAddCom
               </div>
             </div>
           </div>
-        </div>
+        </div> {/* Кінець contentGrid */}
 
-        {/* Student Comment Section */}
+        {/* Блок інформації про бронювання кімнати (якщо є) */}
+        {activeRoomReservation && (
+            <div className={styles.infoBlock}> 
+                <div className={styles.blockHeader}>
+                    <BookmarkSquareIcon className={styles.blockIcon} />
+                    <h3 className={styles.blockTitle}>Активне бронювання кімнати студентом</h3>
+                </div>
+                <div className={styles.blockContent}>
+                    <p><strong>ID Бронювання:</strong> {activeRoomReservation.id}</p>
+                    <p><strong>Заброньована кімната:</strong> №{activeRoomReservation.room_number || "Не вказано"}</p>
+                    <p>
+                        <strong>Статус бронювання:</strong>  
+                        <span className={getStatusClass(activeRoomReservation.status, true)}>
+                           {getRoomReservationStatusDisplayName(activeRoomReservation.status)}
+                        </span>
+                    </p>
+                    {activeRoomReservation.notes_student && <p><strong>Коментар студента до бронювання:</strong> {activeRoomReservation.notes_student}</p>}
+                    {activeRoomReservation.reservation_start_date && activeRoomReservation.reservation_end_date && (
+                        <p><strong>Період бронювання:</strong> {formatDate(activeRoomReservation.reservation_start_date)} - {formatDate(activeRoomReservation.reservation_end_date)}</p>
+                    )}
+                </div>
+            </div>
+        )}
+
         {application.comments && (
             <div className={styles.infoBlock}>
                 <div className={styles.blockHeader}>
                     <InformationCircleIcon className={styles.blockIcon} />
-                    <h3 className={styles.blockTitle}>Коментар студента до заявки</h3>
+                    <h3 className={styles.blockTitle}>Коментар студента до заявки на поселення</h3>
                 </div>
                 <div className={styles.blockContent}>
                     <p className={styles.studentCommentText}>{application.comments}</p>
@@ -275,60 +359,86 @@ const ApplicationDetailModal = ({ application, onClose, onStatusUpdate, onAddCom
             </div>
         )}
 
-        {/* Status Update Section */}
-        {canUpdateStatus && availableStatusOptions.length > 0 && (
+        {canReallyUpdateStatus && (
           <div className={styles.infoBlock}>
             <div className={styles.blockHeader}>
               <PencilSquareIcon className={styles.blockIcon} />
-              <h3 className={styles.blockTitle}>Змінити статус заявки</h3>
+              <h3 className={styles.blockTitle}>Змінити статус заявки на поселення</h3>
             </div>
             <div className={`${styles.blockContent} ${styles.formSection}`}>
-              <select
-                value={newStatus}
-                onChange={(e) => setNewStatus(e.target.value)}
-                disabled={isUpdatingStatus || isModalLoading}
-                className={styles.selectField}
-              >
-                {availableStatusOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+              {!isEditingStatus ? (
+                <button
+                  onClick={() => {
+                    setIsEditingStatus(true);
+                    setNewStatusToSet(""); 
+                    setNewAdminComment(""); 
+                  }}
+                  className={styles.actionButton}
+                  disabled={isModalLoading}
+                >
+                  <PencilSquareIcon className={styles.buttonIcon} /> Змінити статус
+                </button>
+              ) : (
+                <>
+                  <div className={styles.statusEditGroup}>
+                    <label htmlFor="statusSelectModal" className={styles.inputLabel}>Новий статус:</label>
+                    <select
+                      id="statusSelectModal"
+                      value={newStatusToSet} 
+                      onChange={(e) => setNewStatusToSet(e.target.value)}
+                      disabled={isUpdatingStatus || isModalLoading}
+                      className={styles.selectField}
+                    >
+                      <option value="" disabled>Оберіть новий статус...</option>
+                      {availableStatusOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div className={styles.statusEditGroup}>
+                    <label htmlFor="statusChangeComment" className={styles.inputLabel}>Коментар до зміни статусу (необов'язково, але бажано для відхилення):</label>
+                    <textarea
+                      id="statusChangeComment"
+                      value={newAdminComment}
+                      onChange={(e) => setNewAdminComment(e.target.value)}
+                      placeholder="Причина зміни статусу, додаткова інформація..."
+                      disabled={isUpdatingStatus || isModalLoading}
+                      className={styles.textareaField}
+                      rows="2"
+                    />
+                  </div>
 
-              {user?.role === "dorm_manager" && newStatus === "settled" && (
-                <div className={styles.roomSelection}>
-                  <label htmlFor="roomSelectModal" className={styles.inputLabel}>Оберіть кімнату для поселення:</label>
-                  <select
-                    id="roomSelectModal"
-                    value={selectedRoomId}
-                    onChange={(e) => setSelectedRoomId(e.target.value)}
-                    className={styles.selectField}
-                    disabled={isUpdatingStatus || rooms.length === 0 || isModalLoading}
-                  >
-                    <option value="">{isUpdatingStatus && rooms.length === 0 ? "Завантаження кімнат..." : (rooms.length === 0 ? "Немає доступних кімнат" : "Оберіть кімнату...")}</option>
-                    {rooms.map((room) => (
-                      <option key={room.id} value={room.id}>
-                        Кімната №{room.number} (Місткість: {room.capacity})
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                  <div className={styles.statusActionButtons}>
+                    <button
+                      onClick={handleConfirmStatusChange}
+                      disabled={isUpdatingStatus || isModalLoading || (newStatusToSet === "" && !newAdminComment.trim()) || (newStatusToSet === application.status && !newAdminComment.trim())}
+                      className={styles.actionButton}
+                    >
+                      <CheckCircleIcon className={styles.buttonIcon} />
+                      {isUpdatingStatus || isModalLoading ? "Збереження..." : "Зберегти зміни"}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsEditingStatus(false);
+                        setNewAdminComment("");
+                        setNewStatusToSet(application.status); 
+                      }}
+                      className={`${styles.actionButton} ${styles.cancelButton}`}
+                      disabled={isUpdatingStatus || isModalLoading}
+                    >
+                       <XCircleIcon className={styles.buttonIcon}/> Скасувати
+                    </button>
+                  </div>
+                </>
               )}
-              <button
-                onClick={handleStatusChange}
-                disabled={isUpdatingStatus || isModalLoading || (newStatus === application.status && (newStatus !== 'settled' || selectedRoomId === (application.room_id || "")))}
-                className={styles.actionButton}
-              >
-                <CheckCircleIcon className={styles.buttonIcon} />
-                {isUpdatingStatus || isModalLoading ? "Оновлення..." : "Оновити статус"}
-              </button>
             </div>
           </div>
         )}
 
-        {/* Admin Comments Section */}
-        {canAddComment && (
+        {canReallyAddComment && !isEditingStatus && ( 
           <div className={styles.infoBlock}>
             <div className={styles.blockHeader}>
               <ChatBubbleLeftEllipsisIcon className={styles.blockIcon} />
@@ -355,19 +465,19 @@ const ApplicationDetailModal = ({ application, onClose, onStatusUpdate, onAddCom
                 </div>
               )}
               <div className={styles.addCommentArea}>
-                <label htmlFor="newCommentTextarea" className={styles.inputLabel}>Додати новий коментар:</label>
+                <label htmlFor="independentCommentTextarea" className={styles.inputLabel}>Додати новий коментар (не змінюючи статус):</label>
                 <textarea
-                  id="newCommentTextarea"
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
+                  id="independentCommentTextarea"
+                  value={newAdminComment} 
+                  onChange={(e) => setNewAdminComment(e.target.value)}
                   placeholder="Введіть ваш коментар тут..."
                   disabled={isAddingComment || isModalLoading}
                   className={styles.textareaField}
                   rows="3"
                 />
                 <button
-                  onClick={handleCommentSubmit}
-                  disabled={isAddingComment || isModalLoading || !newComment.trim()}
+                  onClick={handleIndependentCommentSubmit}
+                  disabled={isAddingComment || isModalLoading || !newAdminComment.trim()}
                   className={styles.actionButton}
                 >
                   <PlusCircleIcon className={styles.buttonIcon} />

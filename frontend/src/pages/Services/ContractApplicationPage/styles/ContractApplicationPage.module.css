@@ -1,94 +1,94 @@
-/* Імпорт шрифту */
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+/* Variables are now expected to be in a global scope (e.g. :root in index.css or variables.css) */
 
-/* Основний контейнер */
 .layout {
-    display: flex;
-    min-height: 100vh;
-    background-color: #f8fafc;
-    font-family: 'Roboto', sans-serif;
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--background-color);
+  font-family: var(--font-family-sans);
 }
-
-/* Головний вміст */
 .mainContent {
-    flex: 1;
-    padding: 40px;
-    transition: margin-left 0.3s ease;
-    box-sizing: border-box;
+  flex: 1;
+  padding: calc(var(--navbar-height) + var(--main-content-padding)) var(--main-content-padding) var(--main-content-padding);
+  transition: margin-left var(--transition-slow);
+  box-sizing: border-box;
+  margin-left: calc(var(--sidebar-width-expanded) + var(--main-content-padding));
 }
-
-.sidebarCollapsed {
-    margin-left: 80px;
+.mainContent.sidebarCollapsed {
+  margin-left: calc(var(--sidebar-width-collapsed) + var(--main-content-padding));
 }
-
-/* Контейнер форми */
 .container {
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 30px;
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  max-width: 600px;
+  margin: var(--page-container-margin-top) auto;
+  padding: 30px;
+  background: var(--card-background-color);
+  border-radius: var(--border-radius-xl);
+  border: 1px solid var(--border-color);
+  box-sizing: border-box;
+  min-height: calc(100vh - var(--navbar-height) - (var(--page-container-margin-top) * 2) - (var(--main-content-padding)*2) );
 }
-
-/* Форма */
 .form {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
-
 .form label {
-    font-size: 16px;
-    font-weight: 500;
-    color: #333;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-primary);
 }
-
 .form input {
-    padding: 12px;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    font-size: 14px;
-    color: #333;
-    transition: border-color 0.2s ease;
+  padding: 12px;
+  border: 1px solid var(--border-color-dark);
+  border-radius: var(--border-radius-md);
+  font-size: 14px;
+  color: var(--text-primary);
+  transition: border-color var(--transition-base);
 }
-
 .form input:focus {
-    border-color: #006aff;
-    outline: none;
+  border-color: var(--primary-color);
+  outline: none;
 }
-
 .form button {
-    padding: 12px;
-    background-color: #006aff;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 16px;
-    font-weight: 500;
-    transition: background-color 0.2s ease;
+  padding: 12px;
+  background-color: var(--primary-color);
+  color: var(--text-on-primary);
+  border: none;
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 500;
+  transition: background-color var(--transition-base);
 }
-
 .form button:hover {
-    background-color: #0056d2;
+  background-color: var(--primary-color-dark);
 }
 
-/* Адаптивність */
+@media (max-width: 1024px) {
+  .mainContent {
+    margin-left: calc(var(--sidebar-width-collapsed) + 12px);
+    padding: calc(var(--navbar-height) + 12px) 12px 12px;
+  }
+  .mainContent.sidebarCollapsed {
+     margin-left: calc(var(--sidebar-width-collapsed) + 12px);
+  }
+   .container {
+    height: calc(100vh - var(--navbar-height) - (12px*3) );
+  }
+}
+
 @media (max-width: 768px) {
-    .mainContent {
-        padding: 20px;
-    }
-
-    .container {
-        padding: 20px;
-    }
-
-    .form input {
-        padding: 10px;
-    }
-
-    .form button {
-        padding: 10px;
-    }
+  .mainContent {
+    padding: calc(var(--navbar-height) + 10px) 10px 10px;
+    margin-left: 0 !important;
+  }
+  .container {
+    padding: 20px;
+    height: calc(100vh - var(--navbar-height) - (10px*3) );
+  }
+  .form input {
+    padding: 10px;
+  }
+  .form button {
+    padding: 10px;
+  }
 }

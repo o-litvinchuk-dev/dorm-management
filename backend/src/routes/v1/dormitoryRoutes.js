@@ -5,22 +5,22 @@ import {
   getDormitoryById,
   updateDormitory,
   deleteDormitory,
-} from "../../controllers/DormitoryController.js"; // Виправлено шлях імпорту
+} from "../../controllers/DormitoryController.js";
 import { authenticate, authorize } from "../../middlewares/auth.js";
 
 const router = Router();
 
 router.get(
-  "/dormitories",
+  "/dormitories", // Ресурс: /api/v1/dormitories
   authenticate,
   authorize("GET", "/api/v1/dormitories"),
   getDormitories
 );
 
 router.get(
-  "/dormitories/:id",
+  "/dormitories/:id", // Ресурс: /api/v1/dormitories/:id
   authenticate,
-  authorize("GET", "/api/v1/dormitories/:id"),
+  authorize("GET", "/api/v1/dormitories/:id"), // <--- Перевірте, що тут правильний ресурс
   getDormitoryById
 );
 

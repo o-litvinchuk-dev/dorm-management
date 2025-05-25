@@ -1,301 +1,303 @@
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+/* Variables are now expected to be in a global scope (e.g. :root in index.css or variables.css) */
 
 .layout {
   display: flex;
   min-height: 100vh;
-  background: var(--blue-gray-50, #f8fafc);
-  font-family: 'Roboto', sans-serif;
+  background: var(--background-color);
+  font-family: var(--font-family-sans);
 }
-
 .mainContent {
   flex: 1;
-  transition: margin-left 0.3s ease;
-  margin-left: calc(250px + 16px);
-  padding: calc(72px + 16px) 16px 16px 16px;
+  transition: margin-left var(--transition-slow);
+  margin-left: calc(var(--sidebar-width-expanded) + var(--main-content-padding));
+  padding: calc(var(--navbar-height) + var(--main-content-padding)) var(--main-content-padding) var(--main-content-padding);
   box-sizing: border-box;
   min-height: 100vh;
 }
-
 .mainContent.sidebarCollapsed {
-  margin-left: calc(80px + 16px);
+  margin-left: calc(var(--sidebar-width-collapsed) + var(--main-content-padding));
 }
-
-.profileContainer {
-  background: var(--white, #fff);
-  border: 1px solid var(--gray-300, #d1d5db);
-  border-radius: 12px;
-  padding: 0 14px;
-  margin-top: 16px;
+.profileContainer { /* Re-using profileContainer as the page container */
+  background: var(--card-background-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-xl);
+  padding: 24px; /* Increased padding */
+  margin-top: var(--page-container-margin-top);
   width: 100%;
-  height: calc(100vh - 120px);
+  height: calc(100vh - var(--navbar-height) - (var(--page-container-margin-top) * 2) - var(--main-content-padding) );
   box-sizing: border-box;
   position: relative;
   overflow-y: auto;
 }
-
 .blocksContainer {
-  max-width: 1200px;
-  padding: 24px 10px;
+  max-width: 1200px; /* Or remove if you want it full width within pageContainer */
+  margin: 0 auto; /* Center if max-width is set */
+  padding: 0; /* Padding is now on profileContainer */
 }
-
 .pageTitle {
   font-size: 1.75rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--text-primary);
   margin: 0 0 1.5rem 0;
   text-align: left;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color-light);
 }
-
 .blocksGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); /* Slightly larger min-width for blocks */
+  gap: 20px; /* Increased gap */
 }
-
 .block {
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
-  padding: 16px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  max-height: 400px;
+  background: var(--card-background-color);
+  border-radius: var(--border-radius-lg);
+  border: 1px solid var(--border-color);
+  padding: 20px;
+  transition: border-color var(--transition-base);
+  max-height: 450px; /* Increased max-height */
   overflow-y: auto;
+  display: flex;
+  flex-direction: column; /* Added for better internal layout */
 }
-
 .block:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+  border-color: var(--primary-color-light);
 }
-
 .blockHeader {
   display: flex;
   justify-content: flex-start;
   align-items: center;
   margin-bottom: 1rem;
+  flex-shrink: 0; /* Prevent shrinking */
 }
-
 .blockTitle {
-  font-size: 1.2rem;
+  font-size: 1.25rem; /* Slightly larger */
   font-weight: 500;
-  color: #1e293b;
+  color: var(--text-primary);
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   margin: 0;
   text-align: left;
 }
-
 .icon {
-  width: 18px;
-  height: 18px;
-  color: #2563eb;
+  width: 20px; /* Slightly larger */
+  height: 20px;
+  color: var(--primary-color);
 }
-
 .form {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  align-items: flex-start;
+  gap: 12px; /* Increased gap */
+  align-items: stretch; /* Stretch form elements */
+  flex-grow: 1; /* Allow form to take available space */
 }
-
 .input,
-.select {
+.select,
+.textarea { /* Added textarea styling */
   width: 100%;
-  max-width: 100%;
-  padding: 0.65rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  font-size: 13px;
-  font-family: 'Roboto', sans-serif;
+  padding: 0.75rem; /* Increased padding */
+  border: 1px solid var(--border-color-dark);
+  border-radius: var(--border-radius-md);
+  font-size: 0.9rem; /* Slightly larger */
+  font-family: var(--font-family-sans);
   font-weight: 400;
-  background: #fff;
-  transition: border-color 0.2s ease;
+  background: var(--card-background-color);
+  transition: border-color var(--transition-base);
+  box-sizing: border-box; /* Ensure padding doesn't break layout */
 }
-
+.textarea {
+  min-height: 80px;
+  resize: vertical;
+}
 .input:focus,
-.select:focus {
+.select:focus,
+.textarea:focus {
   outline: none;
-  border-color: #2563eb;
+  border-color: var(--primary-color);
 }
-
-.input::placeholder {
-  color: #9ca3af;
+.input::placeholder,
+.textarea::placeholder {
+  color: var(--text-placeholder);
 }
-
-.submitButton {
+.submitButton,
+.cancelButton, /* Added cancel button styling */
+.editButton {    /* Added edit button styling */
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  gap: 6px;
-  padding: 0.65rem 1rem;
-  background: #2563eb;
-  color: #fff;
+  justify-content: center; /* Center content */
+  gap: 8px;
+  padding: 0.75rem 1.25rem;
   border: none;
-  border-radius: 6px;
-  font-size: 13px;
+  border-radius: var(--border-radius-md);
+  font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: background-color var(--transition-base), color var(--transition-base);
+  text-align: center;
+  width: auto; /* Auto width based on content */
+  align-self: flex-start; /* Align to start for single button */
 }
-
+.submitButton {
+  background: var(--primary-color);
+  color: var(--text-on-primary);
+}
 .submitButton:hover {
-  background: #1d4ed8;
+  background: var(--primary-color-dark);
 }
-
+.cancelButton {
+  background-color: var(--border-color-light);
+  color: var(--text-secondary);
+}
+.cancelButton:hover {
+  background-color: var(--border-color);
+}
+.editButton {
+  background: transparent;
+  color: var(--primary-color);
+  padding: 0.4rem; /* Smaller padding for icon buttons */
+}
+.editButton:hover {
+  background-color: var(--primary-bg-light);
+}
+.buttonGroup { /* For grouping buttons like Save/Cancel */
+  display: flex;
+  gap: 10px;
+  margin-top: auto; /* Push to bottom if in flex column */
+  align-self: flex-start;
+}
 .buttonIcon {
-  width: 14px;
-  height: 14px;
+  width: 16px; /* Standardized icon size */
+  height: 16px;
 }
-
 .list {
   list-style: none;
   padding: 0;
-  margin: 0.75rem 0 0 0;
+  margin: 1rem 0 0 0; /* Adjusted margin */
   width: 100%;
+  overflow-y: auto; /* Allow scrolling if list is too long */
+  flex-grow: 1; /* Allow list to take available space */
 }
-
 .listItem {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 6px 0;
-  border-bottom: 1px solid #f1f5f9;
+  padding: 8px 4px; /* Adjusted padding */
+  border-bottom: 1px solid var(--border-color-light);
 }
-
+.listItem > span { /* Target the text span */
+  flex-grow: 1;
+  margin-right: 8px;
+  word-break: break-word; /* Allow long names to wrap */
+}
+.listItem div { /* Actions container */
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0; /* Prevent action buttons from shrinking */
+}
 .listItem:last-child {
   border-bottom: none;
 }
-
 .emptyMessage {
-  font-size: 13px;
-  color: #6b7280;
-  text-align: left;
-  padding: 0.75rem 0;
+  font-size: 0.9rem; /* Adjusted size */
+  color: var(--text-muted);
+  text-align: center; /* Centered empty message */
+  padding: 1rem 0;
+  flex-grow: 1; /* Center vertically if block is flex */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-
 .deleteButton {
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0.4rem;
   background: transparent;
-  color: #ef4444;
+  color: var(--error-color);
   border: none;
-  border-radius: 6px;
+  border-radius: var(--border-radius-md);
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: background-color var(--transition-base);
 }
-
 .deleteButton:hover {
-  background: #fee2e2;
+  background: var(--error-bg-light);
 }
-
 .loading {
-  text-align: left;
+  text-align: center; /* Centered loading */
   padding: 1.5rem 0;
   font-size: 1.1rem;
-  color: #6b7280;
+  color: var(--text-muted);
 }
-
-.errorMessage {
-  background: #fee2e2;
-  color: #dc2626;
-  padding: 0.75rem;
-  border-radius: 6px;
-  margin: 0.75rem 0;
-  text-align: left;
+.errorMessage { /* Error message styling consistent with AdminAccommodationManagementPage */
+  background: var(--error-bg-light);
+  color: var(--error-color);
+  padding: 1rem;
+  border-radius: var(--border-radius-md);
+  margin: 1rem 0; /* Consistent margin */
+  text-align: center;
   font-size: 0.9rem;
-  max-width: 400px;
+  border: 1px solid var(--error-color);
 }
 
 @media (max-width: 1024px) {
   .mainContent {
-    margin-left: calc(80px + 16px);
-    padding: calc(72px + 12px) 12px 12px 12px;
+    margin-left: calc(var(--sidebar-width-collapsed) + 12px);
+    padding: calc(var(--navbar-height) + 12px) 12px 12px;
   }
-
-  .profileContainer {
-    padding: 0 10px;
+  .profileContainer { /* Re-using profileContainer as the page container */
+    padding: 20px;
     margin-top: 12px;
+    height: calc(100vh - var(--navbar-height) - (12px*3) );
   }
-
   .blocksGrid {
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   }
 }
-
 @media (max-width: 768px) {
   .mainContent {
     margin-left: 0 !important;
-    padding: calc(72px + 10px) 10px 10px 10px;
+    padding: calc(var(--navbar-height) + 10px) 10px 10px;
   }
-
   .profileContainer {
-    height: calc(100vh - 150px);
-    padding: 0 8px;
+    height: calc(100vh - var(--navbar-height) - (10px*3) );
+    padding: 16px;
     margin-top: 10px;
   }
-
   .blocksContainer {
-    padding: 16px 6px;
+    padding: 16px 0; /* Remove horizontal padding if pageContainer has it */
   }
-
   .pageTitle {
     font-size: 1.5rem;
   }
-
   .block {
-    padding: 12px;
-    max-height: 350px;
+    padding: 16px;
+    max-height: none; /* Allow blocks to grow on mobile */
   }
-
   .blockTitle {
-    font-size: 1.1rem;
-  }
-
-  .icon {
-    width: 16px;
-    height: 16px;
+    font-size: 1.15rem;
   }
 }
-
 @media (max-width: 480px) {
   .mainContent {
-    padding: calc(72px + 8px) 8px 8px 8px;
+    padding: calc(var(--navbar-height) + 8px) 8px 8px;
   }
-
   .profileContainer {
-    padding: 0 6px;
+    padding: 12px;
     margin-top: 8px;
   }
-
-  .blocksContainer {
-    padding: 12px 4px;
-  }
-
   .blocksGrid {
     grid-template-columns: 1fr;
   }
-
   .input,
   .select,
-  .submitButton {
-    font-size: 12px;
-    padding: 0.5rem;
+  .textarea,
+  .submitButton,
+  .cancelButton {
+    font-size: 0.875rem;
+    padding: 0.65rem;
   }
-
-  .buttonIcon {
-    width: 12px;
-    height: 12px;
-  }
-
-  .block {
-    max-height: 300px;
-  }
-
   .loading,
   .errorMessage {
-    font-size: 0.85rem;
-    padding: 0.6rem 0;
+    font-size: 0.875rem;
   }
 }

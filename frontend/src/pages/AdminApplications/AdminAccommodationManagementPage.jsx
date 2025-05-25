@@ -31,9 +31,8 @@ const AdminAccommodationManagementPage = () => {
     const savedState = localStorage.getItem("sidebarOpen");
     return savedState !== null ? JSON.parse(savedState) : true;
   });
-
   const canUpdateStatus = ["admin", "superadmin", "faculty_dean_office", "dorm_manager"].includes(user?.role);
-  const canAddComment = ["admin", "superadmin", "faculty_dean_office", "dorm_manager", "student_council_head"].includes(user?.role);
+  const canAddComment = user?.role && !["student_council_member"].includes(user?.role);
 
   useEffect(() => {
     localStorage.setItem("sidebarOpen", JSON.stringify(isSidebarExpanded));
@@ -64,7 +63,7 @@ const AdminAccommodationManagementPage = () => {
       setError("Не вдалося завантажити заявки. Спробуйте оновити сторінку.");
       ToastService.handleApiError(err);
       setApplications([]);
-      setPagination(prev => ({ ...prev, total:0 }));
+      setPagination((prev) => ({ ...prev, total: 0 }));
     } finally {
       setIsLoading(false);
     }
@@ -100,52 +99,32 @@ const AdminAccommodationManagementPage = () => {
 
   const handleCloseModal = () => {
     setSelectedApplication(null);
-  }
+  };
 
-  const handleStatusUpdate = async (id, status, extraData = {}) => {
+  const handleStatusUpdate = async (id, status, _unusedRoomData = {}) => {
     if (!canUpdateStatus) {
       ToastService.error("Недостатньо прав для зміни статусу");
       return;
     }
     setIsModalLoading(true);
     try {
-      const payload = { status, ...extraData };
-      // Ensure room_id is an integer if it's present and relevant
-      if (status === "settled" && extraData.room_id) {
-        payload.room_id = parseInt(extraData.room_id, 10);
-         if (isNaN(payload.room_id)) {
-            delete payload.room_id; // Remove if not a valid number
-         }
-      } else if (status !== "settled") {
-        // If status is not 'settled', room_id might not be relevant,
-        // backend should handle if it needs to be nullified or kept
-        // For frontend optimistic update, we might want to clear it if not settled.
-        // However, let's assume backend handles this logic.
-        // If you need to explicitly send null, do: payload.room_id = null;
-        delete payload.room_id; // Or send null explicitly: payload.room_id = null;
-      }
-
-
+      const payload = { status };
       await api.put(`/admin/accommodation-applications/${id}/status`, payload);
       ToastService.success("Статус оновлено");
-      
-      // Optimistically update local state
-      setApplications(prevApps =>
-        prevApps.map(app =>
-          app.id === id ? { ...app, status: status, ...(payload.room_id && { room_id: payload.room_id, room_number: extraData.room_number || app.room_number }) } : app
-        )
+      const updatedApplications = applications.map((app) =>
+        app.id === id ? { ...app, status: status } : app
       );
-      setSelectedApplication(prevApp =>
-        prevApp && prevApp.id === id ? { ...prevApp, status: status, ...(payload.room_id && { room_id: payload.room_id, room_number: extraData.room_number || prevApp.room_number }) } : prevApp
-      );
-
+      setApplications(updatedApplications);
+      if (selectedApplication && selectedApplication.id === id) {
+        setSelectedApplication((prevApp) => ({ ...prevApp, status: status }));
+      }
     } catch (err) {
       ToastService.handleApiError(err);
+      throw err;
     } finally {
       setIsModalLoading(false);
     }
   };
-  
 
   const handleAddComment = async (id, commentText) => {
     if (!canAddComment) {
@@ -158,10 +137,11 @@ const AdminAccommodationManagementPage = () => {
         comment: commentText,
       });
       ToastService.success("Коментар додано");
-      return response.data.comment; // Return the newly added comment
+      fetchApplications();
+      return response.data.comment;
     } catch (err) {
       ToastService.handleApiError(err);
-      throw err; // Re-throw to be caught in modal if needed
+      throw err;
     } finally {
       setIsModalLoading(false);
     }
@@ -171,9 +151,7 @@ const AdminAccommodationManagementPage = () => {
     <div className={styles.layout}>
       <Sidebar isExpanded={isSidebarExpanded} onToggle={setIsSidebarExpanded} />
       <div
-        className={`${styles.mainContent} ${
-          !isSidebarExpanded ? styles.sidebarCollapsed : ""
-        }`}
+        className={`${styles.mainContent} ${!isSidebarExpanded ? styles.sidebarCollapsed : ""}`}
       >
         <Navbar
           isSidebarExpanded={isSidebarExpanded}
@@ -211,19 +189,24 @@ const AdminAccommodationManagementPage = () => {
             )}
           </div>
           {!isLoading && !error && applications.length > 0 && pagination.total > pagination.limit && (
-             <div className={styles.paginationWrapper}>
-                <Pagination
-                    page={pagination.page}
-                    limit={pagination.limit}
-                    total={pagination.total}
-                    onPageChange={handlePageChange}
-                    onLimitChange={handleLimitChange}
-                />
+            <div className={styles.paginationWrapper}>
+              <Pagination
+                page={pagination.page}
+                limit={pagination.limit}
+                total={pagination.total}
+                onPageChange={handlePageChange}
+                onLimitChange={handleLimitChange}
+              />
             </div>
           )}
         </main>
         {selectedApplication && (
-          <div className={styles.modalOverlay} onClick={handleCloseModal} role="dialog" aria-modal="true">
+          <div
+            className={styles.modalOverlay}
+            onClick={handleCloseModal}
+            role="dialog"
+            aria-modal="true"
+          >
             <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
               <button
                 onClick={handleCloseModal}

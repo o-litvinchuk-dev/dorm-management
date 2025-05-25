@@ -1,300 +1,393 @@
+/* Variables are now expected to be in a global scope (e.g. :root in index.css or variables.css) */
+
 .modalInnerContent {
-background-color: #f8fafc;
-padding: 0;
-border-radius: 12px;
-display: flex;
-flex-direction: column;
-max-height: 90vh;
-width: 100%;
-border: 1px solid var(--border-color, #e5e7eb);
+  background-color: var(--card-background-color, #f8fafc);
+  padding: 0;
+  border-radius: var(--border-radius-xl, 12px);
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  width: 100%;
+  border: 1px solid var(--border-color, #e5e7eb);
 }
 .modalHeader {
-padding: 16px 24px;
-border-bottom: 1px solid #e5e7eb;
-background-color: #fff;
-border-top-left-radius: 12px;
-border-top-right-radius: 12px;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border-color-light, #e5e7eb);
+  background-color: var(--card-background-color, #fff);
+  border-top-left-radius: var(--border-radius-xl, 12px);
+  border-top-right-radius: var(--border-radius-xl, 12px);
 }
 .modalTitle {
-font-size: 1.5rem;
-font-weight: 600;
-color: #1e293b;
-margin: 0;
-display: flex;
-align-items: baseline;
-gap: 8px;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary, #1e293b);
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
 }
 .titleApplicantName {
-font-size: 0.9rem;
-font-weight: 400;
-color: #4b5563;
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: var(--text-muted, #4b5563);
 }
 .modalBody {
-padding: 16px 24px;
-overflow-y: auto;
-flex-grow: 1;
+  padding: 16px 24px;
+  overflow-y: auto;
+  flex-grow: 1;
 }
+
 .contentGrid {
-display: grid;
-grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-gap: 20px;
-margin-bottom: 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  align-items: stretch; /* Блоки в одному ряду будуть однакової висоти */
 }
+
 .infoBlock {
-background: #fff;
-border: 1px solid #e5e7eb;
-border-radius: var(--border-radius-md, 8px);
-display: flex;
-flex-direction: column;
+  background: var(--card-background-color, #fff);
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: var(--border-radius-lg, 8px);
+  display: flex; 
+  flex-direction: column; 
+  margin-bottom: 20px; 
 }
+
+/* Прибираємо відступ для останнього infoBlock, якщо він єдиний в modalBody (після contentGrid)
+   або якщо він останній у contentGrid (точніше, для останніх двох, якщо вони в одному ряду,
+   або для останнього, якщо він один в ряду)
+*/
+.modalBody > .infoBlock:last-child {
+    margin-bottom: 0;
+}
+.contentGrid > .infoBlock:nth-last-child(-n + 2):nth-child(even),
+.contentGrid > .infoBlock:last-child:nth-child(odd) {
+    margin-bottom: 0; /* Прибирає відступ для останніх елементів в гріді */
+}
+/* Якщо після contentGrid йдуть ще infoBlock'и, додаємо їм верхній відступ */
+.modalBody > .contentGrid ~ .infoBlock {
+  margin-top: 20px;
+}
+/* І прибираємо зайвий нижній відступ у останнього з них */
+.modalBody > .contentGrid ~ .infoBlock:last-child {
+  margin-bottom: 0;
+}
+
+
 .blockHeader {
-display: flex;
-align-items: center;
-padding: 12px 16px;
-border-bottom: 1px solid #f3f4f6;
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-color-light, #f3f4f6);
+  flex-shrink: 0; 
 }
 .blockIcon {
-width: 20px;
-height: 20px;
-color: #2563eb;
-margin-right: 8px;
+  width: 20px;
+  height: 20px;
+  color: var(--primary-color, #2563eb);
+  margin-right: 8px;
+  flex-shrink: 0; 
 }
 .blockTitle {
-font-size: 1.1rem;
-font-weight: 500;
-color: #111827;
-margin: 0;
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--text-primary, #111827);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .blockContent {
-padding: 16px;
-font-size: 0.9rem;
-color: #374151;
-line-height: 1.6;
-flex-grow: 1;
+  padding: 16px;
+  font-size: 0.9rem;
+  color: var(--text-secondary, #374151);
+  line-height: 1.6;
+  flex-grow: 1; 
+  display: flex; 
+  flex-direction: column; 
 }
 .blockContent p {
-margin: 0 0 8px 0;
+  margin: 0 0 8px 0;
 }
 .blockContent p:last-child {
-margin-bottom: 0;
+  margin-bottom: 0;
 }
 .blockContent strong {
-color: #1f2937;
-font-weight: 500;
+  color: var(--text-primary, #1f2937);
+  font-weight: 500;
 }
 .notAvailableData,
 .warningText {
-display: inline-flex;
-align-items: center;
-gap: 4px;
-font-style: italic;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-style: italic;
 }
 .notAvailableData {
-color: #6b7280;
+  color: var(--text-muted, #6b7280);
 }
 .warningText {
-color: #d97706;
-background-color: #fffbeb;
-padding: 4px 8px;
-border-radius: 4px;
-font-style: normal;
-font-weight: 500;
+  color: var(--warning-color-dark, #d97706);
+  background-color: var(--warning-bg-light, #fffbeb);
+  padding: 4px 8px;
+  border-radius: var(--border-radius-sm, 4px);
+  font-style: normal;
+  font-weight: 500;
 }
 .inlineIcon, .inlineIconSmall, .inlineIconXs {
-display: inline-block;
-vertical-align: middle;
+  display: inline-block;
+  vertical-align: middle;
 }
 .inlineIcon { width: 16px; height: 16px; margin-right: 4px;}
 .inlineIconSmall { width: 14px; height: 14px; margin-right: 3px;}
 .inlineIconXs { width: 12px; height: 12px; margin-right: 2px;}
+
 .statusBadge {
-display: inline-block;
-padding: 4px 10px;
-border-radius: 16px;
-font-size: 0.8rem;
-font-weight: 500;
-line-height: 1.2;
-text-transform: capitalize;
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: var(--border-radius-full, 16px);
+  font-size: 0.8rem;
+  font-weight: 500;
+  line-height: 1.2;
+  text-transform: capitalize;
+  border: 1px solid transparent;
 }
-.statusPending { background-color: #ffedd5; color: #9a3412;  }
-.statusApproved { background-color: #d1fae5; color: #065f46;  }
-.statusRejected { background-color: #fee2e2; color: #991b1b;  }
-.statusSettled { background-color: #dbeafe; color: #1e40af;  }
-.statusDefault { background-color: #e5e7eb; color: #4b5563;  }
+.statusPending {
+  background-color: var(--warning-bg-light, #ffedd5);
+  color: var(--warning-color-dark, #9a3412);
+  border-color: var(--warning-color, #fde68a);
+}
+.statusApproved {
+  background-color: var(--success-bg-light, #d1fae5);
+  color: var(--success-color-dark, #065f46);
+  border-color: var(--success-color, #6ee7b7);
+}
+.statusRejected {
+  background-color: var(--error-bg-light, #fee2e2);
+  color: var(--error-color-dark, #991b1b);
+  border-color: var(--error-color, #fca5a5);
+}
+.statusSettled {
+  background-color: var(--primary-bg-light, #dbeafe);
+  color: var(--primary-color-dark, #1e40af);
+  border-color: var(--primary-color-light, #93c5fd);
+}
+.statusDefault {
+  background-color: var(--border-color-light, #e5e7eb);
+  color: var(--text-muted, #4b5563);
+  border-color: var(--border-color-dark, #d1d5db);
+}
 .timestamps {
-margin-top: 12px;
-font-size: 0.8rem;
-color: #6b7280;
+  margin-top: 12px;
+  font-size: 0.8rem;
+  color: var(--text-muted, #6b7280);
 }
 .timestamps p {
-display: flex;
-align-items: center;
-gap: 4px;
-margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 4px;
 }
 .studentCommentText {
-background-color: #f9fafb;
-padding: 12px;
-border-radius: 6px;
-border: 1px solid #f3f4f6;
-white-space: pre-wrap;
-word-break: break-word;
+  background-color: var(--background-light, #f9fafb);
+  padding: 12px;
+  border-radius: var(--border-radius-md, 6px);
+  border: 1px solid var(--border-color-light, #f3f4f6);
+  white-space: pre-wrap;
+  word-break: break-word;
+  flex-grow: 1; 
 }
 .formSection {
-display: flex;
-flex-direction: column;
-gap: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px; 
 }
 .inputLabel {
-font-size: 0.85rem;
-font-weight: 500;
-color: #374151;
-margin-bottom: 4px;
-display: block;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-secondary, #374151);
+  margin-bottom: 4px;
+  display: block;
 }
 .selectField,
 .textareaField {
-width: 100%;
-padding: 0.75rem 1rem;
-border: 1px solid #d1d5db;
-border-radius: 6px;
-font-size: 0.9rem;
-font-family: 'Roboto', sans-serif;
-background-color: #fff;
-color: #111827;
-transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border-color-dark, #d1d5db);
+  border-radius: var(--border-radius-md, 6px);
+  font-size: 0.9rem;
+  font-family: var(--font-family-sans, 'Roboto', sans-serif);
+  background-color: var(--card-background-color, #fff);
+  color: var(--text-primary, #111827);
+  transition: border-color var(--transition-base);
 }
 .selectField:focus,
 .textareaField:focus {
-outline: none;
-border-color: var(--primary-color, #2563eb);
+  outline: none;
+  border-color: var(--primary-color, #2563eb);
+  box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb, 59, 130, 246), 0.2); 
 }
 .textareaField {
-resize: vertical;
-min-height: 80px;
+  resize: vertical;
+  min-height: 70px; 
 }
 .roomSelection {
-margin-top: 8px;
+  margin-top: 8px;
 }
 .actionButton {
-display: inline-flex;
-align-items: center;
-justify-content: center;
-gap: 8px;
-padding: 0.75rem 1.25rem;
-background-color: #2563eb;
-color: #fff;
-border: none;
-border-radius: 6px;
-font-size: 0.9rem;
-font-weight: 500;
-cursor: pointer;
-transition: background-color 0.2s ease;
-align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0.75rem 1.25rem;
+  background-color: var(--primary-color, #2563eb);
+  color: var(--text-on-primary, #fff);
+  border: none;
+  border-radius: var(--border-radius-md, 6px);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color var(--transition-base);
 }
 .actionButton:hover:not(:disabled) {
-background-color: #1d4ed8;
+  background-color: var(--primary-color-dark, #1d4ed8);
 }
 .actionButton:disabled {
-background-color: #9ca3af;
-cursor: not-allowed;
+  background-color: var(--text-placeholder, #9ca3af);
+  cursor: not-allowed;
 }
 .buttonIcon {
-width: 16px;
-height: 16px;
+  width: 16px;
+  height: 16px;
 }
+
+.statusEditGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px; 
+}
+
+.statusActionButtons {
+  display: flex;
+  gap: 12px; 
+  margin-top: 8px; 
+}
+.statusActionButtons > .actionButton {
+  flex-grow: 1; 
+}
+.cancelButton { 
+  background-color: var(--text-muted, #6b7280);
+}
+.cancelButton:hover:not(:disabled) {
+  background-color: var(--text-secondary, #4b5563);
+}
+
+
 .commentListWrapper {
-max-height: 250px;
-overflow-y: auto;
-border: 1px solid #e5e7eb;
-border-radius: 6px;
-margin-bottom: 16px;
-background-color: #f9fafb;
+  max-height: 250px;
+  overflow-y: auto;
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: var(--border-radius-md, 6px);
+  margin-bottom: 16px;
+  background-color: var(--background-light, #f9fafb);
 }
 .commentList {
-list-style: none;
-padding: 0;
-margin: 0;
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 .commentItem {
-padding: 12px 16px;
-border-bottom: 1px solid #e5e7eb;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-color-light, #e5e7eb);
 }
 .commentItem:last-child {
-border-bottom: none;
+  border-bottom: none;
 }
 .commentMeta {
-display: flex;
-justify-content: space-between;
-align-items: center;
-font-size: 0.8rem;
-color: #4b5563;
-margin-bottom: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+  color: var(--text-muted, #4b5563);
+  margin-bottom: 4px;
 }
 .commentMeta strong {
-font-weight: 500;
-color: #1f2937;
+  font-weight: 500;
+  color: var(--text-primary, #1f2937);
 }
 .commentDate {
-font-style: italic;
+  font-style: italic;
 }
 .commentText {
-font-size: 0.875rem;
-color: #374151;
-line-height: 1.5;
-white-space: pre-wrap;
-word-break: break-word;
+  font-size: 0.875rem;
+  color: var(--text-secondary, #374151);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 .addCommentArea {
-margin-top: 16px;
+  margin-top: 16px;
+}
+.addCommentArea .textareaField {
+  flex-grow: 1; 
 }
 .loadingMessage,
 .emptyMessage {
-font-size: 0.9rem;
-color: #6b7280;
-padding: 16px;
-text-align: center;
-background-color: #f9fafb;
-border-radius: 6px;
+  font-size: 0.9rem;
+  color: var(--text-muted, #6b7280);
+  padding: 16px;
+  text-align: center;
+  background-color: var(--background-light, #f9fafb);
+  border-radius: var(--border-radius-md, 6px);
+  flex-grow: 1; 
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .modalFooter {
-padding: 16px 24px;
-border-top: 1px solid #e5e7eb;
-background-color: #f9fafb;
-display: flex;
-justify-content: flex-end;
-border-bottom-left-radius: 12px;
-border-bottom-right-radius: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--border-color-light, #e5e7eb);
+  background-color: var(--background-light, #f9fafb);
+  display: flex;
+  justify-content: flex-end;
+  border-bottom-left-radius: var(--border-radius-xl, 12px);
+  border-bottom-right-radius: var(--border-radius-xl, 12px);
 }
 .closeModalButton {
-padding: 0.65rem 1.25rem;
-background-color: #6b7280;
-color: #fff;
-border: none;
-border-radius: 6px;
-font-size: 0.9rem;
-font-weight: 500;
-cursor: pointer;
-transition: background-color 0.2s ease;
+  padding: 0.65rem 1.25rem;
+  background-color: var(--text-muted, #6b7280);
+  color: var(--text-on-primary, #fff);
+  border: none;
+  border-radius: var(--border-radius-md, 6px);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color var(--transition-base);
 }
 .closeModalButton:hover {
-background-color: #4b5563;
+  background-color: var(--text-secondary, #4b5563);
 }
 @media (max-width: 600px) {
-.modalTitle {
-font-size: 1.3rem;
-}
-.blockTitle {
-font-size: 1rem;
-}
-.contentGrid {
-grid-template-columns: 1fr;
-}
-.modalHeader, .modalBody, .modalFooter {
-padding: 12px 16px;
-}
-.actionButton, .closeModalButton, .selectField, .textareaField {
-font-size: 0.85rem;
-padding: 0.65rem 1rem;
-}
+  .modalTitle {
+    font-size: 1.3rem;
+  }
+  .blockTitle {
+    font-size: 1rem;
+  }
+  .contentGrid {
+    grid-template-columns: 1fr; 
+  }
+  .infoBlock {
+    margin-bottom: 16px; 
+  }
+  .modalHeader, .modalBody, .modalFooter {
+    padding: 12px 16px;
+  }
+  .actionButton, .closeModalButton, .selectField, .textareaField {
+    font-size: 0.85rem;
+    padding: 0.65rem 1rem;
+  }
+  .statusActionButtons {
+    flex-direction: column; 
+  }
 }

@@ -5,21 +5,36 @@ import styles from "./styles/Filters.module.css";
 
 const Filters = ({ category, filters, onFilterChange }) => {
   const { user } = useUser();
-  const [dormitories, setDormitories] = useState([]);
+  const [dormitoriesForDean, setDormitoriesForDean] = useState([]);
 
   useEffect(() => {
     if (user?.role === "faculty_dean_office" && category === "accommodation") {
       const fetchManagedDormitories = async () => {
+        if (!user.faculty_id) {
+          console.warn("Faculty Dean Office user does not have faculty_id assigned.");
+          setDormitoriesForDean([]);
+          return;
+        }
         try {
-          const response = await api.get("/secure/managed-dormitories");
-          setDormitories(response.data);
+          // Завантажуємо гуртожитки, прив'язані до факультету декана
+          const response = await api.get(`/faculty-dormitories?faculty_id=${user.faculty_id}`);
+          // response.data тут буде масив зв'язків { faculty_id, dormitory_id, quota, dormitory_name }
+          // Нам потрібні унікальні гуртожитки з цих зв'язків
+          const uniqueDorms = response.data.reduce((acc, link) => {
+            if (!acc.find(d => d.id === link.dormitory_id)) {
+              acc.push({ id: link.dormitory_id, name: link.dormitory_name });
+            }
+            return acc;
+          }, []);
+          setDormitoriesForDean(uniqueDorms);
         } catch (error) {
-          console.error("Помилка отримання гуртожитків:", error);
+          console.error("Помилка отримання гуртожитків для деканату:", error);
+          setDormitoriesForDean([]);
         }
       };
       fetchManagedDormitories();
     }
-  }, [user?.role, category]);
+  }, [user?.role, user?.faculty_id, category]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -27,7 +42,8 @@ const Filters = ({ category, filters, onFilterChange }) => {
   };
 
   const isAccommodation = category === "accommodation";
-  const isRestrictedRole = ["dorm_manager", "student_council_head", "student_council_member"].includes(user?.role);
+  const isRestrictedUserRoleForFaculty = ["student_council_head", "student_council_member", "faculty_dean_office"].includes(user?.role);
+
 
   return (
     <div className={styles.filters}>
@@ -38,10 +54,11 @@ const Filters = ({ category, filters, onFilterChange }) => {
           name="search"
           value={filters.search}
           onChange={handleChange}
-          placeholder={isAccommodation ? "Пошук за ID, ПІБ, email..." : "Пошук за ім'ям, прізвищем..."}
+          placeholder={isAccommodation ? "ID, ПІБ, email, факультет..." : "Ім'я, прізвище..."}
           className={styles.inputField}
         />
       </div>
+
       {isAccommodation ? (
         <>
           <div className={styles.inputGroup}>
@@ -54,12 +71,12 @@ const Filters = ({ category, filters, onFilterChange }) => {
             >
               <option value="">Всі статуси</option>
               <option value="pending">Очікує</option>
-              <option value="approved">Підтверджено</option>
+              <option value="approved">Затверджено</option>
               <option value="rejected">Відхилено</option>
-              <option value="approved_by_faculty">Підтверджено факультетом</option>
-              <option value="rejected_by_faculty">Відхилено факультетом</option>
-              <option value="approved_by_dorm">Підтверджено гуртожитком</option>
-              <option value="rejected_by_dorm">Відхилено гуртожитком</option>
+              <option value="approved_by_faculty">Затв. деканатом</option>
+              <option value="rejected_by_faculty">Відх. деканатом</option>
+              <option value="approved_by_dorm">Затв. гуртожитком</option>
+              <option value="rejected_by_dorm">Відх. гуртожитком</option>
               <option value="settled">Поселено</option>
             </select>
           </div>
@@ -83,60 +100,60 @@ const Filters = ({ category, filters, onFilterChange }) => {
               className={styles.inputField}
             />
           </div>
+
           {user?.role === "faculty_dean_office" ? (
             <div className={styles.inputGroup}>
               <label className={styles.inputLabel}>Гуртожиток</label>
               <select
-                name="dormNumber"
+                name="dormNumber" 
                 value={filters.dormNumber}
                 onChange={handleChange}
                 className={styles.inputField}
               >
-                <option value="">Всі гуртожитки</option>
-                {dormitories.map((dorm) => (
+                <option value="">Всі керовані гуртожитки</option>
+                {dormitoriesForDean.map((dorm) => (
                   <option key={dorm.id} value={dorm.id}>
                     {dorm.name}
                   </option>
                 ))}
               </select>
             </div>
-          ) : isRestrictedRole ? (
+          ) : user?.role === "dorm_manager" ? (
             <div className={styles.inputGroup}>
               <label className={styles.inputLabel}>Гуртожиток</label>
               <input
                 type="text"
-                name="dormNumber"
-                value={user?.dormitory_id || filters.dormNumber}
+                value={user?.dormitory_name || `Гуртожиток ID: ${user?.dormitory_id}` || "Ваш гуртожиток"}
                 className={styles.inputField}
-                disabled
+                disabled 
               />
             </div>
-          ) : (
+          ) : ( // Для admin, superadmin (або якщо роль не декан і не комендант, але має доступ)
             <div className={styles.inputGroup}>
               <label className={styles.inputLabel}>ID гуртожитку</label>
               <input
                 type="text"
-                name="dormNumber"
+                name="dormNumber" 
                 value={filters.dormNumber}
                 onChange={handleChange}
-                placeholder="ID гуртожитку"
+                placeholder="Введіть ID гуртожитку"
                 className={styles.inputField}
               />
             </div>
           )}
         </>
-      ) : (
+      ) : ( 
         <>
           <div className={styles.inputGroup}>
             <label className={styles.inputLabel}>Факультет</label>
             <input
               type="text"
               name="faculty"
-              value={isRestrictedRole ? user?.faculty_name || filters.faculty : filters.faculty}
+              value={(isRestrictedUserRoleForFaculty && user?.faculty_name) ? user.faculty_name : filters.faculty}
               onChange={handleChange}
               placeholder="Факультет"
               className={styles.inputField}
-              disabled={isRestrictedRole}
+              disabled={isRestrictedUserRoleForFaculty && !!user?.faculty_name}
             />
           </div>
           <div className={styles.inputGroup}>

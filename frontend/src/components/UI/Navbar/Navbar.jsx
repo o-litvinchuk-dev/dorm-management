@@ -51,7 +51,7 @@ const Navbar = ({ isSidebarExpanded }) => {
       case "faculty_dean_office":
         return `Деканат (${user.faculty_name || "Факультет"})`;
       case "dorm_manager":
-        return `Комендант (Гуртожиток ${user.dormitory_name || user.dormitory_id || "невідомий"})`;
+        return `Комендант (${user.dormitory_name || user.dormitory_id || "невідомий"})`;
       case "student_council_head":
         return `Голова студ. ради (${user.faculty_name || "Факультет"})`;
       case "student_council_member":

@@ -20,7 +20,6 @@ const Page1Content = ({
   isPresetActive,
   selectedPreset,
 }) => {
-
   return (
     <div className={styles.contractText}>
       <h2 className={styles.centeredTitle}>1ДОГОВІР</h2>
@@ -118,8 +117,8 @@ const Page1Content = ({
         >
           <option value="" disabled>
             {dataLoading.groups ? "Завантаження..." :
-             !formData.faculty ? "Спочатку факультет" :
-             groupsForFaculty.length === 0 ? "Немає груп" : "Оберіть групу"}
+            !formData.faculty ? "Спочатку факультет" :
+            groupsForFaculty.length === 0 ? "Немає груп" : "Оберіть групу"}
           </option>
           {groupsForFaculty.map((group) => (
             <option key={group.id} value={group.id}>
@@ -162,6 +161,7 @@ const Page1Content = ({
         <span className={styles.inputLabel}>(П.І.Б.)</span>
       </div>
       {errors.fullName && ( <p id="fullName-error" className={styles.error}> {errors.fullName} </p> )}
+
       <p className={styles.justifiedText}>
         Паспорт серії{" "}
         <input
@@ -213,6 +213,7 @@ const Page1Content = ({
       {errors.passportSeries && ( <p id="passportSeries-error" className={styles.error}> {errors.passportSeries} </p> )}
       {errors.passportNumber && ( <p id="passportNumber-error" className={styles.error}> {errors.passportNumber} </p> )}
       {errors.passportIssued && ( <p id="passportIssued-error" className={styles.error}> {errors.passportIssued} </p> )}
+
       <div className={styles.taxIdWrapper}>
         <table className={styles.taxIdTable} role="grid" aria-label="Ідентифікаційний номер">
           <tbody>
@@ -243,11 +244,12 @@ const Page1Content = ({
           <p id="taxId-error" className={styles.error}> {errors.taxId} </p>
         )}
         {errors.taxId && Array.isArray(errors.taxId) && errors.taxId.map((error, index) =>
-            error && typeof error === 'string' ? (
-              <p key={index} id={`taxId-${index}-error`} className={styles.error}> {error} </p>
-            ) : null
+          error && typeof error === 'string' ? (
+            <p key={index} id={`taxId-${index}-error`} className={styles.error}> {error} </p>
+          ) : null
         )}
       </div>
+
       <p className={styles.justifiedText}>
         Договір Укладено згідно з вимогами чинного законодавства України
       </p>
@@ -309,10 +311,10 @@ const Page1Content = ({
           aria-label="Номер гуртожитку"
           disabled={dataLoading.dormitories || dataLoading.preset}
         >
-           <option value="" disabled>{dataLoading.dormitories ? "Завантаження..." : "Оберіть гуртожиток"}</option>
-            {allDormitories.map(dorm => (
-              <option key={dorm.id} value={dorm.id}>{dorm.name}</option>
-            ))}
+          <option value="" disabled>{dataLoading.dormitories ? "Завантаження..." : "Оберіть гуртожиток"}</option>
+          {allDormitories.map(dorm => (
+            <option key={dorm.id} value={dorm.id}>{dorm.name}</option>
+          ))}
         </select>{" "}
         кімната №{" "}
         <input

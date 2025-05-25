@@ -4,7 +4,16 @@ import { ToastService } from '../../utils/toastConfig';
 import Sidebar from '../../components/UI/Sidebar/Sidebar';
 import Navbar from '../../components/UI/Navbar/Navbar';
 import styles from './styles/AdminRoomReservationsPage.module.css';
-import { ListBulletIcon, CheckCircleIcon, XCircleIcon, PencilIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
+import { 
+    ListBulletIcon, 
+    CheckCircleIcon, 
+    XCircleIcon, 
+    InformationCircleIcon,
+    // Іконки, що більше не використовуються в таблиці, можна прибрати, якщо вони не потрібні деінде
+    // UserCircleIcon, 
+    // BuildingOffice2Icon,
+    // ChatBubbleLeftEllipsisIcon 
+} from '@heroicons/react/24/outline';
 import { useUser } from '../../contexts/UserContext';
 import Pagination from '../../components/Admin/Pagination';
 
@@ -18,106 +27,179 @@ const statusLabels = {
   expired: "Термін минув"
 };
 
-const ReservationRow = ({ reservation, onUpdateStatus, onEditNotes }) => {
+// --- ReservationRow Component ---
+const ReservationRow = ({ reservation, onOpenModal }) => {
   const { user } = useUser();
-  const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('uk-UA') : 'N/A';
+  const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('uk-UA', {day: '2-digit', month: '2-digit', year: 'numeric'}) : 'N/A';
   
-  const canConfirmOrReject = (user?.role === 'superadmin' || user?.role === 'admin' || 
+  const canManageThisReservation = (user?.role === 'superadmin' || user?.role === 'admin' || 
     (user?.role === 'dorm_manager' && String(user.dormitory_id) === String(reservation.room_dormitory_id)));
 
+  const getStatusClass = (status) => {
+    if (!status) return styles.statusDefault;
+    const baseClass = styles.statusBadge;
+    switch (status.toLowerCase()) {
+        case 'pending_confirmation': return `${baseClass} ${styles.statusPending}`;
+        case 'confirmed':
+        case 'checked_in':
+             return `${baseClass} ${styles.statusConfirmed}`;
+        case 'cancelled_by_user':
+        case 'rejected_by_admin':
+        case 'expired':
+        case 'checked_out':
+            return `${baseClass} ${styles.statusCancelled}`;
+        default: return `${baseClass} ${styles.statusDefault}`;
+    }
+  };
+
   return (
-    <tr>
-      <td>{reservation.id}</td>
-      <td>{reservation.user_name || reservation.user_email}</td>
-      <td>{reservation.dormitory_name} - Кімн. {reservation.room_number}</td>
-      <td>{formatDate(reservation.reservation_start_date)}</td>
-      <td>{formatDate(reservation.reservation_end_date)}</td>
-      <td>
-        <span className={`${styles.statusBadge} ${styles[`status${reservation.status.replace(/_/g, '')}`]}`}>
+    <tr className={styles.reservationRow}>
+      <td data-label="ID">{reservation.id}</td>
+      <td data-label="Студент">
+        {/* <div className={styles.cellWithIcon}> */}
+          {/* <UserCircleIcon className={styles.tableIcon} /> */}
+          <span>{reservation.user_name || reservation.user_email}</span>
+        {/* </div> */}
+      </td>
+      <td data-label="Кімната">
+         {/* <div className={styles.cellWithIcon}> */}
+            {/* <BuildingOffice2Icon className={styles.tableIcon} /> */}
+            <span>{reservation.dormitory_name} - Кімн. {reservation.room_number}</span>
+        {/* </div> */}
+      </td>
+      <td data-label="Статус">
+        <span className={`${styles.statusBadge} ${getStatusClass(reservation.status)}`}>
           {statusLabels[reservation.status] || reservation.status}
         </span>
       </td>
-      <td>{formatDate(reservation.created_at)}</td>
-      <td className={styles.notesCell} title={reservation.notes_admin || ''}>
-        {reservation.notes_admin ? `${reservation.notes_admin.substring(0, 30)}${reservation.notes_admin.length > 30 ? '...' : ''}` : '-'}
+      <td data-label="Створено">{formatDate(reservation.created_at)}</td>
+      <td data-label="Примітки Адм." className={styles.notesCell} title={reservation.notes_admin || 'Немає приміток'}>
+        {reservation.notes_admin ? (
+            // <div className={styles.cellWithIcon}>
+                // <ChatBubbleLeftEllipsisIcon className={`${styles.tableIcon} ${styles.notesIcon}`} />
+                <span>{reservation.notes_admin.substring(0, 30)}{reservation.notes_admin.length > 30 ? '...' : ''}</span>
+            // </div>
+        ) : '-'}
       </td>
-      <td className={styles.actionsCell}>
-        {reservation.status === 'pending_confirmation' && canConfirmOrReject && (
-          <>
+      <td data-label="Дії" className={styles.actionsCell}>
+        {canManageThisReservation && (
             <button 
-              onClick={() => onUpdateStatus(reservation.id, 'confirmed', reservation)}
-              className={`${styles.actionButton} ${styles.confirmButton}`}
-              title="Підтвердити"
+                onClick={() => onOpenModal(reservation, reservation.status)} 
+                className={`${styles.actionButtonText}`} // Новий або змінений клас для текстової кнопки
+                title="Переглянути / Змінити"
             >
-              <CheckCircleIcon />
+                Детальніше
             </button>
-            <button 
-              onClick={() => onEditNotes(reservation, 'rejected_by_admin')}
-              className={`${styles.actionButton} ${styles.rejectButton}`}
-              title="Відхилити з коментарем"
-            >
-              <XCircleIcon />
-            </button>
-          </>
-        )}
-         {reservation.status === 'confirmed' && canConfirmOrReject && (
-          <button 
-            onClick={() => onUpdateStatus(reservation.id, 'checked_in', reservation)}
-            className={`${styles.actionButton} ${styles.checkInButton}`}
-            title="Заселити"
-          >
-            Заселити
-          </button>
-        )}
-        {reservation.status === 'checked_in' && canConfirmOrReject && (
-          <button 
-            onClick={() => onUpdateStatus(reservation.id, 'checked_out', reservation)}
-            className={`${styles.actionButton} ${styles.checkOutButton}`}
-            title="Виселити"
-          >
-            Виселити
-          </button>
-        )}
-        {canConfirmOrReject && (
-           <button 
-            onClick={() => onEditNotes(reservation, reservation.status)} 
-            className={`${styles.actionButton} ${styles.editNotesButton}`}
-            title="Редагувати примітки"
-          >
-            <PencilIcon/>
-          </button>
         )}
       </td>
     </tr>
   );
 };
 
-const AdminNotesModal = ({ reservation, currentStatusToSet, onClose, onSubmit }) => {
+// --- AdminNotesModal Component ---
+const AdminNotesModal = ({ reservation, initialStatusToSet, onClose, onConfirm }) => {
     const [notes, setNotes] = useState(reservation.notes_admin || '');
+    const [newStatus, setNewStatus] = useState(initialStatusToSet); 
+    const { user } = useUser(); 
+
+    const isRejecting = newStatus === 'rejected_by_admin';
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        onSubmit(reservation.id, currentStatusToSet, notes, reservation);
+        if (isRejecting && !notes.trim()) {
+            ToastService.error("При відхиленні бронювання коментар є обов'язковим.");
+            return;
+        }
+        onConfirm(reservation.id, newStatus, notes, reservation); 
     };
+    
+    let title = `Бронювання #${reservation.id}`;
+    if (newStatus !== reservation.status && newStatus !== "") { // Показуємо зміну тільки якщо статус дійсно змінюється
+        title = `Зміна статусу на "${statusLabels[newStatus] || newStatus}" для бронювання #${reservation.id}`;
+    } else {
+        title = `Деталі бронювання #${reservation.id}`;
+    }
+
+
+    const statusOptionsConfig = {
+        admin: [
+          { value: "confirmed", label: "Підтвердити" },
+          { value: "rejected_by_admin", label: "Відхилити" }, 
+          { value: "checked_in", label: "Заселити" },
+          { value: "checked_out", label: "Виселити" },
+        ],
+        superadmin: [],
+        dorm_manager: [
+          { value: "confirmed", label: "Підтвердити" },
+          { value: "rejected_by_admin", label: "Відхилити" },
+          { value: "checked_in", label: "Заселити" },
+          { value: "checked_out", label: "Виселити" },
+        ],
+      };
+    statusOptionsConfig.superadmin = [...statusOptionsConfig.admin];
+    
+    let availableStatusOptions = (statusOptionsConfig[user?.role] || []);
+    
+    if (reservation.status === 'pending_confirmation') {
+        availableStatusOptions = availableStatusOptions.filter(opt => ['confirmed', 'rejected_by_admin'].includes(opt.value));
+    } else if (reservation.status === 'confirmed') {
+        availableStatusOptions = availableStatusOptions.filter(opt => ['checked_in', 'rejected_by_admin'].includes(opt.value));
+    } else if (reservation.status === 'checked_in') {
+        availableStatusOptions = availableStatusOptions.filter(opt => ['checked_out'].includes(opt.value));
+    } else { 
+        availableStatusOptions = [];
+    }
+
 
     return (
         <div className={styles.modalOverlay}>
             <div className={styles.modalContent}>
-                <h3>Примітки для бронювання #{reservation.id}</h3>
-                <p>Студент: {reservation.user_name || reservation.user_email}</p>
-                <p>Кімната: {reservation.dormitory_name} - {reservation.room_number}</p>
-                <form onSubmit={handleSubmit}>
-                    <textarea
-                        value={notes}
-                        onChange={(e) => setNotes(e.target.value)}
-                        placeholder="Введіть примітки або причину відхилення..."
-                        rows="4"
-                        className={styles.modalTextarea}
-                    />
+                <h3>{title}</h3>
+                <p><strong>Студент:</strong> {reservation.user_name || reservation.user_email}</p>
+                <p><strong>Кімната:</strong> {reservation.dormitory_name} - Кімн. {reservation.room_number}</p>
+                <p><strong>Поточний статус:</strong> <span className={`${styles.statusBadgeOnModal} ${styles[`status${reservation.status.replace(/_/g, '')}`]}`}>{statusLabels[reservation.status]}</span></p>
+                {/* Дати бронювання видалено з модального вікна */}
+                
+                <form onSubmit={handleSubmit} className={styles.modalForm}>
+                    {availableStatusOptions.length > 0 && (
+                        <div className={styles.modalFormGroup}>
+                            <label htmlFor="newStatusModal" className={styles.modalLabel}>Змінити статус на:</label>
+                            <select 
+                                id="newStatusModal"
+                                value={newStatus} 
+                                onChange={(e) => setNewStatus(e.target.value)}
+                                className={styles.modalSelect}
+                            >
+                                {/* Дозволяємо залишити поточний, якщо мета - лише додати коментар */}
+                                <option value={reservation.status}>Залишити поточний ({statusLabels[reservation.status]})</option>
+                                {availableStatusOptions.map(opt => (
+                                    opt.value !== reservation.status && // Не показуємо поточний ще раз, якщо він вже є
+                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
+
+                    <div className={styles.modalFormGroup}>
+                        <label htmlFor="adminNotes" className={styles.modalLabel}>
+                            {isRejecting ? "Причина відхилення (обов'язково):" : "Коментар адміністратора:"}
+                        </label>
+                        <textarea
+                            id="adminNotes"
+                            value={notes}
+                            onChange={(e) => setNotes(e.target.value)}
+                            placeholder={isRejecting ? "Вкажіть причину відхилення..." : "Додаткова інформація, примітки..."}
+                            rows="3"
+                            className={styles.modalTextarea}
+                        />
+                    </div>
                     <div className={styles.modalActions}>
-                        <button type="button" onClick={onClose} className={styles.modalButtonCancel}>Скасувати</button>
-                        <button type="submit" className={styles.modalButtonSubmit}>
-                            {currentStatusToSet === 'rejected_by_admin' ? 'Відхилити та Зберегти' : 'Зберегти примітки'}
+                        <button type="button" onClick={onClose} className={`${styles.modalButton} ${styles.modalButtonCancel}`}>
+                            <XCircleIcon /> Скасувати
+                        </button>
+                        <button type="submit" className={`${styles.modalButton} ${styles.modalButtonSubmit}`}>
+                            <CheckCircleIcon /> 
+                            {newStatus !== reservation.status && newStatus !== "" ? `Змінити на "${statusLabels[newStatus]}" та зберегти` : 'Зберегти примітки'}
                         </button>
                     </div>
                 </form>
@@ -126,7 +208,7 @@ const AdminNotesModal = ({ reservation, currentStatusToSet, onClose, onSubmit })
     );
 };
 
-
+// --- AdminRoomReservationsPage Component ---
 const AdminRoomReservationsPage = () => {
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(() => {
     const saved = localStorage.getItem("sidebarOpen");
@@ -138,8 +220,7 @@ const AdminRoomReservationsPage = () => {
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0 });
   const [dormitories, setDormitories] = useState([]);
   const [editingReservation, setEditingReservation] = useState(null);
-  const [statusToSetOnEdit, setStatusToSetOnEdit] = useState('');
-
+  const [statusToUpdateViaModal, setStatusToUpdateViaModal] = useState('');
 
   const { user } = useUser();
 
@@ -148,13 +229,15 @@ const AdminRoomReservationsPage = () => {
   }, [isSidebarExpanded]);
 
   const fetchDormitories = useCallback(async () => {
-    try {
-      const response = await api.get('/dormitories');
-      setDormitories(response.data || []);
-    } catch (error) {
-      ToastService.handleApiError(error);
+    if (user?.role === 'admin' || user?.role === 'superadmin') {
+        try {
+          const response = await api.get('/dormitories');
+          setDormitories(response.data || []);
+        } catch (error) {
+          ToastService.handleApiError(error);
+        }
     }
-  }, []);
+  }, [user]);
 
   const fetchAdminReservations = useCallback(async () => {
     setIsLoading(true);
@@ -166,12 +249,10 @@ const AdminRoomReservationsPage = () => {
         sortOrder: 'desc',
         ...filters,
       };
-      // If dorm manager, override dormitory_id filter
       if (user?.role === 'dorm_manager' && user.dormitory_id) {
         params.dormitory_id = user.dormitory_id;
       }
       if(params.search === null || params.search === undefined) params.search = '';
-
 
       const response = await api.get('/admin/room-reservations', { params });
       setReservations(response.data.reservations || []);
@@ -186,29 +267,38 @@ const AdminRoomReservationsPage = () => {
   }, [user, filters, pagination.page, pagination.limit]);
 
   useEffect(() => {
-    if(user){ // Ensure user context is loaded
+    if(user){ 
         fetchAdminReservations();
-        if(user.role === 'admin' || user.role === 'superadmin'){
-             fetchDormitories();
-        }
+        fetchDormitories();
     }
   }, [fetchAdminReservations, user, fetchDormitories]);
 
 
-  const handleUpdateStatus = async (reservationId, newStatus, reservation, notes = null) => {
+  const handleConfirmUpdateWithNotes = async (reservationId, newStatus, notes, originalReservation) => {
     try {
-        await api.put(`/admin/room-reservations/${reservationId}/status`, { status: newStatus, notes_admin: notes });
-        ToastService.success(`Статус бронювання #${reservationId} оновлено.`);
-        fetchAdminReservations(); // Refresh data
-        if(editingReservation) setEditingReservation(null); // Close modal if open
+        // Якщо статус не було змінено в модалці (користувач вибрав "Залишити поточний" або newStatus пустий)
+        // але нотатки змінились, то надсилаємо поточний статус.
+        const statusToSend = (newStatus === "" || newStatus === originalReservation.status) ? originalReservation.status : newStatus;
+        
+        await api.put(`/admin/room-reservations/${reservationId}/status`, { status: statusToSend, notes_admin: notes });
+        
+        let toastMessage = `Примітки для бронювання #${reservationId} оновлено.`;
+        if (statusToSend !== originalReservation.status) {
+            toastMessage = `Бронювання #${reservationId}: статус змінено на "${statusLabels[statusToSend] || statusToSend}"${notes ? ' з коментарем' : ''}.`;
+        }
+        ToastService.success(toastMessage);
+        fetchAdminReservations(); 
+        setEditingReservation(null); 
     } catch (error) {
         ToastService.handleApiError(error);
     }
   };
   
-  const handleEditNotes = (reservation, statusToSetAfterEdit) => {
+  const handleOpenModalForEdit = (reservation, statusToSet) => {
     setEditingReservation(reservation);
-    setStatusToSetOnEdit(statusToSetAfterEdit || reservation.status); 
+    // Передаємо поточний статус бронювання як початковий для модалки,
+    // користувач зможе його змінити або залишити таким самим
+    setStatusToUpdateViaModal(reservation.status); 
   };
 
 
@@ -218,8 +308,7 @@ const AdminRoomReservationsPage = () => {
 
   const applyFilters = (e) => {
     e.preventDefault();
-    setPagination(prev => ({ ...prev, page: 1 })); // Reset to first page on new filter
-    // fetchAdminReservations will be called by useEffect due to filters/pagination change
+    setPagination(prev => ({ ...prev, page: 1 })); 
   };
 
   const handlePageChange = (page) => setPagination(prev => ({ ...prev, page }));
@@ -280,11 +369,9 @@ const AdminRoomReservationsPage = () => {
                     <th>ID</th>
                     <th>Студент</th>
                     <th>Кімната</th>
-                    <th>Заїзд</th>
-                    <th>Виїзд</th>
                     <th>Статус</th>
                     <th>Створено</th>
-                    <th>Примітки</th>
+                    <th>Примітки Адм.</th>
                     <th>Дії</th>
                     </tr>
                 </thead>
@@ -293,8 +380,7 @@ const AdminRoomReservationsPage = () => {
                     <ReservationRow 
                         key={res.id} 
                         reservation={res} 
-                        onUpdateStatus={handleUpdateStatus}
-                        onEditNotes={handleEditNotes}
+                        onOpenModal={handleOpenModalForEdit} 
                     />
                     ))}
                 </tbody>
@@ -316,9 +402,9 @@ const AdminRoomReservationsPage = () => {
       {editingReservation && (
         <AdminNotesModal
             reservation={editingReservation}
-            currentStatusToSet={statusToSetOnEdit}
+            initialStatusToSet={statusToUpdateViaModal} 
             onClose={() => setEditingReservation(null)}
-            onSubmit={handleUpdateStatus}
+            onConfirm={handleConfirmUpdateWithNotes} 
         />
       )}
     </div>

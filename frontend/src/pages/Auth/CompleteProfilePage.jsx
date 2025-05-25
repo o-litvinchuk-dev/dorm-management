@@ -26,14 +26,21 @@ const CompleteProfilePage = () => {
     let initialFacultyId = user.faculty_id || "";
     let initialDormitoryId = user.dormitory_id || "";
 
-    if (user.role === "student" && user.faculty_id) { // Use user.faculty_id for student's profile faculty_id
+    if (user.role === "student" && user.faculty_id) { 
         initialFacultyId = user.faculty_id;
     }
     
+    // Default 'other' or invalid gender to 'not_specified'
+    const validGenders = ['male', 'female', 'not_specified'];
+    let initialGender = user.gender || "not_specified";
+    if (!validGenders.includes(initialGender)) {
+        initialGender = "not_specified";
+    }
+
     return {
       name: user.name || "",
       phone: user.phone || "",
-      gender: user.gender || "not_specified",
+      gender: initialGender,
       faculty_id: initialFacultyId,
       group_id: user.group_id || "",
       course: user.course || "",
@@ -50,15 +57,15 @@ const CompleteProfilePage = () => {
     phone: Yup.string()
       .matches(/^\+380\d{9}$/, "Формат телефону: +380XXXXXXXXX (наприклад, +380991234567)")
       .required("Телефон обов'язковий"),
-    gender: Yup.string().oneOf(['male', 'female', 'other'], "Оберіть стать (чоловіча або жіноча є обов'язковими для студентів)")
+    gender: Yup.string()
       .when('userRole', {
-          is: 'student',
-          then: schema => schema.test(
-              'student-gender-required',
-              'Для студентів стать (чоловіча/жіноча) є обов\'язковою',
-              value => value === 'male' || value === 'female'
-          ),
-          otherwise: schema => schema.optional() // not_specified is allowed for other roles
+        is: 'student',
+        then: (schema) => schema
+          .oneOf(['male', 'female'], 'Для студентів необхідно обрати стать "Чоловіча" або "Жіноча".')
+          .required('Стать є обов\'язковою для студентів.'),
+        otherwise: (schema) => schema // For non-students
+          .oneOf(['male', 'female', 'not_specified'], 'Будь ласка, оберіть стать або "Не вказано".')
+          .optional(), 
       }),
     faculty_id: Yup.number().when('userRole', {
       is: (userRole) => ["student", "faculty_dean_office", "student_council_head", "student_council_member"].includes(userRole),
@@ -89,7 +96,7 @@ const CompleteProfilePage = () => {
   const formik = useFormik({
     initialValues: getInitialValues(),
     validationSchema: validationSchema,
-    enableReinitialize: true,
+    enableReinitialize: true, // This will reset form if initialValues identity changes
     onSubmit: async (values, { setSubmitting }) => {
       setSubmitting(true);
       try {
@@ -100,13 +107,13 @@ const CompleteProfilePage = () => {
         };
 
         if (user?.role === "student") {
-          payload.faculty_id = values.faculty_id || null; // This is user_profiles.faculty_id
+          payload.faculty_id = values.faculty_id || null;
           payload.group_id = values.group_id || null;
           payload.course = values.course || null;
         } else if (["faculty_dean_office", "student_council_head", "student_council_member"].includes(user?.role)) {
-          payload.faculty_id = values.faculty_id || null; // This is users.faculty_id
+          payload.faculty_id = values.faculty_id || null; 
         } else if (user?.role === "dorm_manager") {
-          payload.dormitory_id = values.dormitory_id || null; // This is users.dormitory_id
+          payload.dormitory_id = values.dormitory_id || null;
         }
         
         Object.keys(payload).forEach(key => {
@@ -117,8 +124,7 @@ const CompleteProfilePage = () => {
 
         await api.patch("/secure/profile", payload);
         ToastService.success("Профіль успішно оновлено!");
-        await refreshUser(); // This will re-fetch and update is_profile_complete
-        // Navigation will be handled by AuthRequiredRoute after refreshUser updates the context
+        await refreshUser();
       } catch (error) {
         ToastService.handleApiError(error);
       } finally {
@@ -127,14 +133,14 @@ const CompleteProfilePage = () => {
     },
   });
   
+  // This useEffect is to ensure formik's internal 'userRole' is synced
+  // if the user object from context changes after the form is initialized.
+  // Other field synchronizations are handled by `enableReinitialize` via `getInitialValues`.
   useEffect(() => {
     if (user && formik.values.userRole !== user.role) {
         formik.setFieldValue('userRole', user.role);
     }
-    if (user && user.gender && formik.values.gender !== user.gender) {
-        formik.setFieldValue('gender', user.gender);
-    }
-}, [user, formik]);
+  }, [user, formik.setFieldValue, formik.values.userRole]);
 
 
   useEffect(() => {
@@ -188,12 +194,11 @@ const CompleteProfilePage = () => {
                 const groupInNewList = fetchedGroups.find(g => g.id === currentGroupId);
 
                 if (currentGroupId && groupInNewList) {
-                    if (formik.values.course !== groupInNewList.course) {
+                    if (String(formik.values.course) !== String(groupInNewList.course)) {
                         formik.setFieldValue('course', groupInNewList.course, false);
                     }
                 } else {
-                    // If current group_id is not in new list, or no group_id was set, clear them
-                    if(formik.dirty || formik.values.group_id){ // Only clear if form was touched or group_id existed
+                    if(formik.dirty || formik.values.group_id){ 
                         formik.setFieldValue('group_id', '', false);
                         formik.setFieldValue('course', '', false);
                     }
@@ -206,14 +211,14 @@ const CompleteProfilePage = () => {
                 formik.setFieldValue('course', '', false);
             })
             .finally(() => setDataLoading(false));
-    } else if (user?.role === "student") { // If faculty is not selected for student
+    } else if (user?.role === "student") { 
         setGroups([]);
-        if (formik.values.group_id || formik.values.course) { // If group/course were set, clear them
+        if (formik.values.group_id || formik.values.course) { 
             formik.setFieldValue('group_id', '', false);
             formik.setFieldValue('course', '', false);
         }
     }
-}, [formik.values.faculty_id, user?.role]); // Removed formik.values.group_id, formik.values.course from deps to avoid loops
+}, [formik.values.faculty_id, user?.role, formik.dirty, formik.values.group_id, formik.values.course]);
 
 const handleGroupChange = (event) => {
     const newGroupId = event.target.value;
@@ -223,10 +228,10 @@ const handleGroupChange = (event) => {
         if (selectedGroupObject && typeof selectedGroupObject.course !== 'undefined') {
             formik.setFieldValue('course', selectedGroupObject.course);
         } else {
-            formik.setFieldValue('course', ''); // Group might not have course, or not found
+            formik.setFieldValue('course', ''); 
         }
     } else {
-        formik.setFieldValue('course', ''); // No group selected, clear course
+        formik.setFieldValue('course', ''); 
     }
 };
 
@@ -298,7 +303,6 @@ const handleGroupChange = (event) => {
               <option value="not_specified">Не вказано</option>
               <option value="male">Чоловіча</option>
               <option value="female">Жіноча</option>
-              <option value="other">Інша</option>
             </select>
             {formik.touched.gender && formik.errors.gender && (
               <div className={styles.errorMessage}>{formik.errors.gender}</div>
@@ -364,7 +368,7 @@ const handleGroupChange = (event) => {
                   id="course"
                   name="course"
                   type="number"
-                  onChange={formik.handleChange} // Keep for consistency, though readonly
+                  onChange={formik.handleChange} 
                   onBlur={formik.handleBlur}
                   value={formik.values.course}
                   className={formik.touched.course && formik.errors.course ? styles.inputError : ""}

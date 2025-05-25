@@ -1,135 +1,127 @@
+/* Variables are now expected to be in a global scope (e.g. :root in index.css or variables.css) */
+
 .layout {
   display: flex;
   min-height: 100vh;
-  background-color: #f4f7f6; /* Light gray-blue background */
+  background-color: var(--background-color);
 }
-
 .mainContent {
   flex-grow: 1;
   display: flex;
   flex-direction: column;
-  transition: margin-left 0.3s ease-in-out;
-  margin-left: 260px; /* Default sidebar width + some margin */
+  transition: margin-left var(--transition-slow);
+  margin-left: calc(var(--sidebar-width-expanded) + var(--main-content-padding));
+  padding: calc(var(--navbar-height) + var(--main-content-padding)) var(--main-content-padding) var(--main-content-padding);
+  box-sizing: border-box;
 }
-
 .mainContent.sidebarCollapsed {
-  margin-left: 80px; /* Collapsed sidebar width + some margin */
+  margin-left: calc(var(--sidebar-width-collapsed) + var(--main-content-padding));
 }
-
 .pageContainer {
   padding: 2rem;
-  background-color: var(--background-color, #ffffff);
+  background-color: var(--card-background-color);
   flex-grow: 1;
-  border-radius: 8px;
-  margin: 1rem; /* Margin around the main content area */
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  border-radius: var(--border-radius-xl);
+  margin-top: var(--page-container-margin-top);
+  border: 1px solid var(--border-color);
 }
-
 .backButton {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
   margin-bottom: 1.5rem;
-  background-color: var(--background-light, #f0f4f8);
-  color: var(--text-secondary, #555);
-  border: 1px solid var(--border-color, #ddd);
-  border-radius: 6px;
+  background-color: var(--background-light);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color-dark);
+  border-radius: var(--border-radius-md);
   cursor: pointer;
   font-size: 0.9rem;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition: background-color var(--transition-base), color var(--transition-base);
 }
 .backButton svg {
   width: 18px;
   height: 18px;
 }
 .backButton:hover {
-  background-color: var(--border-color-light, #e5e7eb);
-  color: var(--text-primary, #333);
+  background-color: var(--border-color-light);
+  color: var(--text-primary);
 }
-
 .pageTitle {
   font-size: 2rem;
   font-weight: 700;
-  color: var(--text-primary, #2c3e50);
-  margin-bottom: 0.5rem; /* Reduced margin */
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color-light);
 }
 .pageSubtitle {
   font-size: 1rem;
-  color: var(--text-secondary, #6c757d);
+  color: var(--text-muted);
   margin-bottom: 1.5rem;
 }
-
-
 .roomDetailsGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 2rem;
   align-items: flex-start;
 }
-
 .roomImagePlaceholder {
   width: 100%;
   aspect-ratio: 16 / 10;
-  background-color: var(--background-light, #f0f4f8);
-  border-radius: 8px;
+  background-color: var(--background-light);
+  border-radius: var(--border-radius-lg);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-secondary-light, #a0aec0);
-  border: 1px solid var(--border-color-light, #e0e0e0);
+  color: var(--text-placeholder);
+  border: 1px solid var(--border-color-light);
 }
 .roomImagePlaceholder svg {
   width: 80px;
   height: 80px;
 }
-
 .roomInfo h2 {
   font-size: 1.75rem;
   font-weight: 600;
-  color: var(--primary-color, #257BF4);
+  color: var(--primary-color);
   margin-top: 0;
   margin-bottom: 0.75rem;
 }
-
 .description {
   font-size: 1rem;
   line-height: 1.6;
-  color: var(--text-secondary, #555);
+  color: var(--text-secondary);
   margin-bottom: 1.5rem;
 }
-
 .infoGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1rem;
   margin-bottom: 1.5rem;
 }
-
 .infoItem {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   font-size: 0.95rem;
-  color: var(--text-primary, #333);
-  background-color: var(--background-light, #f9fafb);
+  color: var(--text-primary);
+  background-color: var(--background-light);
   padding: 0.75rem;
-  border-radius: 6px;
-  border: 1px solid var(--border-color-light, #e7e7e7);
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--border-color-light);
 }
 .infoItem svg {
   width: 20px;
   height: 20px;
-  color: var(--primary-color-light, #5c9ded);
+  color: var(--primary-color-light);
 }
-
 .reservationDates {
   display: flex;
   gap: 1rem;
   margin-bottom: 1.5rem;
   flex-wrap: wrap;
 }
-
 .dateInputGroup {
   display: flex;
   flex-direction: column;
@@ -139,53 +131,54 @@
 .dateInputGroup label {
   font-size: 0.875rem;
   font-weight: 500;
-  color: var(--text-secondary, #555);
+  color: var(--text-secondary);
   margin-bottom: 0.3rem;
 }
 .dateInput {
   padding: 0.6rem;
-  border: 1px solid var(--border-color, #ccc);
-  border-radius: 6px;
+  border: 1px solid var(--border-color-dark);
+  border-radius: var(--border-radius-md);
   font-size: 0.9rem;
 }
-
 .notesSection {
-    margin-bottom: 1.5rem;
+  margin-bottom: 1.5rem;
 }
 .notesLabel {
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: var(--text-secondary, #555);
-    margin-bottom: 0.5rem;
-    display: flex;
-    align-items: center;
-    gap: 0.3rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
 }
 .notesLabel svg {
-    width: 18px;
-    height: 18px;
+  width: 18px;
+  height: 18px;
 }
 .notesTextarea {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid var(--border-color, #ccc);
-    border-radius: 6px;
-    font-size: 0.9rem;
-    min-height: 80px;
-    resize: vertical;
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color-dark);
+  border-radius: var(--border-radius-md);
+  font-size: 0.9rem;
+  min-height: 80px;
+  resize: vertical;
 }
-
-
+.notesTextarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
 .reserveButton {
-  background-color: var(--success-color, #28a745);
-  color: white;
+  background-color: var(--success-color);
+  color: var(--text-on-primary);
   padding: 0.8rem 1.8rem;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--border-radius-md);
   font-size: 1.05rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: background-color var(--transition-base);
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
@@ -195,54 +188,62 @@
   height: 20px;
 }
 .reserveButton:hover {
-  background-color: var(--success-color-dark, #218838);
+  background-color: var(--success-color-dark);
 }
 .reserveButton:disabled {
-  background-color: #a0aec0;
+  background-color: var(--text-placeholder);
   cursor: not-allowed;
 }
-
 .notAvailableMessage {
-  color: var(--error-color, #dc3545);
+  color: var(--error-color);
   font-weight: 500;
-  background-color: var(--error-bg-light, #f8d7da);
+  background-color: var(--error-bg-light);
   padding: 0.75rem;
-  border-radius: 6px;
-  border: 1px solid var(--error-color-dark, #f5c6cb);
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--error-color-dark);
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 .notAvailableMessage svg {
-    width: 20px;
-    height: 20px;
+  width: 20px;
+  height: 20px;
 }
-
-
 .loadingSpinner {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 2rem;
-    font-size: 1.2rem;
-    color: var(--text-secondary, #777);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  font-size: 1.2rem;
+  color: var(--text-secondary);
 }
 .errorMessage {
-    color: var(--error-color, #dc3545);
-    text-align: center;
-    font-weight: 500;
+  color: var(--error-color);
+  text-align: center;
+  font-weight: 500;
 }
 
-
+@media (max-width: 1024px) {
+  .mainContent {
+    margin-left: calc(var(--sidebar-width-collapsed) + 12px);
+  }
+  .mainContent.sidebarCollapsed {
+     margin-left: calc(var(--sidebar-width-collapsed) + 12px);
+  }
+   .pageContainer {
+    height: calc(100vh - var(--navbar-height) - (12px*3) );
+  }
+}
 @media (max-width: 768px) {
   .mainContent {
-    margin-left: 80px;
+    margin-left: var(--sidebar-width-collapsed);
   }
   .mainContent.sidebarCollapsed {
     margin-left: 0;
   }
   .pageContainer {
     padding: 1rem;
+    height: calc(100vh - var(--navbar-height) - (10px*3) );
   }
   .roomDetailsGrid {
     grid-template-columns: 1fr;
