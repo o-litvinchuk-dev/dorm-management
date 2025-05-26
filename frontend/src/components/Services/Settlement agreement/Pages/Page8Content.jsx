@@ -8,28 +8,17 @@ const Page8Content = ({
   handleFocus,
   handleBlur,
   inputRefs,
+  handleDateKeyDown, // Ensure this specific handler is passed if needed
+  isPresetActive, // Added
+  selectedPreset, // Added
+  dataLoading, // Added
 }) => {
-  const handleDateKeyDown = (e, currentField, nextField, prevField) => {
-    if (e.key === "ArrowRight" && formData[currentField] && formData[currentField].length >= 2) {
-      inputRefs.current[nextField]?.focus();
-    } else if (e.key === "ArrowLeft" && formData[currentField] && formData[currentField].length === 0) {
-      inputRefs.current[prevField]?.focus();
-    } else if (e.key === "Enter" || (e.key === "Tab" && !e.shiftKey)) {
-      if (inputRefs.current[nextField]) {
-        inputRefs.current[nextField]?.focus();
-        e.preventDefault();
-      }
-    } else if (e.key === "Tab" && e.shiftKey) {
-       if (inputRefs.current[prevField]) {
-        inputRefs.current[prevField]?.focus();
-        e.preventDefault();
-      }
-    }
-  };
+  // Using the more generic handleDateKeyDown from props
+  // specific handleDateKeyDown from this component removed to avoid conflict
 
   return (
-    <div className={styles.contractText} role="region" aria-labelledby="section-title">
-      <h3 id="section-title" className={styles.centeredTitle}>6. ВІДПОВІДАЛЬНІСТЬ СТОРІН</h3>
+    <div className={styles.contractText} role="region" aria-labelledby="section-title-p8">
+      <h3 id="section-title-p8" className={styles.centeredTitle}>6. ВІДПОВІДАЛЬНІСТЬ СТОРІН</h3>
       <p className={styles.justifiedText}>
         6.1. За порушення умов Договору, його невиконання або неналежне виконання Сторони несуть відповідальність згідно чинного законодавства України.
       </p>
@@ -44,24 +33,25 @@ const Page8Content = ({
         7.1. Цей Договір вважається укладеним і набирає чинності з моменту його підписання Сторонами, а закінчується «
         <input
           type="text"
-          name="endDay" // Це поле повторюється з Page1Content
+          name="endDay" // This is already on Page1Content and should be the source of truth
           value={formData.endDay || ""}
           onChange={(e) => handleChange(e, "endDay")}
           onFocus={() => handleFocus("endDay")}
           onBlur={() => handleBlur("endDay")}
-          onKeyDown={(e) => handleDateKeyDown(e, "endDay", "endMonth", null)} // prevField null, бо це початок секції
+          onKeyDown={(e) => handleDateKeyDown(e, "endDay", "page8_endMonth_display", null)}
           maxLength="2"
           placeholder="__"
-          className={`${styles.inlineInputDate} ${errors.endDay ? styles.errorInput : ''}`}
+          className={`${styles.inlineInputDate} ${errors.endDay ? styles.errorInput : ''} ${
+            (isPresetActive && selectedPreset?.end_date) ? styles.readOnlyField : ""
+          }`}
           ref={(el) => {
-            if (el) inputRefs.current["page8_endDay"] = el; // Унікальний ref
-            else delete inputRefs.current["page8_endDay"];
+            if (el) inputRefs.current["page8_endDay_display"] = el; // Unique ref
+            else delete inputRefs.current["page8_endDay_display"];
           }}
-          required
-          data-error-field="endDay" // data-error-field може бути однаковим, якщо валідація спільна
+          data-error-field="endDay"
           aria-label="День закінчення (строк дії)"
-          aria-invalid={!!errors.endDay}
-          aria-describedby={errors.endDay ? "endDay-error" : undefined}
+          readOnly={isPresetActive && !!selectedPreset?.end_date} // ReadOnly if from preset
+          disabled={dataLoading.preset} // Disabled during preset loading
         />{" "}
         »{" "}
         <input
@@ -71,19 +61,20 @@ const Page8Content = ({
           onChange={(e) => handleChange(e, "endMonth")}
           onFocus={() => handleFocus("endMonth")}
           onBlur={() => handleBlur("endMonth")}
-          onKeyDown={(e) => handleDateKeyDown(e, "endMonth", "endYear", "page8_endDay")}
+          onKeyDown={(e) => handleDateKeyDown(e, "endMonth", "page8_endYear_display", "page8_endDay_display")}
           maxLength="2"
           placeholder="__"
-          className={`${styles.inlineInputDate} ${errors.endMonth ? styles.errorInput : ''}`}
+          className={`${styles.inlineInputDate} ${errors.endMonth ? styles.errorInput : ''} ${
+            (isPresetActive && selectedPreset?.end_date) ? styles.readOnlyField : ""
+          }`}
           ref={(el) => {
-            if (el) inputRefs.current["page8_endMonth"] = el;
-            else delete inputRefs.current["page8_endMonth"];
+            if (el) inputRefs.current["page8_endMonth_display"] = el;
+            else delete inputRefs.current["page8_endMonth_display"];
           }}
-          required
           data-error-field="endMonth"
           aria-label="Місяць закінчення (строк дії)"
-          aria-invalid={!!errors.endMonth}
-          aria-describedby={errors.endMonth ? "endMonth-error" : undefined}
+          readOnly={isPresetActive && !!selectedPreset?.end_date}
+          disabled={dataLoading.preset}
         />{" "}
         <span>20</span>
         <input
@@ -93,25 +84,25 @@ const Page8Content = ({
           onChange={(e) => handleChange(e, "endYear")}
           onFocus={() => handleFocus("endYear")}
           onBlur={() => handleBlur("endYear")}
-          onKeyDown={(e) => handleDateKeyDown(e, "endYear", null, "page8_endMonth")} // nextField null, бо це кінець секції дати
+          onKeyDown={(e) => handleDateKeyDown(e, "endYear", null, "page8_endMonth_display")} // No next field in this date sequence
           maxLength="2"
           placeholder="__"
-          className={`${styles.inlineInputDate} ${errors.endYear ? styles.errorInput : ''}`}
+          className={`${styles.inlineInputDate} ${errors.endYear ? styles.errorInput : ''} ${
+            (isPresetActive && selectedPreset?.end_date) ? styles.readOnlyField : ""
+          }`}
           ref={(el) => {
-            if (el) inputRefs.current["page8_endYear"] = el;
-            else delete inputRefs.current["page8_endYear"];
+            if (el) inputRefs.current["page8_endYear_display"] = el;
+            else delete inputRefs.current["page8_endYear_display"];
           }}
-          required
           data-error-field="endYear"
           aria-label="Рік закінчення (строк дії, останні дві цифри)"
-          aria-invalid={!!errors.endYear}
-          aria-describedby={errors.endYear ? "endYear-error" : undefined}
+          readOnly={isPresetActive && !!selectedPreset?.end_date}
+          disabled={dataLoading.preset}
         />{" "}
         р.
       </p>
-      {errors.endDay && <p id="endDay-error" className={styles.error}>{errors.endDay}</p>}
-      {errors.endMonth && <p id="endMonth-error" className={styles.error}>{errors.endMonth}</p>}
-      {errors.endYear && <p id="endYear-error" className={styles.error}>{errors.endYear}</p>}
+      {/* Errors for endDay, endMonth, endYear are shown on Page1Content, no need to repeat here
+          unless you want specific messages for this context */}
       <p className={styles.justifiedText}>
         7.2. Закінчення строку цього Договору не звільняє Сторони від відповідальності за його порушення, яке мало місце під час дії цього Договору.
       </p>

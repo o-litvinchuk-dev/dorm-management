@@ -5,15 +5,17 @@
   min-height: 100vh;
   background: var(--background-color);
   font-family: var(--font-family-sans);
+  overflow-x: hidden;
 }
 .mainContent {
   flex: 1;
   transition: margin-left var(--transition-slow);
   margin-left: calc(var(--sidebar-width-expanded) + var(--main-content-padding));
-  padding: calc(var(--navbar-height) + var(--main-content-padding)) var(--main-content-padding) var(--main-content-padding);
+  padding: 0 var(--main-content-padding) var(--main-content-padding);
+  padding-top: calc(var(--navbar-height) + var(--main-content-padding));
   box-sizing: border-box;
   min-height: 100vh;
-  overflow-y: auto;
+  overflow: hidden;
 }
 .mainContent.sidebarCollapsed {
   margin-left: calc(var(--sidebar-width-collapsed) + var(--main-content-padding));
@@ -28,127 +30,220 @@
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  /* Змінено для адаптації висоти */
-  min-height: calc(100vh - var(--navbar-height) - (var(--page-container-margin-top) * 2) - var(--main-content-padding));
-  overflow: hidden; /* Дозволяє внутрішній скрол, якщо таблиця завелика */
+  height: calc(100vh - var(--navbar-height) - (var(--page-container-margin-top) * 2) - var(--main-content-padding));
+  overflow: hidden;
 }
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
   padding-bottom: 16px;
-  border-bottom: 1px solid var(--border-color-light);
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 .pageTitle {
-  font-size: 1.75rem; /* Розмір може бути в var(--font-size-xl) або подібному */
+  font-size: 1.75rem;
   font-weight: 600;
   color: var(--text-primary);
   margin: 0;
-  display: flex; 
-  align-items: center; 
-  gap: 0.625rem; /* 10px */
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+.titleIcon {
+  width: 1.625rem;
+  height: 1.625rem;
+  color: var(--primary-color);
 }
 
-.titleIcon { /* Стиль для іконки в заголовку */
-  width: 1.75rem; /* Або 28px, синхронізуємо з розміром шрифту */
-  height: 1.75rem;
-  color: var(--primary-color); 
-}
-
-.addButton {
+.actionButtonMain {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.625rem 1rem; /* 10px 16px */
+  padding: 0.625rem 1.25rem;
   background-color: var(--primary-color);
   color: var(--text-on-primary);
   font-weight: 500;
-  font-size: 0.875rem; /* 14px */
+  font-size: 0.9rem;
   border: none;
   border-radius: var(--border-radius-md);
   cursor: pointer;
   transition: background-color var(--transition-base);
 }
-.addButton:hover {
+.actionButtonMain:hover:not(:disabled) {
   background-color: var(--primary-color-dark);
 }
-.addButton .buttonIcon { /* Іконки всередині кнопок */
-  width: 1.125rem; /* 18px */
+.actionButtonMain:disabled {
+  background-color: var(--text-placeholder);
+  cursor: not-allowed;
+}
+.buttonIcon { /* Для кнопок типу "Додати" */
+  width: 1.125rem;
   height: 1.125rem;
 }
-.tableContainer {
-  overflow-x: auto; /* Дозволяє горизонтальний скрол для таблиці */
-  flex-grow: 1; /* Щоб контейнер таблиці займав доступний простір */
-  border: 1px solid var(--border-color);
+.buttonIconSm { /* Для менших іконок, наприклад, в кнопці "Скинути фільтри" */
+    width: 1rem;
+    height: 1rem;
+}
+
+
+.contentWrapper {
+  flex-grow: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.filtersPanel { /* Нова панель фільтрів */
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* Адаптивні колонки */
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background-color: var(--background-light);
   border-radius: var(--border-radius-lg);
-  margin-top: 1rem; /* 16px */
+  border: 1px solid var(--border-color-light);
+}
+.inputField, .selectField { /* Загальний стиль для інпутів/селектів у фільтрах */
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid var(--border-color-dark, #d1d5db);
+  border-radius: var(--border-radius-md, 0.375rem);
+  box-sizing: border-box;
+  font-size: 0.875rem;
+  font-family: var(--font-family-sans, 'Roboto', sans-serif);
+  transition: border-color var(--transition-base);
+  background-color: var(--card-background-color, white);
+}
+.inputField:focus, .selectField:focus {
+  outline: none;
+  border-color: var(--primary-color, #3b82f6);
+}
+.inputField::placeholder {
+  color: var(--text-placeholder, #9ca3af);
+}
+.resetFilterButton { /* Стиль для кнопки скидання фільтрів */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  background-color: var(--text-muted);
+  color: var(--text-on-primary);
+  font-weight: 500;
+  font-size: 0.875rem;
+  border: none;
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  transition: background-color var(--transition-base);
+  /* Можна додати grid-column: 1 / -1; якщо кнопка має бути на всю ширину */
+}
+.resetFilterButton:hover {
+  background-color: var(--text-secondary);
+}
+
+
+.tableContainer {
+  overflow-x: auto;
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: var(--border-radius-lg, 8px);
+  background-color: var(--card-background-color, white);
+  max-width: 100%;
+  box-sizing: border-box;
+  flex-grow: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 .table {
   width: 100%;
+  min-width: 1000px; /* Збільшено для нових колонок */
   border-collapse: collapse;
-  font-size: 0.875rem; /* 14px */
-  min-width: 900px; /* Мінімальна ширина, щоб забезпечити відображення всіх колонок */
+  font-size: 0.875rem;
 }
 .table th,
 .table td {
-  border-bottom: 1px solid var(--border-color-light);
-  padding: 0.75rem 1rem; /* 12px 16px */
+  border-bottom: 1px solid var(--border-color-light, #e5e7eb);
+  padding: 0.75rem 1rem;
   text-align: left;
   vertical-align: middle;
   white-space: nowrap;
 }
-.table td:first-child, .table th:first-child {
-  padding-left: 1.5rem; /* 24px */
-}
-.table td:last-child, .table th:last-child {
-  padding-right: 1.5rem; /* 24px */
-  text-align: center; /* Для колонки "Дії" */
-}
 .table th {
-  background-color: var(--background-light);
+  background-color: var(--background-light, #f9fafb);
   font-weight: 500;
-  color: var(--text-primary);
+  color: var(--text-primary, #374151);
   text-transform: uppercase;
-  font-size: 0.75rem; /* 12px */
+  font-size: 0.75rem;
   letter-spacing: 0.05em;
+  cursor: pointer;
+}
+.table th:hover {
+  color: var(--primary-color);
+}
+.sortIcon { /* Іконка сортування */
+  width: 1rem;
+  height: 1rem;
+  stroke-width: 2;
+  margin-left: 0.25rem;
+  color: var(--text-muted);
+}
+.table th:hover .sortIcon {
+    color: var(--primary-color);
+}
+.table td:first-child,
+.table th:first-child {
+  padding-left: 1.5rem;
+}
+.table td:last-child,
+.table th:last-child {
+  padding-right: 1.5rem;
+  text-align: right;
 }
 .table tbody tr:hover {
-  background-color: var(--primary-bg-light);
+  background-color: var(--primary-bg-hover-light, #f3f4f6);
 }
-
 .actionsCell {
-  text-align: center;
+  text-align: right;
   white-space: nowrap;
 }
 .actionButton {
   background: transparent;
   border: none;
-  padding: 0.375rem; /* 6px */
+  padding: 0.375rem;
   cursor: pointer;
   color: var(--text-muted);
   transition: color var(--transition-base), transform var(--transition-fast);
-  margin-left: 0.5rem; /* 8px */
+  margin-left: 0.5rem;
 }
-.actionButton:hover {
+.actionButton:hover:not(:disabled) {
   transform: translateY(-1px);
 }
 .actionButton svg {
-  width: 1.125rem; /* 18px */
+  width: 1.125rem;
   height: 1.125rem;
   stroke-width: 1.5;
 }
-.editButton:hover {
-  color: var(--success-color);
+.editButton:hover:not(:disabled) {
+  color: var(--primary-color);
 }
-.deleteButton:hover {
+.deleteButton:hover:not(:disabled) {
   color: var(--error-color);
 }
+.actionButton:disabled {
+  color: var(--border-color-dark);
+  cursor: not-allowed;
+}
 .commentHeader {
-  min-width: 200px; /* Щоб було місце для коментаря */
+  min-width: 200px;
 }
 .commentCell {
-  max-width: 250px; /* Збільшено для кращого відображення */
+  max-width: 250px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -156,141 +251,248 @@
 }
 .actionsHeader {
   min-width: 100px;
+  text-align: right;
+}
+.statusCell { /* Для колонки "Активний" */
+    text-align: center;
+}
+.statusIconActive {
+    color: var(--success-color);
+    width: 1.25rem;
+    height: 1.25rem;
+}
+.statusIconInactive {
+    color: var(--text-muted);
+    width: 1.25rem;
+    height: 1.25rem;
 }
 
 .emptyMessage,
-.loadingMessage {
+.loading {
   text-align: center;
-  padding: 2rem; /* 32px */
+  padding: 2rem;
   color: var(--text-muted);
   font-style: italic;
-  font-size: 1rem; /* 16px */
+  font-size: 1rem;
   flex-grow: 1;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
 }
+.emptyMessage svg {
+  width: 3rem;
+  height: 3rem;
+  margin-bottom: 1rem;
+  color: var(--text-muted);
+}
+.errorMessage {
+  background: var(--error-bg-light);
+  color: var(--error-color);
+  padding: 1rem;
+  border-radius: var(--border-radius-md);
+  text-align: center;
+  font-size: 1rem;
+  border: 1px solid var(--error-color);
+}
 
 /* Modal Styles */
-.modalOverlay {
+.modalOverlayGlobal {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.6);
+  background-color: rgba(31, 41, 55, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
-  padding: 20px;
+  z-index: 1050;
+  padding: 16px;
   box-sizing: border-box;
+  backdrop-filter: blur(4px);
 }
-
-.modal {
+.modalContentGlobal {
   background: var(--card-background-color);
-  padding: 24px 32px;
-  border-radius: var(--border-radius-xl);
+  padding: 0;
+  border-radius: var(--border-radius-lg);
   border: 1px solid var(--border-color);
   width: 100%;
   max-width: 600px;
-  z-index: 1001;
-  transform: scale(0.98);
-  opacity: 0;
-  animation: fadeInModal 0.3s forwards;
   max-height: 90vh;
-  overflow-y: auto;
-}
-
-@keyframes fadeInModal {
-  to {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-.modal h2 {
-  margin-top: 0;
-  margin-bottom: 24px;
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  text-align: center;
-}
-
-.form {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  animation: fadeInScaleUp 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+@keyframes fadeInScaleUp {
+  from { opacity: 0; transform: scale(0.95) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.closeButtonIconGlobal {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: transparent;
+  border: none;
+  padding: 6px;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: color var(--transition-base), background-color var(--transition-base);
+  border-radius: var(--border-radius-full);
+  z-index: 10;
+}
+.closeButtonIconGlobal:hover {
+  color: var(--text-primary);
+  background-color: var(--border-color-light);
+}
+.closeButtonIconGlobal svg {
+  width: 20px;
+  height: 20px;
+  stroke-width: 2.5;
+}
+.modalInnerContent {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+}
+.modalHeader {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border-color-light);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+.modalTitle {
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+.modalTitleIcon {
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-right: 0.625rem;
+  color: var(--primary-color);
+}
+.modalBody {
+  padding: 20px 24px;
+  overflow-y: auto;
+  flex-grow: 1;
 }
 .formGroup {
   display: flex;
   flex-direction: column;
-  gap: 0.375rem;
+  margin-bottom: 1rem;
 }
-.label {
+.formRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+.inputLabel {
   display: block;
+  margin-bottom: 6px;
   font-weight: 500;
   font-size: 0.875rem;
   color: var(--text-secondary);
 }
-
-.input,
-.select,
-.textarea {
+.inputField, .selectField, .textareaField {
   width: 100%;
-  padding: 0.625rem 0.75rem;
+  padding: 0.75rem 1rem;
   border: 1px solid var(--border-color-dark);
   border-radius: var(--border-radius-md);
-  box-sizing: border-box;
-  font-size: 0.9375rem;
+  font-size: 0.9rem;
   font-family: var(--font-family-sans);
+  background-color: var(--card-background-color);
+  color: var(--text-primary);
   transition: border-color var(--transition-base), box-shadow var(--transition-base);
+  box-sizing: border-box;
 }
-
-.input:focus,
-.select:focus,
-.textarea:focus {
+.inputField:focus, .selectField:focus, .textareaField:focus {
   outline: none;
   border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb, 59, 130, 246), 0.2);
 }
-
-.textarea {
+.inputField:disabled, .selectField:disabled, .textareaField:disabled {
+    background-color: var(--background-light);
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+.textareaField {
   min-height: 80px;
   resize: vertical;
 }
-
-.errorText {
-  color: var(--error-color);
-  font-size: 0.8125rem;
+.inputError {
+  border-color: var(--error-color) !important;
 }
-
-.buttonGroup {
+.inputError:focus {
+  box-shadow: 0 0 0 2px rgba(var(--error-color-rgb, 239, 68, 68), 0.2) !important;
+}
+.errorMessage {
+  font-size: 0.75rem;
+  color: var(--error-color-dark);
+  margin-top: 4px;
+}
+.checkboxGroup { /* Стиль для чекбокса is_active */
+  display: flex;
+  align-items: center;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+.checkboxInput {
+  width: 1rem;
+  height: 1rem;
+  margin-right: 0.5rem;
+  accent-color: var(--primary-color);
+  cursor: pointer;
+}
+.checkboxLabel {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  user-select: none;
+  margin-bottom: 0;
+}
+.modalFooter {
+  padding: 16px 24px;
+  border-top: 1px solid var(--border-color-light);
+  background-color: var(--background-light);
   display: flex;
   justify-content: flex-end;
   gap: 0.75rem;
-  margin-top: 1.5rem;
+  flex-shrink: 0;
+  margin-top: auto;
 }
-
-.submitButton,
-.cancelButton {
-  padding: 0.625rem 1.25rem;
-  border-radius: var(--border-radius-md);
-  border: none;
-  font-size: 0.9375rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color var(--transition-base), box-shadow var(--transition-base);
+.formButton {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
+  padding: 0.6rem 1.2rem;
+  border-radius: var(--border-radius-md);
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
 }
-.submitButton .buttonIcon,
-.cancelButton .buttonIcon {
-    width: 1rem;
-    height: 1rem;
+.formButton svg {
+  width: 18px;
+  height: 18px;
 }
-
+.cancelButton {
+  background-color: var(--background-light);
+  color: var(--text-secondary);
+  border-color: var(--border-color);
+}
+.cancelButton:hover:not(:disabled) {
+  background-color: var(--border-color-light);
+}
 .submitButton {
   background-color: var(--primary-color);
   color: var(--text-on-primary);
@@ -298,18 +500,20 @@
 .submitButton:hover:not(:disabled) {
   background-color: var(--primary-color-dark);
 }
-.submitButton:disabled {
+.formButton:disabled {
   background-color: var(--text-placeholder);
-  color: var(--border-color-light);
+  color: var(--text-on-dark);
   cursor: not-allowed;
+  border-color: transparent;
 }
-
-.cancelButton {
-  background-color: var(--border-color-light);
-  color: var(--text-secondary);
-}
-.cancelButton:hover {
-  background-color: var(--border-color);
+.paginationWrapper { /* Для пагінації */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-top: 20px;
+  margin-top: 16px;
+  border-top: 1px solid var(--border-color);
+  flex-shrink: 0;
 }
 
 
@@ -317,98 +521,47 @@
 @media (max-width: 1024px) {
   .mainContent {
     margin-left: calc(var(--sidebar-width-collapsed) + 12px);
-    padding: calc(var(--navbar-height) + 12px) 12px 12px;
+    padding: 0 12px 12px;
+    padding-top: calc(var(--navbar-height) + 12px);
   }
   .mainContent.sidebarCollapsed {
      margin-left: calc(var(--sidebar-width-collapsed) + 12px);
   }
   .pageContainer {
-    height: calc(100vh - var(--navbar-height) - (12px * 3) ); 
     padding: 20px;
+    margin-top: 12px;
+    height: calc(100vh - var(--navbar-height) - (12px * 2) - var(--page-container-margin-top));
   }
-  .pageTitle {
-    font-size: 1.5rem;
-  }
-   .titleIcon {
-    width: 1.5rem; 
-    height: 1.5rem;
-  }
+  .pageTitle { font-size: 1.5rem; }
+  .titleIcon { width: 1.5rem; height: 1.5rem; }
+  .filtersPanel { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
 }
 
 @media (max-width: 768px) {
   .mainContent {
-    margin-left: 0 !important; 
-    padding: calc(var(--navbar-height) + 10px) 10px 10px;
+    margin-left: 0 !important;
+    padding: 0 10px 10px;
+    padding-top: calc(var(--navbar-height) + 10px);
   }
   .pageContainer {
     padding: 16px;
-    height: calc(100vh - var(--navbar-height) - (10px * 3) );
+    margin-top: 10px;
+    height: calc(100vh - var(--navbar-height) - (10px * 2) - var(--page-container-margin-top));
   }
   .header {
     flex-direction: column;
-    align-items: stretch; 
+    align-items: stretch;
     gap: 12px;
   }
-  .pageTitle {
-    font-size: 1.375rem;
-    text-align: center; 
-  }
-  .titleIcon {
-    width: 1.375rem; 
-    height: 1.375rem;
-  }
-  .addButton {
-    width: 100%; 
-    justify-content: center;
-    padding: 0.75rem;
-  }
-  .table th,
-  .table td {
-    padding: 0.625rem 0.75rem;
-    font-size: 0.8125rem;
-    white-space: normal; 
-  }
-   .table td:first-child, .table th:first-child {
-    padding-left: 0.75rem;
-  }
-  .table td:last-child, .table th:last-child {
-    padding-right: 0.75rem;
-    text-align: center; 
-  }
-  .actionsCell {
-    text-align: center;
-    display: flex; 
-    gap: 0.5rem;
-    justify-content: center;
-  }
-  .actionButton {
-    margin-left: 0; 
-  }
-  .modal {
-    max-width: calc(100% - 40px); 
-    padding: 20px;
-  }
-  .modal h2 {
-    font-size: 1.25rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .pageTitle {
-    font-size: 1.25rem;
-  }
-   .titleIcon { 
-    width: 1.25rem; 
-    height: 1.25rem;
-  }
-  .input,
-  .select,
-  .textarea {
-    font-size: 0.875rem;
-  }
-  .submitButton,
-  .cancelButton {
-    font-size: 0.875rem;
-    padding: 0.5rem 1rem;
-  }
+  .pageTitle { font-size: 1.375rem; text-align: center; }
+  .actionButtonMain { width: 100%; justify-content: center; }
+  .filtersPanel { grid-template-columns: 1fr; }
+  .resetFilterButton { grid-column: auto; }
+  .table th, .table td { font-size: 0.8125rem; white-space: normal; }
+  .modalContentGlobal { max-width: 95%; }
+  .modalHeader, .modalBody, .modalFooter { padding: 12px 16px; }
+  .modalTitle { font-size: 1.2rem; }
+  .formRow { grid-template-columns: 1fr; }
+  .modalFooter { flex-direction: column-reverse; }
+  .formButton { width: 100%; }
 }

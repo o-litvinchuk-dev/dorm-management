@@ -1,0 +1,225 @@
+/* Variables are now expected to be in a global scope (e.g. :root in index.css or variables.css) */
+
+.layout {
+  display: flex;
+  min-height: 100vh;
+  background: var(--background-color);
+  font-family: var(--font-family-sans);
+  overflow-x: hidden;
+}
+.mainContent {
+  flex: 1;
+  transition: margin-left var(--transition-slow);
+  margin-left: calc(var(--sidebar-width-expanded) + var(--main-content-padding));
+  padding: 0 var(--main-content-padding) var(--main-content-padding);
+  padding-top: calc(var(--navbar-height) + var(--main-content-padding));
+  box-sizing: border-box;
+  min-height: 100vh;
+  overflow: hidden;
+}
+.mainContent.sidebarCollapsed {
+  margin-left: calc(var(--sidebar-width-collapsed) + var(--main-content-padding));
+}
+.pageContainer {
+  background: var(--card-background-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-xl);
+  padding: 24px;
+  margin-top: var(--page-container-margin-top);
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - var(--navbar-height) - var(--page-container-margin-top) - var(--main-content-padding)); /* Віднімаємо відступ знизу теж */
+  overflow: hidden; /* Важливо для правильної роботи flex-grow та overflow-y */
+}
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0; /* Щоб хедер не стискався */
+}
+.title {
+  font-size: 1.75rem; /* Як в AdminDashboard */
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+.titleIcon {
+  width: 1.625rem;
+  height: 1.625rem;
+  margin-right: 0.625rem;
+  color: var(--primary-color);
+}
+.contentWrapper {
+  flex-grow: 1; /* Дозволяє контенту займати доступний простір */
+  overflow-y: auto; /* Вмикає скрол тільки для контенту */
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0; /* Для правильної роботи overflow-y в flex-контейнері */
+  /* Додано для кращого вигляду скролбару, якщо він є */
+  padding-right: 8px;
+  margin-right: -8px; /* Компенсація для padding-right */
+}
+.contentWrapper::-webkit-scrollbar {
+  width: 8px;
+}
+.contentWrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+.contentWrapper::-webkit-scrollbar-thumb {
+  background-color: var(--border-color-strong, #cccccc);
+  border-radius: var(--border-radius-full);
+  border: 2px solid var(--card-background-color); /* Відступ від краю */
+}
+.contentWrapper::-webkit-scrollbar-thumb:hover {
+  background-color: var(--text-muted, #aaaaaa);
+}
+
+.loading, .emptyMessage, .loadingSpinner /* .loadingSpinner - це ваш клас, тому додав сюди */ {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-secondary);
+  font-style: italic;
+  font-size: 1rem;
+  flex-grow: 1; /* Щоб займало весь доступний простір, якщо це єдиний елемент */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.errorMessage { /* Стиль для помилки */
+  background: var(--error-bg-light);
+  color: var(--error-color);
+  padding: 1rem;
+  border-radius: var(--border-radius-md);
+  margin: 0 0 1.5rem 0;
+  text-align: center;
+  font-size: 1rem;
+  border: 1px solid var(--error-color);
+}
+
+/* Секція заголовка для модулів (якщо потрібна) */
+.sectionTitle {
+  font-size: 1.375rem; /* 22px */
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-top: var(--spacing-lg, 24px);
+  margin-bottom: var(--spacing-lg, 24px);
+  padding-bottom: var(--spacing-sm, 8px);
+  border-bottom: 1px solid var(--border-color-light, var(--border-color));
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); /* Адаптивні колонки */
+  gap: var(--spacing-lg, 24px); /* Відстань між картками */
+  padding-bottom: var(--spacing-lg, 24px); /* Відступ в кінці контенту, щоб скрол не прилипав */
+}
+.statCard {
+  background-color: var(--card-background-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-lg, 24px);
+  box-shadow: var(--shadow-sm);
+  display: flex; /* Змінено для відповідності AdminDashboard */
+  flex-direction: column; /* Контент картки в стовпчик */
+  cursor: pointer;
+  transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base);
+  min-height: 190px; /* Мінімальна висота картки */
+}
+.statCard:hover, .statCard:focus-visible {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--primary-color);
+  outline: 2px solid transparent; /* Для видимості фокусу */
+  outline-offset: 2px;
+}
+.cardIconWrapper {
+  background-color: var(--primary-bg-light);
+  border-radius: var(--border-radius-md);
+  padding: 0.85rem; /* 14px */
+  margin-bottom: var(--spacing-md, 16px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary-color);
+}
+.cardIcon {
+  width: 1.75rem; /* 28px */
+  height: 1.75rem;
+}
+.cardContent {
+  flex-grow: 1; /* Дозволяє контенту картки займати вільний простір */
+  display: flex;
+  flex-direction: column;
+}
+.cardTitle {
+  font-size: 1.25rem; /* 20px */
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 var(--spacing-xs, 4px) 0;
+  line-height: 1.3;
+}
+.cardCount { /* Змінено для відповідності AdminDashboard */
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--primary-color); /* Акцентний колір */
+  margin: 0 0 var(--spacing-sm, 8px) 0;
+}
+.cardDescription {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-top: auto; /* Притискає опис до низу, якщо картка вища */
+}
+
+@media (max-width: 1024px) {
+  .mainContent {
+    margin-left: calc(var(--sidebar-width-collapsed) + 12px);
+    padding: 0 12px 12px;
+    padding-top: calc(var(--navbar-height) + 12px);
+  }
+  .mainContent.sidebarCollapsed {
+     margin-left: calc(var(--sidebar-width-collapsed) + 12px);
+  }
+  .pageContainer {
+    padding: 20px;
+    margin-top: 12px;
+    height: calc(100vh - var(--navbar-height) - 12px - 12px); /* navbar + top/bottom main content padding + page container margin */
+  }
+  .title { font-size: 1.6rem; }
+  .titleIcon { width: 1.5rem; height: 1.5rem; }
+  .statsGrid { gap: var(--spacing-md, 16px); }
+  .statCard { padding: var(--spacing-md, 16px); min-height: 170px; }
+  .cardTitle { font-size: 1.125rem; }
+}
+
+@media (max-width: 768px) {
+  .mainContent {
+    margin-left: 0 !important; /* Важливо для мобільних, коли сайдбар прихований */
+    padding: 0 10px 10px;
+    padding-top: calc(var(--navbar-height) + 10px);
+  }
+  .pageContainer {
+    padding: 16px;
+    margin-top: 10px;
+    height: calc(100vh - var(--navbar-height) - 10px - 10px); /* navbar + top/bottom main content padding + page container margin */
+    border-radius: var(--border-radius-lg); /* Можливо, менший радіус для мобільних */
+  }
+  .header { margin-bottom: 16px; padding-bottom: 12px; }
+  .title { font-size: 1.375rem; }
+  .titleIcon { width: 1.375rem; height: 1.375rem; margin-right: 0.5rem; }
+  .contentWrapper { padding-right: 4px; margin-right: -4px; }
+  .sectionTitle { font-size: 1.25rem; margin-top: var(--spacing-lg, 24px); margin-bottom: var(--spacing-md, 16px); }
+  .statsGrid { grid-template-columns: 1fr; gap: var(--spacing-md, 16px); } /* Одна картка на рядок */
+  .statCard { min-height: auto; } /* Автоматична висота для карток на мобільних */
+  .cardTitle { font-size: 1.05rem; }
+  .cardCount { font-size: 0.95rem; }
+  .cardDescription { font-size: 0.85rem; }
+}

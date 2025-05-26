@@ -4,6 +4,7 @@ import Settlement from "../models/Settlement.js";
 import AccommodationApplication from "../models/AccommodationApplication.js";
 import Joi from "joi";
 import User from "../models/User.js"; // Імпортуємо модель User
+import { SettlementContract } from "../models/SettlementContract.js"; // Added
 
 export const getDashboardData = async (req, res) => {
     try {
@@ -388,6 +389,52 @@ export const cancelAccommodationApplication = async (req, res) => {
         res.status(500).json({ error: "Помилка сервера", details: error.message });
     }
 };
+export const getMySettlementAgreements = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const schema = Joi.object({
+      page: Joi.number().integer().min(1).default(1),
+      limit: Joi.number().integer().min(1).max(100).default(10), // Keep limit reasonable
+      status: Joi.string().valid("pending_review", "approved", "rejected", "archived", "").allow("").default(""),
+      sortBy: Joi.string().valid("id", "contract_date", "status", "created_at").default("created_at"),
+      sortOrder: Joi.string().valid("asc", "desc").default("desc"),
+    });
+
+    const { error, value: validatedQueryFilters } = schema.validate(req.query);
+    if (error) {
+      console.error("[SecureController] Joi validation error for getMySettlementAgreements:", error.details);
+      return res.status(400).json({ error: "Невірні параметри запиту", details: error.details });
+    }
+
+    const result = await SettlementContract.findAllForUser(userId, validatedQueryFilters);
+    res.json(result);
+  } catch (error) {
+    console.error("[SecureController] Помилка отримання власних договорів на поселення:", error);
+    res.status(500).json({ error: "Помилка сервера", details: error.message });
+  }
+};
+
+export const getSettlementAgreementByIdForUser = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { id } = req.params;
+
+    const schema = Joi.number().integer().positive().required();
+    const { error: idError } = schema.validate(id);
+    if (idError) {
+        return res.status(400).json({ error: "Невірний ID договору", details: idError.details });
+    }
+
+    const contract = await SettlementContract.findByIdForUser(id, userId);
+    if (!contract) {
+        return res.status(404).json({ error: "Договір не знайдено або у вас немає доступу до нього" });
+    }
+    res.json(contract);
+  } catch (error) {
+    console.error("[SecureController] Помилка отримання договору за ID для користувача:", error);
+    res.status(500).json({ error: "Помилка сервера", details: error.message });
+  }
+};
 export default {
     getDashboardData,
     getApplications,
@@ -398,4 +445,6 @@ export default {
     createAccommodationApplication,
     getAccommodationApplicationById,
     cancelAccommodationApplication,
+    getMySettlementAgreements,       // Added
+    getSettlementAgreementByIdForUser, // Added
 };

@@ -13,14 +13,16 @@ import {
   ChevronRightIcon,
   ChevronLeftIcon,
   ClipboardDocumentListIcon,
-  ShieldCheckIcon,
+  ShieldCheckIcon, // Keep for superadmin management link
   AcademicCapIcon,
-  WrenchScrewdriverIcon, // Icon for Application Presets
+  WrenchScrewdriverIcon,
   BuildingStorefrontIcon,
   BookmarkSquareIcon,
   HomeModernIcon,
   MagnifyingGlassCircleIcon,
   BuildingLibraryIcon,
+  ShieldCheckIcon as AdminPanelIcon,
+  AcademicCapIcon as DeanPanelIcon,
 } from "@heroicons/react/24/outline";
 import {
   ChartBarIcon as ChartBarSolidIcon,
@@ -31,14 +33,16 @@ import {
   QuestionMarkCircleIcon as QuestionMarkCircleSolidIcon,
   ArrowLeftOnRectangleIcon as ArrowLeftOnRectangleSolidIcon,
   ClipboardDocumentListIcon as ClipboardDocumentListSolidIcon,
-  ShieldCheckIcon as ShieldCheckSolidIcon,
+  ShieldCheckIcon as ShieldCheckSolidIcon, // Keep for superadmin management link
   AcademicCapIcon as AcademicCapSolidIcon,
-  WrenchScrewdriverIcon as WrenchScrewdriverSolidIcon, // Icon for Application Presets
+  WrenchScrewdriverIcon as WrenchScrewdriverSolidIcon,
   BuildingStorefrontIcon as BuildingStorefrontSolidIcon,
   BookmarkSquareIcon as BookmarkSquareSolidIcon,
   HomeModernIcon as HomeModernSolidIcon,
   MagnifyingGlassCircleIcon as MagnifyingGlassCircleSolidIcon,
   BuildingLibraryIcon as BuildingLibrarySolidIcon,
+  ShieldCheckIcon as AdminPanelSolidIcon,
+  AcademicCapIcon as DeanPanelSolidIcon,
 } from "@heroicons/react/24/solid";
 import api from "../../../utils/api";
 
@@ -60,42 +64,44 @@ const Sidebar = ({ onToggle }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const isAdmin = // This check is for the whole admin section, individual items have role checks
-    user &&
-    [
-      "admin",
-      "superadmin",
-      "dorm_manager",
-      "student_council_head",
-      "student_council_member",
-      "faculty_dean_office",
-    ].includes(user.role);
+  const isAdminRole = user && [ // Renamed for clarity
+    "admin",
+    "superadmin",
+    "dorm_manager",
+    "student_council_head",
+    "student_council_member",
+    "faculty_dean_office",
+  ].includes(user.role);
 
   useEffect(() => {
     const path = location.pathname.slice(1).split("/")[0] || "dashboard";
     const currentPath = location.pathname.slice(1);
 
-    // Update adminSubPaths to include the new route if it's namespaced under admin
-    // For "admin/application-presets", it's already included.
     const adminSubPaths = [
       "admin/management",
       "admin/accommodation-applications",
       "dean/groups",
-      "adminApplications", // Consider renaming or removing if it's old
-      "admin/application-presets", // This is the route for Application Presets
+      "adminApplications", // Keep if it's a distinct page not covered by dashboards
+      "admin/application-presets",
       "admin/room-reservations",
       "dorm-manager/rooms",
+      "dorm-manager/dashboard",
+      "admin/settlement-agreements",
+      "dean/dashboard",
+      "admin/dashboard",
     ];
 
     let matchedTab = path;
 
-    if (adminSubPaths.some((subPath) => currentPath.startsWith(subPath))) {
-      // For nested admin routes, use the first two segments for active state
-      // e.g., "admin/management", "admin/application-presets"
+    // Prioritize dashboard paths for active tab highlighting
+    if (currentPath === "dorm-manager/dashboard") matchedTab = "dorm-manager/dashboard";
+    else if (currentPath === "dean/dashboard") matchedTab = "dean/dashboard";
+    else if (currentPath === "admin/dashboard") matchedTab = "admin/dashboard";
+    else if (adminSubPaths.some((subPath) => currentPath.startsWith(subPath))) {
       matchedTab = currentPath.split("/").slice(0, 2).join("/");
       if (
         !adminSubPaths.includes(matchedTab) &&
-        currentPath.startsWith("adminApplications") // Legacy or specific case
+        currentPath.startsWith("adminApplications")
       ) {
         matchedTab = "adminApplications";
       }
@@ -103,14 +109,13 @@ const Sidebar = ({ onToggle }) => {
       matchedTab = "services/rooms/search";
     } else if (currentPath.startsWith("services/")) {
       matchedTab = "services";
-    } else if (currentPath === "my-reservations"){
-        matchedTab = "my-reservations";
+    } else if (currentPath === "my-reservations") {
+      matchedTab = "my-reservations";
     }
-    // Add other specific path checks if needed
 
     const allTabs = [
       "dashboard",
-      "applications", // Student's own applications
+      "applications", // This seems like a general "My Applications" for students
       "my-accommodation-applications",
       "dormitories",
       "services",
@@ -126,12 +131,11 @@ const Sidebar = ({ onToggle }) => {
     if (allTabs.includes(matchedTab)) {
       setActiveTab(matchedTab);
     } else {
-      // Fallback to parent path if full matchedTab is not in allTabs
       const parentPath = currentPath.split("/")[0];
       if (allTabs.includes(parentPath)) {
         setActiveTab(parentPath);
       } else {
-        setActiveTab(path); // Default to the first segment
+        setActiveTab(path);
       }
     }
   }, [location.pathname]);
@@ -227,15 +231,23 @@ const Sidebar = ({ onToggle }) => {
       settings: isActive ? Cog6ToothSolidIcon : Cog6ToothIcon,
       help: isActive ? QuestionMarkCircleSolidIcon : QuestionMarkCircleIcon,
       logout: isActive ? ArrowLeftOnRectangleSolidIcon : ArrowLeftOnRectangleIcon,
-      adminApplications: isActive ? DocumentTextSolidIcon : DocumentTextIcon, // Consider specific icon
-      "admin/management": isActive ? ShieldCheckSolidIcon : ShieldCheckIcon,
+      
+      // Admin/Role specific panel icons
+      "admin/dashboard": isActive ? AdminPanelSolidIcon : AdminPanelIcon,
+      "dorm-manager/dashboard": isActive ? BuildingStorefrontSolidIcon : BuildingStorefrontIcon,
+      "dean/dashboard": isActive ? DeanPanelSolidIcon : DeanPanelIcon,
+
+      // Icons for individual admin functions (might be hidden if dashboard exists)
+      adminApplications: isActive ? DocumentTextSolidIcon : DocumentTextIcon, // If it's a general "view all" page for admins
+      "admin/management": isActive ? ShieldCheckSolidIcon : ShieldCheckIcon, // Superadmin only usually
       "admin/accommodation-applications": isActive ? ClipboardDocumentListSolidIcon : ClipboardDocumentListIcon,
       "dean/groups": isActive ? AcademicCapSolidIcon : AcademicCapIcon,
       "admin/application-presets": isActive ? WrenchScrewdriverSolidIcon : WrenchScrewdriverIcon,
       "admin/room-reservations": isActive ? BuildingStorefrontSolidIcon : BuildingStorefrontIcon,
       "dorm-manager/rooms": isActive ? BuildingLibrarySolidIcon : BuildingLibraryIcon,
+      "admin/settlement-agreements": isActive ? WrenchScrewdriverSolidIcon : WrenchScrewdriverIcon,
     };
-    const IconComponent = icons[iconName] || QuestionMarkCircleIcon; // Default icon
+    const IconComponent = icons[iconName] || QuestionMarkCircleIcon;
     return <IconComponent className={styles.menuIcon} />;
   }, []);
 
@@ -262,6 +274,22 @@ const Sidebar = ({ onToggle }) => {
     </div>
   );
 
+  // Define which roles have a dedicated dashboard that groups functionalities
+  const hasDedicatedDashboard = (role) => {
+    return ['dorm_manager', 'faculty_dean_office', 'admin', 'superadmin'].includes(role);
+  };
+
+  // Define which admin links are grouped under a dedicated dashboard
+  // These will be hidden if the user has a dedicated dashboard
+  const groupedAdminFunctions = [
+    "admin/accommodation-applications",
+    "admin/room-reservations",
+    "admin/settlement-agreements",
+    "dean/groups", // Dean's dashboard covers this for deans
+    "admin/application-presets", // Covered by admin, dean, dorm_manager dashboards
+    "dorm-manager/rooms", // Covered by dorm_manager dashboard
+  ];
+
   const menuItems = {
     main: [
       { name: "dashboard", label: "Головна" },
@@ -272,18 +300,23 @@ const Sidebar = ({ onToggle }) => {
       { name: "services/rooms/search", label: "Пошук кімнат" },
       { name: "settlement", label: "Розклад поселення" },
     ],
-    admin: [
-      // { name: "adminApplications", label: "Адмін-заявки (старі)", roles: ["admin", "superadmin", "faculty_dean_office", "dorm_manager", "student_council_head", "student_council_member"] },
-      { name: "admin/accommodation-applications", label: "Заявки на поселення", roles: ["admin", "superadmin", "faculty_dean_office", "dorm_manager", "student_council_head", "student_council_member"] },
-      { name: "admin/room-reservations", label: "Бронювання Кімнат", roles: ["admin", "superadmin", "dorm_manager"] },
-      { name: "admin/management", label: "Керування системою", roles: ["superadmin"] },
-      { name: "dean/groups", label: "Управління групами", roles: ["faculty_dean_office", "admin", "superadmin"] },
-      { 
-        name: "admin/application-presets", 
-        label: "Налаштування Заяв", 
-        roles: ["admin", "superadmin", "faculty_dean_office", "dorm_manager"] // Додано dorm_manager
-      },
-      { name: "dorm-manager/rooms", label: "Керування кімнатами", roles: ["dorm_manager", "admin", "superadmin"] },
+    // This section will now primarily show the "Panel" links
+    // Individual links will be filtered based on whether a panel exists for the role
+    adminPanels: [
+        { name: "admin/dashboard", label: "Адмін. Панель", roles: ["admin", "superadmin"] },
+        { name: "dorm-manager/dashboard", label: "Панель коменданта", roles: ["dorm_manager"] },
+        { name: "dean/dashboard", label: "Панель Деканату", roles: ["faculty_dean_office"] },
+    ],
+    // These are specific admin functions that might not be on a panel OR for roles without a panel
+    // or for superadmin to see everything.
+    specificAdminFunctions: [
+      { name: "admin/accommodation-applications", label: "Усі Заявки", roles: ["superadmin", "admin", "student_council_head", "student_council_member"] }, // student_council might not have a panel
+      { name: "admin/room-reservations", label: "Усі Бронювання", roles: ["superadmin", "admin"] },
+      { name: "admin/settlement-agreements", label: "Усі Договори", roles: ["superadmin", "admin"] },
+      { name: "admin/management", label: "Керування Системою", roles: ["superadmin"] },
+      { name: "dean/groups", label: "Управління групами (загальне)", roles: ["superadmin", "admin"] }, // Superadmin/admin access to all groups
+      { name: "admin/application-presets", label: "Налаштування Заяв (загальне)", roles: ["superadmin", "admin"]},
+      { name: "dorm-manager/rooms", label: "Усі Кімнати (Адмін)", roles: ["superadmin", "admin"] }, // Superadmin/admin access to all rooms
     ],
     settings: [{ name: "settings", label: "Налаштування" }],
     bottom: [
@@ -301,7 +334,7 @@ const Sidebar = ({ onToggle }) => {
     >
       <div className={styles.logoContainer}>
         <img
-          src="/logo2.svg" // Переконайтесь, що цей шлях правильний
+          src="/logo2.svg"
           alt="Dorm Life Logo"
           className={styles.logoImage}
         />
@@ -338,11 +371,38 @@ const Sidebar = ({ onToggle }) => {
               )}
             </div>
 
-            {isAdmin && ( // Перевіряє, чи користувач має будь-яку з адмінських ролей
+            {isAdminRole && (
               <div className={styles.sidebarSection}>
                 {renderSectionHeader("Управління")}
-                {menuItems.admin
-                  .filter((item) => user && item.roles.includes(user.role)) // Фільтруємо конкретні пункти меню
+                {/* Render Panel Links First */}
+                {menuItems.adminPanels
+                  .filter((item) => user && item.roles.includes(user.role))
+                  .map((item) => renderMenuItem(item.name, item.label))}
+
+                {/* Render specific admin functions only if the user is superadmin OR if the user's role does NOT have a dedicated dashboard that would cover this function */}
+                {menuItems.specificAdminFunctions
+                  .filter((item) => {
+                    if (!user || !item.roles.includes(user.role)) {
+                      return false; // User doesn't have this role at all
+                    }
+                    // Superadmin sees everything
+                    if (user.role === "superadmin") {
+                      return true;
+                    }
+                    // If user is NOT superadmin, and their role has a dedicated dashboard,
+                    // and this function is typically grouped under such a dashboard, then HIDE it.
+                    if (hasDedicatedDashboard(user.role) && groupedAdminFunctions.includes(item.name)) {
+                       // Special case: student_council_head/member might need direct access to applications
+                       // if their "panel" is just the applications list itself.
+                       // If they don't have a specific *dashboard* page, but a direct link, we show it.
+                       if ((user.role === "student_council_head" || user.role === "student_council_member") && item.name === "admin/accommodation-applications") {
+                           return true;
+                       }
+                       return false;
+                    }
+                    // Otherwise, show it (e.g., for admin role if it doesn't have its own dashboard page yet, or functions not on panels)
+                    return true;
+                  })
                   .map((item) => renderMenuItem(item.name, item.label))}
               </div>
             )}
@@ -369,7 +429,7 @@ const Sidebar = ({ onToggle }) => {
             top: `${tooltipData.top}px`,
             left: `${tooltipData.left}px`,
           }}
-          onClick={(e) => e.stopPropagation()} // Запобігає закриттю тултіпа при кліку на нього
+          onClick={(e) => e.stopPropagation()}
         >
           <div className={styles.tooltipArrow}></div>
           <div className={styles.tooltipContent}>{tooltipData.content}</div>

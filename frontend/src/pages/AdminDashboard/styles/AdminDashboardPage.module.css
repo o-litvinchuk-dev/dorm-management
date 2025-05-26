@@ -1,0 +1,279 @@
+/* Variables are now expected to be in a global scope (e.g. :root in index.css or variables.css) */
+
+.layout {
+  display: flex;
+  min-height: 100vh;
+  background: var(--background-color);
+  font-family: var(--font-family-sans);
+  overflow-x: hidden;
+}
+.mainContent {
+  flex: 1;
+  transition: margin-left var(--transition-slow);
+  margin-left: calc(var(--sidebar-width-expanded) + var(--main-content-padding));
+  padding: 0 var(--main-content-padding) var(--main-content-padding);
+  padding-top: calc(var(--navbar-height) + var(--main-content-padding));
+  box-sizing: border-box;
+  min-height: 100vh;
+  overflow: hidden; 
+}
+.mainContent.sidebarCollapsed {
+  margin-left: calc(var(--sidebar-width-collapsed) + var(--main-content-padding));
+}
+.pageContainer {
+  background: var(--card-background-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-xl);
+  padding: 24px;
+  margin-top: var(--page-container-margin-top);
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - var(--navbar-height) - var(--page-container-margin-top) - var(--main-content-padding));
+  overflow: hidden;
+}
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+.title {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+.titleIcon {
+  width: 1.625rem; 
+  height: 1.625rem;
+  margin-right: 0.625rem;
+  color: var(--primary-color);
+}
+.contentWrapper {
+  flex-grow: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  /* Додано для кращого вигляду скролбару, якщо він є */
+  padding-right: 8px; 
+  margin-right: -8px; /* Компенсація для padding-right */
+}
+/* Кастомний скролбар для contentWrapper */
+.contentWrapper::-webkit-scrollbar {
+  width: 8px;
+}
+.contentWrapper::-webkit-scrollbar-track {
+  background: transparent; 
+}
+.contentWrapper::-webkit-scrollbar-thumb {
+  background-color: var(--border-color-strong, #cccccc); 
+  border-radius: var(--border-radius-full);
+  border: 2px solid var(--card-background-color); /* Відступ від краю */
+}
+.contentWrapper::-webkit-scrollbar-thumb:hover {
+  background-color: var(--text-muted, #aaaaaa);
+}
+
+
+.loading, .emptyMessage {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-secondary);
+  font-style: italic;
+  font-size: 1rem;
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.errorMessage {
+  background: var(--error-bg-light);
+  color: var(--error-color);
+  padding: 1rem;
+  border-radius: var(--border-radius-md);
+  margin: 0 0 1.5rem 0;
+  text-align: center;
+  font-size: 1rem;
+  border: 1px solid var(--error-color);
+}
+.overallStatsContainer {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--spacing-lg, 24px);
+  margin-bottom: var(--spacing-xl, 32px);
+}
+.overallStatItem {
+  background-color: var(--background-color); /* Фон, що відрізняється від pageContainer */
+  border: 1px solid var(--border-color-light, var(--border-color));
+  padding: var(--spacing-md, 16px) var(--spacing-lg, 24px);
+  border-radius: var(--border-radius-lg);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md, 16px);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--transition-base), transform var(--transition-base);
+}
+.overallStatItem:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+.overallStatIcon {
+  width: 2.25rem; /* 36px */
+  height: 2.25rem;
+  color: var(--primary-color);
+  flex-shrink: 0;
+  background-color: var(--primary-bg-light);
+  padding: var(--spacing-xs, 6px);
+  border-radius: var(--border-radius-md);
+}
+.overallStatValue {
+  font-size: 2rem; /* Збільшено */
+  font-weight: 700;
+  color: var(--text-primary);
+  display: block;
+  line-height: 1.2;
+}
+.overallStatLabel {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-top: var(--spacing-xxs, 2px);
+}
+.sectionTitle {
+  font-size: 1.375rem; /* 22px */
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-top: var(--spacing-lg, 24px); /* Зменшено, бо overallStatsContainer вже має margin-bottom */
+  margin-bottom: var(--spacing-lg, 24px);
+  padding-bottom: var(--spacing-sm, 8px);
+  border-bottom: 1px solid var(--border-color-light, var(--border-color));
+}
+.statsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+    gap: var(--spacing-lg, 24px);
+    padding-bottom: var(--spacing-lg, 24px); /* Відступ в кінці контенту */
+}
+.statCard {
+    background-color: var(--card-background-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-lg, 24px);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base);
+    min-height: 190px; 
+}
+.statCard.fullWidthCard {
+    grid-column: 1 / -1;
+}
+.statCard:hover, .statCard:focus-visible {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--primary-color);
+    outline: 2px solid transparent; /* For focus visibility */
+    outline-offset: 2px;
+}
+.cardIconWrapper {
+    background-color: var(--primary-bg-light);
+    border-radius: var(--border-radius-md);
+    padding: 0.85rem; /* 14px */
+    margin-bottom: var(--spacing-md, 16px);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary-color);
+}
+.cardIcon {
+    width: 1.75rem; /* 28px */
+    height: 1.75rem;
+}
+.cardContent {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+.cardTitle {
+    font-size: 1.25rem; /* 20px */
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 var(--spacing-xs, 4px) 0;
+    line-height: 1.3;
+}
+.cardCount {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--primary-color); /* Зроблено акцентним */
+    margin: 0 0 var(--spacing-sm, 8px) 0;
+}
+.cardDescription {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-top: auto;
+}
+
+@media (max-width: 1024px) {
+  .mainContent {
+    margin-left: calc(var(--sidebar-width-collapsed) + 12px);
+    padding: 0 12px 12px;
+    padding-top: calc(var(--navbar-height) + 12px);
+  }
+  .mainContent.sidebarCollapsed {
+     margin-left: calc(var(--sidebar-width-collapsed) + 12px);
+  }
+  .pageContainer {
+    padding: 20px;
+    margin-top: 12px;
+    height: calc(100vh - var(--navbar-height) - 12px - 12px); 
+  }
+  .title { font-size: 1.6rem; }
+  .titleIcon { width: 1.5rem; height: 1.5rem; }
+  .overallStatsContainer {
+    gap: var(--spacing-md, 16px);
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+  .overallStatValue { font-size: 1.75rem; }
+  .statsGrid { gap: var(--spacing-md, 16px); }
+  .statCard { padding: var(--spacing-md, 16px); min-height: 170px; }
+  .cardTitle { font-size: 1.125rem; }
+}
+
+@media (max-width: 768px) {
+  .mainContent {
+    margin-left: 0 !important;
+    padding: 0 10px 10px;
+    padding-top: calc(var(--navbar-height) + 10px);
+  }
+  .pageContainer {
+    padding: 16px;
+    margin-top: 10px;
+    height: calc(100vh - var(--navbar-height) - 10px - 10px);
+    border-radius: var(--border-radius-lg);
+  }
+  .header { margin-bottom: 16px; padding-bottom: 12px; }
+  .title { font-size: 1.375rem; }
+  .titleIcon { width: 1.375rem; height: 1.375rem; margin-right: 0.5rem; }
+  .contentWrapper { padding-right: 4px; margin-right: -4px; }
+  .overallStatsContainer { grid-template-columns: 1fr; gap: var(--spacing-sm, 8px); }
+  .overallStatItem { padding: var(--spacing-sm, 8px) var(--spacing-md, 16px); }
+  .overallStatIcon { width: 2rem; height: 2rem; }
+  .overallStatValue { font-size: 1.6rem; }
+  .overallStatLabel { font-size: 0.85rem; }
+  .sectionTitle { font-size: 1.25rem; margin-top: var(--spacing-lg, 24px); margin-bottom: var(--spacing-md, 16px); }
+  .statsGrid { grid-template-columns: 1fr; gap: var(--spacing-md, 16px); }
+  .statCard { min-height: auto; }
+  .cardTitle { font-size: 1.05rem; }
+  .cardCount { font-size: 0.95rem; }
+  .cardDescription { font-size: 0.85rem; }
+}

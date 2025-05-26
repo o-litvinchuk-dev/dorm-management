@@ -5,6 +5,8 @@ import {
   getRoomById,
   updateRoom,
   deleteRoom,
+  batchUpdateReservable,
+  batchDeleteRooms
 } from "../../controllers/RoomController.js";
 import { authenticate, authorize } from "../../middlewares/auth.js";
 
@@ -31,7 +33,6 @@ router.get(
   getRoomById 
 );
 
-
 router.put(
   "/rooms/:id",
   authenticate,
@@ -44,6 +45,20 @@ router.delete(
   authenticate,
   authorize("DELETE", "/api/v1/rooms/:id"),
   deleteRoom
+);
+
+router.post(
+  "/rooms/batch-update-reservable",
+  authenticate,
+  authorize("PUT", "/api/v1/rooms/:id"),
+  batchUpdateReservable
+);
+
+router.post(
+  "/rooms/batch-delete",
+  authenticate,
+  authorize("DELETE", "/api/v1/rooms/:id"),
+  batchDeleteRooms
 );
 
 export default router;

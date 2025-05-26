@@ -2,7 +2,7 @@ import pool from "../config/db.js";
 
 const formatDateToYYYYMMDD = (dateString) => {
     if (!dateString || dateString === "0000-00-00") {
-    return null;
+        return null;
     }
     if (typeof dateString === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
         const [year, month, day] = dateString.split('-').map(Number);
@@ -42,7 +42,6 @@ const formatDateToYYYYMMDD = (dateString) => {
     return null;
 };
 
-
 class DormitoryApplicationPreset {
     static async create({
         dormitory_id,
@@ -50,37 +49,38 @@ class DormitoryApplicationPreset {
         academic_year,
         start_date,
         end_date,
-        // application_date, // Видалено
         default_comments,
         created_by,
+        is_active = true, // Дефолтне значення true
     }) {
         const query = `
             INSERT INTO dormitory_application_presets
-            (dormitory_id, faculty_id, academic_year, start_date, end_date, default_comments, created_by)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        `; // Видалено application_date з VALUES
+            (dormitory_id, faculty_id, academic_year, start_date, end_date, default_comments, created_by, is_active)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `;
         const [result] = await pool.execute(query, [
             dormitory_id,
             faculty_id || null,
             academic_year,
             start_date || null,
             end_date || null,
-            // application_date || null, // Видалено
             default_comments || null,
             created_by || null,
+            is_active ? 1 : 0, // Перетворюємо boolean на 0/1 для БД
         ]);
         return result.insertId;
     }
 
     static async findById(id) {
         const query = `
-            SELECT dap.id, dap.dormitory_id, dap.faculty_id, dap.academic_year, dap.start_date, dap.end_date, dap.default_comments, dap.created_by, dap.created_at, dap.updated_at, 
+            SELECT dap.id, dap.dormitory_id, dap.faculty_id, dap.academic_year, dap.start_date, dap.end_date, 
+                   dap.default_comments, dap.created_by, dap.created_at, dap.updated_at, dap.is_active,
                    d.name as dormitory_name, f.name as faculty_name
             FROM dormitory_application_presets dap
             JOIN dormitories d ON dap.dormitory_id = d.id
             LEFT JOIN faculties f ON dap.faculty_id = f.id
             WHERE dap.id = ?
-        `; // Видалено dap.application_date з SELECT
+        `;
         const [rows] = await pool.execute(query, [id]);
         if (rows[0]) {
             const row = rows[0];
@@ -88,7 +88,7 @@ class DormitoryApplicationPreset {
                 ...row,
                 start_date: formatDateToYYYYMMDD(row.start_date),
                 end_date: formatDateToYYYYMMDD(row.end_date),
-                // application_date: formatDateToYYYYMMDD(row.application_date), // Видалено
+                is_active: !!row.is_active, // Перетворюємо 0/1 на boolean
             };
         }
         return null;
@@ -96,23 +96,24 @@ class DormitoryApplicationPreset {
 
     static async findByDormitoryAndAcademicYear(dormitory_id, academic_year) {
         const query = `
-            SELECT dap.id, dap.dormitory_id, dap.faculty_id, dap.academic_year, dap.start_date, dap.end_date, dap.default_comments, dap.created_by, dap.created_at, dap.updated_at,
+            SELECT dap.id, dap.dormitory_id, dap.faculty_id, dap.academic_year, dap.start_date, dap.end_date, 
+                   dap.default_comments, dap.created_by, dap.created_at, dap.updated_at, dap.is_active,
                    d.name as dormitory_name, f.name as faculty_name
             FROM dormitory_application_presets dap
             JOIN dormitories d ON dap.dormitory_id = d.id
             LEFT JOIN faculties f ON dap.faculty_id = f.id
             WHERE dap.dormitory_id = ? AND dap.academic_year = ?
             ORDER BY dap.faculty_id IS NULL DESC, dap.created_at DESC 
-            LIMIT 1 
-        `; // Видалено dap.application_date з SELECT
+            LIMIT 1
+        `;
         const [rows] = await pool.execute(query, [dormitory_id, academic_year]);
-         if (rows[0]) {
+        if (rows[0]) {
             const row = rows[0];
             const formattedPreset = {
                 ...row,
                 start_date: formatDateToYYYYMMDD(row.start_date),
                 end_date: formatDateToYYYYMMDD(row.end_date),
-                // application_date: formatDateToYYYYMMDD(row.application_date), // Видалено
+                is_active: !!row.is_active, // Перетворюємо 0/1 на boolean
             };
             console.log('[Model] Preset found and formatted for findByDormitoryAndAcademicYear:', JSON.stringify(formattedPreset));
             return formattedPreset;
@@ -120,15 +121,16 @@ class DormitoryApplicationPreset {
         console.log('[Model] No preset found for:', { dormitory_id, academic_year });
         return null;
     }
-    
+
     static async findByFacultyOrGlobal(faculty_id, dormitory_id = null) {
         let query = `
-            SELECT dap.id, dap.dormitory_id, dap.faculty_id, dap.academic_year, dap.start_date, dap.end_date, dap.default_comments, dap.created_by, dap.created_at, dap.updated_at, 
+            SELECT dap.id, dap.dormitory_id, dap.faculty_id, dap.academic_year, dap.start_date, dap.end_date, 
+                   dap.default_comments, dap.created_by, dap.created_at, dap.updated_at, dap.is_active,
                    d.name as dormitory_name, f.name as faculty_name
             FROM dormitory_application_presets dap
             JOIN dormitories d ON dap.dormitory_id = d.id
             LEFT JOIN faculties f ON dap.faculty_id = f.id
-        `; // Видалено dap.application_date з SELECT
+        `;
         const params = [];
         const whereClauses = [];
 
@@ -136,7 +138,7 @@ class DormitoryApplicationPreset {
             whereClauses.push(`(dap.faculty_id = ? OR dap.faculty_id IS NULL)`);
             params.push(faculty_id);
         }
-        if (dormitory_id){
+        if (dormitory_id) {
             whereClauses.push(`dap.dormitory_id = ?`);
             params.push(dormitory_id);
         }
@@ -151,44 +153,46 @@ class DormitoryApplicationPreset {
             ...row,
             start_date: formatDateToYYYYMMDD(row.start_date),
             end_date: formatDateToYYYYMMDD(row.end_date),
-            // application_date: formatDateToYYYYMMDD(row.application_date), // Видалено
+            is_active: !!row.is_active, // Перетворюємо 0/1 на boolean
         }));
     }
 
     static async findByDormitoryAndNotFacultySpecific(dormitory_id) {
         const query = `
-            SELECT dap.id, dap.dormitory_id, dap.faculty_id, dap.academic_year, dap.start_date, dap.end_date, dap.default_comments, dap.created_by, dap.created_at, dap.updated_at, 
+            SELECT dap.id, dap.dormitory_id, dap.faculty_id, dap.academic_year, dap.start_date, dap.end_date, 
+                   dap.default_comments, dap.created_by, dap.created_at, dap.updated_at, dap.is_active,
                    d.name as dormitory_name, f.name as faculty_name
             FROM dormitory_application_presets dap
             JOIN dormitories d ON dap.dormitory_id = d.id
             LEFT JOIN faculties f ON dap.faculty_id = f.id 
             WHERE dap.dormitory_id = ? AND dap.faculty_id IS NULL
             ORDER BY dap.academic_year DESC
-        `; // Видалено dap.application_date з SELECT
+        `;
         const [rows] = await pool.execute(query, [dormitory_id]);
         return rows.map(row => ({
             ...row,
             start_date: formatDateToYYYYMMDD(row.start_date),
             end_date: formatDateToYYYYMMDD(row.end_date),
-            // application_date: formatDateToYYYYMMDD(row.application_date), // Видалено
+            is_active: !!row.is_active, // Перетворюємо 0/1 на boolean
         }));
     }
 
     static async findAll() {
         const query = `
-            SELECT dap.id, dap.dormitory_id, dap.faculty_id, dap.academic_year, dap.start_date, dap.end_date, dap.default_comments, dap.created_by, dap.created_at, dap.updated_at, 
+            SELECT dap.id, dap.dormitory_id, dap.faculty_id, dap.academic_year, dap.start_date, dap.end_date, 
+                   dap.default_comments, dap.created_by, dap.created_at, dap.updated_at, dap.is_active,
                    d.name as dormitory_name, f.name as faculty_name
             FROM dormitory_application_presets dap
             JOIN dormitories d ON dap.dormitory_id = d.id
             LEFT JOIN faculties f ON dap.faculty_id = f.id
             ORDER BY dap.academic_year DESC, d.name ASC
-        `; // Видалено dap.application_date з SELECT
+        `;
         const [rows] = await pool.execute(query);
         return rows.map(row => ({
             ...row,
             start_date: formatDateToYYYYMMDD(row.start_date),
             end_date: formatDateToYYYYMMDD(row.end_date),
-            // application_date: formatDateToYYYYMMDD(row.application_date), // Видалено
+            is_active: !!row.is_active, // Перетворюємо 0/1 на boolean
         }));
     }
 
@@ -198,27 +202,56 @@ class DormitoryApplicationPreset {
         academic_year,
         start_date,
         end_date,
-        // application_date, // Видалено
         default_comments,
-        created_by, 
+        created_by,
+        is_active,
     }) {
+        const fieldsToUpdate = [];
+        const params = [];
+
+        if (dormitory_id !== undefined) {
+            fieldsToUpdate.push("dormitory_id = ?");
+            params.push(dormitory_id);
+        }
+        if (faculty_id !== undefined) {
+            fieldsToUpdate.push("faculty_id = ?");
+            params.push(faculty_id);
+        }
+        if (academic_year !== undefined) {
+            fieldsToUpdate.push("academic_year = ?");
+            params.push(academic_year);
+        }
+        if (start_date !== undefined) {
+            fieldsToUpdate.push("start_date = ?");
+            params.push(start_date);
+        }
+        if (end_date !== undefined) {
+            fieldsToUpdate.push("end_date = ?");
+            params.push(end_date);
+        }
+        if (default_comments !== undefined) {
+            fieldsToUpdate.push("default_comments = ?");
+            params.push(default_comments);
+        }
+        if (is_active !== undefined) {
+            fieldsToUpdate.push("is_active = ?");
+            params.push(is_active ? 1 : 0); // Перетворюємо boolean на 0/1 для БД
+        }
+        // created_by не оновлюємо, оскільки воно встановлюється при створенні
+
+        if (fieldsToUpdate.length === 0) {
+            console.warn(`[DAPresetModel] No fields to update for preset ID: ${id}`);
+            return false;
+        }
+
         const query = `
             UPDATE dormitory_application_presets
-            SET dormitory_id = ?, faculty_id = ?, academic_year = ?, start_date = ?, end_date = ?,
-            default_comments = ?, created_by = ?, updated_at = CURRENT_TIMESTAMP
+            SET ${fieldsToUpdate.join(", ")}, updated_at = CURRENT_TIMESTAMP
             WHERE id = ?
-        `; // Видалено application_date = ? з SET
-        const [result] = await pool.execute(query, [
-            dormitory_id,
-            faculty_id || null,
-            academic_year,
-            start_date || null,
-            end_date || null,
-            // application_date || null, // Видалено
-            default_comments || null,
-            created_by || null, 
-            id,
-        ]);
+        `;
+        params.push(id);
+
+        const [result] = await pool.execute(query, params);
         return result.affectedRows > 0;
     }
 

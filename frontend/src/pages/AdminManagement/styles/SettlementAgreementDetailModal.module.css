@@ -1,0 +1,323 @@
+/* src/pages/AdminManagement/styles/SettlementAgreementDetailModal.module.css */
+
+/* Base Modal Styles (can be shared if you have a global modal style) */
+.modalOverlayGlobal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(31, 41, 55, 0.6); /* Tailwind gray-800 with opacity */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1050;
+    padding: 1rem;
+    box-sizing: border-box;
+    backdrop-filter: blur(4px);
+}
+
+.modalContentGlobal {
+    background-color: var(--card-background-color, #fff);
+    border-radius: var(--border-radius-xl, 0.75rem); /* Tailwind rounded-xl */
+    box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); /* Tailwind shadow-xl */
+    position: relative;
+    overflow: hidden; 
+}
+
+/* Specific to Agreement Detail Modal */
+.agreementDetailModalContent {
+    width: 90%;
+    max-width: 950px; 
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    animation: fadeInScaleUpModal 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+@keyframes fadeInScaleUpModal {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.closeButtonIconGlobal {
+    position: absolute;
+    top: 0.75rem; 
+    right: 0.75rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.25rem; 
+    color: var(--text-muted, #6b7280); 
+    transition: color var(--transition-base), background-color var(--transition-base);
+    border-radius: var(--border-radius-full);
+    z-index: 10;
+}
+
+.closeButtonIconGlobal svg {
+    width: 1.5rem; 
+    height: 1.5rem;
+    stroke-width: 2.5;
+}
+
+.closeButtonIconGlobal:hover {
+    color: var(--text-primary, #1f2937); 
+    background-color: var(--border-color-light, #f3f4f6); 
+}
+
+.modalInnerContentScrollable {
+    padding: 0; 
+    overflow-y: auto;
+    flex-grow: 1;
+}
+
+.modalHeader {
+    padding: 1.25rem 1.5rem; 
+    border-bottom: 1px solid var(--border-color, #e5e7eb);
+    background-color: var(--background-light, #f9fafb);
+}
+
+.modalTitle {
+    font-size: 1.5rem; 
+    font-weight: 600; 
+    color: var(--text-primary, #1f2937);
+    margin: 0;
+}
+
+.modalBody {
+    padding: 1.5rem; 
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem; 
+}
+
+/* Section Styling */
+.modalSection {
+    background-color: var(--card-background-color);
+    padding: 1rem;
+    border-radius: var(--border-radius-lg);
+    border: 1px solid var(--border-color-light);
+}
+.modalSection:last-of-type { margin-bottom: 0; }
+
+.modalSectionTitle {
+    font-size: 1.125rem; 
+    font-weight: 500; 
+    color: var(--primary-color, #3b82f6);
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--primary-bg-light, #eff6ff);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.modalSectionTitle svg {
+    width: 1.25rem; 
+    height: 1.25rem;
+}
+
+/* Grid for Info Items */
+.modalInfoGrid, .modalDetailGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
+    gap: 0.75rem 1.25rem; 
+}
+
+.modalInfoItem, .modalInfoItemWide {
+    font-size: 0.875rem; 
+    color: var(--text-secondary, #4b5563);
+    padding: 0.25rem 0;
+    word-break: break-word;
+    display: flex;
+    flex-direction: column; 
+    gap: 0.125rem;
+}
+.modalInfoItemWide {
+    grid-column: 1 / -1;
+}
+
+.modalInfoItem strong, .modalInfoItem .infoLabel {
+    font-weight: 500; 
+    color: var(--text-primary, #1f2937);
+    margin-right: 0.3rem;
+    display: block; 
+}
+.modalInfoItem .infoValue {
+    color: var(--text-secondary);
+}
+
+.naText {
+    color: var(--text-muted, #9ca3af);
+    font-style: italic;
+}
+
+.statusBadgeOnModal {
+    padding: 0.2rem 0.6rem;
+    border-radius: var(--border-radius-full);
+    font-size: 0.8rem;
+    font-weight: 500;
+    border: 1px solid transparent;
+    display: inline-block;
+}
+.statusBadgeOnModal.statusPending { background-color: var(--warning-bg-light); color: var(--warning-color-dark); border-color: var(--warning-color); }
+.statusBadgeOnModal.statusApproved { background-color: var(--success-bg-light); color: var(--success-color-dark); border-color: var(--success-color); }
+.statusBadgeOnModal.statusRejected { background-color: var(--error-bg-light); color: var(--error-color-dark); border-color: var(--error-color); }
+.statusBadgeOnModal.statusDefault { background-color: var(--neutral-bg-light); color: var(--neutral-color-dark); border-color: var(--neutral-color); }
+
+/* Table for lists */
+.tableWrapperModal {
+    overflow-x: auto;
+    border: 1px solid var(--border-color-light);
+    border-radius: var(--border-radius-md);
+    margin-top: 0.5rem;
+}
+.detailTableModal {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+.detailTableModal th, .detailTableModal td {
+    padding: 0.5rem 0.75rem; 
+    text-align: left;
+    border-bottom: 1px solid var(--border-color-light);
+}
+.detailTableModal th {
+    background-color: var(--background-light);
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+.detailTableModal tr:last-child td {
+    border-bottom: none;
+}
+.noteCellModal, .descriptionCellModal {
+    max-width: 200px;
+    white-space: normal;
+    word-break: break-word;
+}
+.descriptionCellModal {
+    max-width: 300px;
+}
+
+.noDataTextModal {
+    color: var(--text-muted);
+    font-style: italic;
+    font-size: 0.875rem;
+    padding: 0.75rem 0;
+}
+
+/* Admin Form */
+.modalForm {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color-light);
+}
+.formSectionModal {
+    margin-bottom: 1rem;
+}
+.inputLabelModal {
+    display: block;
+    font-weight: 500;
+    margin-bottom: 0.375rem;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+.selectFieldModal, .textareaFieldModal {
+    width: 100%;
+    padding: 0.625rem 0.75rem;
+    border: 1px solid var(--border-color-dark);
+    border-radius: var(--border-radius-md);
+    font-size: 0.9rem;
+    background-color: var(--card-background-color);
+    box-sizing: border-box;
+}
+.selectFieldModal:focus, .textareaFieldModal:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px var(--primary-bg-light);
+}
+.selectFieldModal:disabled, .textareaFieldModal:disabled {
+    background-color: var(--neutral-bg-light, #e5e7eb); 
+    cursor: not-allowed;
+}
+.textareaFieldModal {
+    resize: vertical;
+    min-height: 70px;
+}
+
+.modalFooter {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding: 1.25rem 1.5rem;
+    border-top: 1px solid var(--border-color, #e5e7eb);
+    background-color: var(--background-light, #f9fafb);
+}
+
+.commonButton {
+    padding: 0.625rem 1.25rem;
+    border-radius: var(--border-radius-md);
+    font-weight: 500;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color var(--transition-fast), border-color var(--transition-fast);
+    border: 1px solid transparent;
+}
+.commonButton:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+.cancelButtonModal {
+    background-color: var(--card-background-color, #fff);
+    color: var(--text-secondary, #4b5563);
+    border-color: var(--border-color-dark, #d1d5db);
+}
+.cancelButtonModal:hover:not(:disabled) {
+    background-color: var(--border-color-light, #f3f4f6); 
+}
+.submitButtonModal {
+    background-color: var(--primary-color, #3b82f6);
+    color: var(--text-on-primary, #fff);
+    border-color: var(--primary-color, #3b82f6);
+}
+.submitButtonModal:hover:not(:disabled) {
+    background-color: var(--primary-color-dark, #2563eb);
+    border-color: var(--primary-color-dark, #2563eb);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .agreementDetailModalContent {
+        max-width: 95%;
+        margin: 1rem;
+    }
+    .modalBody {
+        padding: 1rem;
+    }
+    .modalHeader, .modalFooter {
+        padding: 1rem;
+    }
+    .modalTitle {
+        font-size: 1.25rem;
+    }
+    .modalSectionTitle {
+        font-size: 1rem;
+    }
+    .modalInfoGrid, .modalDetailGrid {
+        grid-template-columns: 1fr; /* Stack on smaller screens */
+    }
+    .modalInfoItem, .modalInfoItemWide {
+        font-size: 0.825rem;
+    }
+    .detailTableModal {
+        font-size: 0.825rem;
+    }
+    .detailTableModal th, .detailTableModal td {
+        padding: 0.4rem 0.6rem;
+    }
+}

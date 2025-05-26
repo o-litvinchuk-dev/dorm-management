@@ -1,3 +1,4 @@
+// src/models/Dormitory.js
 import pool from "../config/db.js";
 
 const Dormitory = {
@@ -16,19 +17,22 @@ const Dormitory = {
   },
 
   async findAll() {
-  const query = `
-    SELECT id, name, address, capacity, created_at, updated_at
-    FROM dormitories
-  `;
-  const [rows] = await pool.execute(query);
-  return rows;
-},
+    const query = `
+      SELECT d.id, d.name, d.address, d.capacity, d.created_at, d.updated_at, d.manager_user_id, u.name as manager_name
+      FROM dormitories d
+      LEFT JOIN users u ON d.manager_user_id = u.id
+      ORDER BY d.name ASC
+    `;
+    const [rows] = await pool.execute(query);
+    return rows;
+  },
 
   async findById(id) {
     const query = `
-      SELECT id, name, address, capacity, created_at, updated_at
-      FROM dormitories
-      WHERE id = ?
+      SELECT d.id, d.name, d.address, d.capacity, d.created_at, d.updated_at, d.manager_user_id, u.name as manager_name
+      FROM dormitories d
+      LEFT JOIN users u ON d.manager_user_id = u.id
+      WHERE d.id = ?
     `;
     const [rows] = await pool.execute(query, [id]);
     return rows[0] || null;

@@ -1,5 +1,8 @@
-import React, { useRef } from "react";
+// src/components/Services/Settlement agreement/Pages/Page11Content.jsx
+import React, { useEffect } from "react";
 import styles from "../../../../pages/Services/Settlement agreement/styles/SettlementAgreementPage.module.css";
+import InventoryTable from "../InventoryTable"; // Assuming InventoryTable is now a shared UI component
+import SignatureBlock from "../SignatureBlock"; // Assuming SignatureBlock is a shared UI component
 
 const Page11Content = ({
   formData,
@@ -8,323 +11,239 @@ const Page11Content = ({
   handleFocus,
   handleBlur,
   inputRefs,
+  handleInputKeyDown,
+  handleDateKeyDown,
+  autoSelectedRoomInfo,
+  isPresetActive,
+  selectedPreset,
+  dataLoading,
+  allDormitories,
+  defaultInventoryItems, // Pass the default inventory structure for read-only names
+  handleTableKeyDown, // For table navigation
 }) => {
-  const yearRef = useRef(null);
 
-  const handleDateKeyDown = (e, currentField, nextField, prevField) => {
-    if (e.key === "ArrowRight" && formData[currentField].length >= 2) {
-      inputRefs.current[nextField]?.focus();
-    } else if (e.key === "ArrowLeft" && formData[currentField].length === 0) {
-      inputRefs.current[prevField]?.focus();
-    } else if (e.key === "Enter" || (e.key === "Tab" && !e.shiftKey)) {
-      inputRefs.current[nextField]?.focus();
-      e.preventDefault();
-    } else if (e.key === "Tab" && e.shiftKey) {
-      inputRefs.current[prevField]?.focus();
-      e.preventDefault();
+  useEffect(() => {
+    const today = new Date();
+    const updates = {};
+
+    if (!formData.day_appendix1 && !isPresetActive) { // Only set if not empty and no preset active (preset might have its own date logic if needed)
+        updates.day_appendix1 = String(today.getDate()).padStart(2, '0');
     }
+    if (!formData.month_appendix1 && !isPresetActive) {
+        updates.month_appendix1 = String(today.getMonth() + 1).padStart(2, '0');
+    }
+    if (!formData.year_appendix1 && !isPresetActive) {
+        updates.year_appendix1 = String(today.getFullYear()).slice(-2);
+    }
+    
+    let currentDormAddress = formData.dormStreet && formData.dormBuilding ? `${formData.dormStreet}, ${formData.dormBuilding}` : (selectedPreset?.dormitory_address || "");
+    if (isPresetActive && selectedPreset?.dormitory_address) {
+        currentDormAddress = selectedPreset.dormitory_address;
+    } else if (formData.dormNumber) { // Try to get from main page if no preset
+        const dorm = allDormitories.find(d => String(d.id) === String(formData.dormNumber));
+        if (dorm) currentDormAddress = dorm.address;
+    }
+
+
+    if (!formData.address_appendix1 && currentDormAddress) {
+        updates.address_appendix1 = currentDormAddress;
+    }
+
+
+    if (formData.roomNumber && formData.roomNumber_appendix1 !== formData.roomNumber) {
+      updates.roomNumber_appendix1 = formData.roomNumber;
+    }
+
+    if (formData.dormNumber && formData.dormNumber_appendix1 !== formData.dormNumber) {
+      updates.dormNumber_appendix1 = formData.dormNumber;
+    }
+
+    // Auto-fill signature names if they are empty and main names are present
+    if (!formData.dormManagerName_appendix1 && formData.dormManagerName_main) { // Assuming dormManagerName_main is the one from page 12
+        updates.dormManagerName_appendix1 = formData.dormManagerName_main;
+    }
+    if (!formData.residentName_appendix1 && formData.fullName) { // Use fullName from page 1 for resident
+        updates.residentName_appendix1 = formData.fullName;
+    }
+
+
+    if (Object.keys(updates).length > 0) {
+        Object.entries(updates).forEach(([key, value]) => {
+            handleChange({ target: { name: key, value: String(value) } });
+        });
+    }
+  }, [
+      formData.day_appendix1, formData.month_appendix1, formData.year_appendix1,
+      formData.dormStreet, formData.dormBuilding, formData.roomNumber, formData.dormNumber,
+      formData.address_appendix1, formData.roomNumber_appendix1, formData.dormNumber_appendix1,
+      formData.dormManagerName_main, formData.fullName, // For signature auto-fill
+      formData.dormManagerName_appendix1, formData.residentName_appendix1,
+      handleChange, isPresetActive, selectedPreset, allDormitories
+  ]);
+
+
+  const roomSourceText = () => {
+    if (autoSelectedRoomInfo?.source === 'reservation') return "(З вашого бронювання)";
+    if (autoSelectedRoomInfo?.source === 'auto-select') return "(Автоматично підібрано)";
+    return "";
   };
 
-  const handleInputKeyDown = (e, currentField, nextField, prevField) => {
-    if (e.key === "Enter" || (e.key === "Tab" && !e.shiftKey)) {
-      inputRefs.current[nextField]?.focus();
-      e.preventDefault();
-    } else if (e.key === "Tab" && e.shiftKey) {
-      inputRefs.current[prevField]?.focus();
-      e.preventDefault();
-    }
+  const getDormNameById = (dormId) => {
+    if (!dormId || !allDormitories || allDormitories.length === 0) return `ID: ${dormId || '?'}`;
+    const dorm = allDormitories.find(d => String(d.id) === String(dormId));
+    return dorm ? dorm.name : `ID: ${dormId}`;
   };
 
   return (
-    <div className={styles.contractText} role="region" aria-labelledby="appendix-title">
+    <div className={styles.contractText} role="region" aria-labelledby="appendix-title-1">
       <p className={styles.rightText}>Додаток № 1</p>
-      <h3 id="appendix-title" className={styles.centeredTitle}>ПЕРЕЛІК</h3>
+      <h3 id="appendix-title-1" className={styles.centeredTitle}>ПЕРЕЛІК</h3>
       <p className={styles.centeredText}>меблів і м’якого інвентарю</p>
       <div className={styles.dateRight}>
         <span>«</span>
         <input
           type="text"
-          name="day"
-          value={formData.day}
-          onChange={(e) => handleChange(e, "day")}
-          onFocus={() => handleFocus("day")}
-          onBlur={() => handleBlur("day")}
-          onKeyDown={(e) => handleDateKeyDown(e, "day", "month", null)}
+          name="day_appendix1"
+          value={formData.day_appendix1 || ""}
+          onChange={(e) => handleChange(e, "day_appendix1")}
+          onFocus={() => handleFocus("day_appendix1")}
+          onBlur={() => handleBlur("day_appendix1")}
+          onKeyDown={(e) => handleDateKeyDown(e, "day_appendix1", "month_appendix1", null)} // prev field from prev page (Page 10 last interactive)
           maxLength="2"
           placeholder="__"
-          className={`${styles.inlineInputDate} ${errors.day ? styles.errorInput : ''}`}
+          className={`${styles.inlineInputDate} ${errors.day_appendix1 ? styles.errorInput : ''}`}
           required
-          ref={(el) => (inputRefs.current.day = el)}
-          data-error-field="day"
-          aria-label="День"
-          aria-invalid={!!errors.day}
-          aria-describedby={errors.day ? "day-error" : undefined}
-          autoComplete="off"
+          ref={(el) => { inputRefs.current["day_appendix1"] = el; }}
+          data-error-field="day_appendix1"
+          aria-label="День для Додатку 1"
         />
         <span>»</span>
         <input
           type="text"
-          name="month"
-          value={formData.month}
-          onChange={(e) => handleChange(e, "month")}
-          onFocus={() => handleFocus("month")}
-          onBlur={() => handleBlur("month")}
-          onKeyDown={(e) => handleDateKeyDown(e, "month", "year", "day")}
+          name="month_appendix1"
+          value={formData.month_appendix1 || ""}
+          onChange={(e) => handleChange(e, "month_appendix1")}
+          onFocus={() => handleFocus("month_appendix1")}
+          onBlur={() => handleBlur("month_appendix1")}
+          onKeyDown={(e) => handleDateKeyDown(e, "month_appendix1", "year_appendix1", "day_appendix1")}
           maxLength="2"
           placeholder="__"
-          className={`${styles.inlineInputDate} ${errors.month ? styles.errorInput : ''}`}
+          className={`${styles.inlineInputDate} ${errors.month_appendix1 ? styles.errorInput : ''}`}
           required
-          ref={(el) => (inputRefs.current.month = el)}
-          data-error-field="month"
-          aria-label="Місяць"
-          aria-invalid={!!errors.month}
-          aria-describedby={errors.month ? "month-error" : undefined}
-          autoComplete="off"
+          ref={(el) => { inputRefs.current["month_appendix1"] = el; }}
+          data-error-field="month_appendix1"
+          aria-label="Місяць для Додатку 1"
         />
         <span>20</span>
         <input
           type="text"
-          name="year"
-          value={formData.year}
-          onChange={(e) => handleChange(e, "year")}
-          onFocus={() => handleFocus("year")}
-          onBlur={() => handleBlur("year")}
-          onKeyDown={(e) => handleDateKeyDown(e, "year", "address", "month")}
+          name="year_appendix1"
+          value={formData.year_appendix1 || ""}
+          onChange={(e) => handleChange(e, "year_appendix1")}
+          onFocus={() => handleFocus("year_appendix1")}
+          onBlur={() => handleBlur("year_appendix1")}
+          onKeyDown={(e) => handleDateKeyDown(e, "year_appendix1", "address_appendix1", "month_appendix1")}
           maxLength="2"
           placeholder="__"
-          className={`${styles.inlineInputDate} ${errors.year ? styles.errorInput : ''}`}
+          className={`${styles.inlineInputDate} ${errors.year_appendix1 ? styles.errorInput : ''}`}
           required
-          ref={(el) => {
-            yearRef.current = el;
-            inputRefs.current.year = el;
-          }}
-          data-error-field="year"
-          aria-label="Рік (останні дві цифри)"
-          aria-invalid={!!errors.year}
-          aria-describedby={errors.year ? "year-error" : undefined}
-          autoComplete="off"
+          ref={(el) => {inputRefs.current["year_appendix1"] = el; }}
+          data-error-field="year_appendix1"
+          aria-label="Рік для Додатку 1 (останні дві цифри)"
         />
         <span>р.</span>
       </div>
+      {errors.day_appendix1 && <p id="day_appendix1-error-p11" className={styles.error}>{errors.day_appendix1}</p>}
+      {errors.month_appendix1 && <p id="month_appendix1-error-p11" className={styles.error}>{errors.month_appendix1}</p>}
+      {errors.year_appendix1 && <p id="year_appendix1-error-p11" className={styles.error}>{errors.year_appendix1}</p>}
+
+
       <div className={styles.infoRow}>
         <span>за адресою</span>
         <input
           type="text"
-          name="address"
-          value={formData.address}
-          onChange={(e) => handleChange(e, "address")}
-          onFocus={() => handleFocus("address")}
-          onBlur={() => handleBlur("address")}
-          onKeyDown={(e) => handleInputKeyDown(e, "address", "roomNumber", "year")}
-          className={`${styles.longInput} ${errors.address ? styles.errorInput : ''}`}
+          name="address_appendix1"
+          value={formData.address_appendix1 || ""}
+          onChange={(e) => handleChange(e, "address_appendix1")}
+          onFocus={() => handleFocus("address_appendix1")}
+          onBlur={() => handleBlur("address_appendix1")}
+          onKeyDown={(e) => handleInputKeyDown(e, "address_appendix1", "roomNumberInput_appendix1_display", "year_appendix1")}
+          className={`${styles.longInput} ${errors.address_appendix1 ? styles.errorInput : ''} ${
+            (isPresetActive && selectedPreset?.dormitory_address) || (formData.dormNumber && !isPresetActive) ? styles.readOnlyField : "" // readOnly if from preset or auto-filled from main page
+          }`}
           required
-          ref={(el) => (inputRefs.current.address = el)}
-          data-error-field="address"
-          aria-label="Адреса"
-          aria-invalid={!!errors.address}
-          aria-describedby={errors.address ? "address-error" : undefined}
-          autoComplete="street-address"
+          ref={(el) => { inputRefs.current["address_appendix1"] = el; }}
+          data-error-field="address_appendix1"
+          aria-label="Адреса для Додатку 1"
+          readOnly={(isPresetActive && !!selectedPreset?.dormitory_address) || (!!formData.dormNumber && !isPresetActive)}
+          disabled={dataLoading.preset}
         />
         <span>кімнати №</span>
         <input
           type="text"
-          name="roomNumber"
-          value={formData.roomNumber}
-          onChange={(e) => handleChange(e, "roomNumber")}
-          onFocus={() => handleFocus("roomNumber")}
-          onBlur={() => handleBlur("roomNumber")}
-          onKeyDown={(e) => handleInputKeyDown(e, "roomNumber", "dormNumber", "address")}
-          className={`${styles.shortInput} ${errors.roomNumber ? styles.errorInput : ''}`}
-          required
-          ref={(el) => (inputRefs.current.roomNumber = el)}
-          data-error-field="roomNumber"
-          aria-label="Номер кімнати"
-          aria-invalid={!!errors.roomNumber}
-          aria-describedby={errors.roomNumber ? "roomNumber-error" : undefined}
-          autoComplete="off"
+          name="roomNumberInput_appendix1_display" // For display, actual data in formData.roomNumber_appendix1
+          value={formData.roomNumber_appendix1 || ""}
+          readOnly // Always read-only as it's auto-filled from main page
+          className={`${styles.roomNumberAppendix} ${styles.readOnlyField} ${errors.roomNumber_appendix1 ? styles.errorInput : ''}`}
+          ref={(el) => { inputRefs.current["roomNumberInput_appendix1_display"] = el; }}
+          data-error-field="roomNumber_appendix1"
+          aria-label="Номер кімнати для Додатку 1 (автоматично)"
+          onKeyDown={(e) => handleInputKeyDown(e, "roomNumberInput_appendix1_display", "dormNumberInput_appendix1_display", "address_appendix1")}
         />
+         {autoSelectedRoomInfo?.source && autoSelectedRoomInfo.source !== 'manual' && formData.roomNumber_appendix1 && (
+          <span className={styles.roomSourceInfo} style={{fontSize: '12px', marginLeft: '3px'}}>
+            {roomSourceText()}
+          </span>
+        )}
         <span>гуртожитку №</span>
         <input
           type="text"
-          name="dormNumber"
-          value={formData.dormNumber}
-          onChange={(e) => handleChange(e, "dormNumber")}
-          onFocus={() => handleFocus("dormNumber")}
-          onBlur={() => handleBlur("dormNumber")}
-          onKeyDown={(e) => handleInputKeyDown(e, "dormNumber", "inventory[14].name", "roomNumber")}
-          className={`${styles.shortInput} ${errors.dormNumber ? styles.errorInput : ''}`}
-          required
-          ref={(el) => (inputRefs.current.dormNumber = el)}
-          data-error-field="dormNumber"
-          aria-label="Номер гуртожитку"
-          aria-invalid={!!errors.dormNumber}
-          aria-describedby={errors.dormNumber ? "dormNumber-error" : undefined}
-          autoComplete="off"
+          name="dormNumberInput_appendix1_display" // For display
+          value={getDormNameById(formData.dormNumber_appendix1)}
+          readOnly // Always read-only
+          className={`${styles.inlineInputDormNameAppendix} ${styles.readOnlyField} ${errors.dormNumber_appendix1 ? styles.errorInput : ''}`}
+          ref={(el) => { inputRefs.current["dormNumberInput_appendix1_display"] = el; }}
+          aria-label="Назва гуртожитку для Додатку 1 (автоматично)"
+          data-error-field="dormNumber_appendix1"
+          onKeyDown={(e) => handleInputKeyDown(e, "dormNumberInput_appendix1_display", `inventory[0].quantity`, "roomNumberInput_appendix1_display")} // Assuming first item in inventory is quantity
         />
       </div>
-      {errors.day && <p id="day-error" className={styles.error}>{errors.day}</p>}
-      {errors.month && <p id="month-error" className={styles.error}>{errors.month}</p>}
-      {errors.year && <p id="year-error" className={styles.error}>{errors.year}</p>}
-      {errors.address && <p id="address-error" className={styles.error}>{errors.address}</p>}
-      {errors.roomNumber && <p id="roomNumber-error" className={styles.error}>{errors.roomNumber}</p>}
-      {errors.dormNumber && <p id="dormNumber-error" className={styles.error}>{errors.dormNumber}</p>}
-      <table className={styles.inventoryTable} role="grid" aria-label="Перелік меблів і м’якого інвентарю">
-        <thead>
-          <tr>
-            <th>№ з/п</th>
-            <th>Назва предметів</th>
-            <th>Кількість</th>
-            <th>Примітка</th>
-          </tr>
-        </thead>
-        <tbody>
-          {formData.inventory.map((item, index) => (
-            <tr key={index}>
-              <td>{index + 1}</td>
-              <td>
-                {index < 14 ? (
-                  <span>{formData.inventory[index].name}</span>
-                ) : (
-                  <input
-                    type="text"
-                    name={`inventory[${index}].name`}
-                    value={formData.inventory[index].name}
-                    onChange={(e) => handleChange(e, "inventory", index, "name")}
-                    onFocus={() => handleFocus(`inventory[${index}].name`)}
-                    onBlur={() => handleBlur(`inventory[${index}].name`)}
-                    className={`${styles.tableInput} ${
-                      errors.inventory?.[index]?.name ? styles.errorInput : ''
-                    }`}
-                    data-error-field={`inventory[${index}].name`}
-                    aria-label={`Назва предмета ${index + 1}`}
-                    aria-invalid={!!errors.inventory?.[index]?.name}
-                    aria-describedby={
-                      errors.inventory?.[index]?.name ? `inventory-${index}-name-error` : undefined
-                    }
-                    autoComplete="off"
-                  />
-                )}
-              </td>
-              <td>
-                <input
-                  type="number"
-                  name={`inventory[${index}].quantity`}
-                  value={formData.inventory[index].quantity}
-                  onChange={(e) => handleChange(e, "inventory", index, "quantity")}
-                  onFocus={() => handleFocus(`inventory[${index}].quantity`)}
-                  onBlur={() => handleBlur(`inventory[${index}].quantity`)}
-                  className={`${styles.tableInput} ${
-                    errors.inventory?.[index]?.quantity ? styles.errorInput : ''
-                  }`}
-                  min="0"
-                  data-error-field={`inventory[${index}].quantity`}
-                  aria-label={`Кількість предмета ${index + 1}`}
-                  aria-invalid={!!errors.inventory?.[index]?.quantity}
-                  aria-describedby={
-                    errors.inventory?.[index]?.quantity ? `inventory-${index}-quantity-error` : undefined
-                  }
-                  autoComplete="off"
-                />
-              </td>
-              <td>
-                <input
-                  type="text"
-                  name={`inventory[${index}].note`}
-                  value={formData.inventory[index].note}
-                  onChange={(e) => handleChange(e, "inventory", index, "note")}
-                  onFocus={() => handleFocus(`inventory[${index}].note`)}
-                  onBlur={() => handleBlur(`inventory[${index}].note`)}
-                  className={`${styles.tableInput} ${
-                    errors.inventory?.[index]?.note ? styles.errorInput : ''
-                  }`}
-                  data-error-field={`inventory[${index}].note`}
-                  aria-label={`Примітка до предмета ${index + 1}`}
-                  aria-invalid={!!errors.inventory?.[index]?.note}
-                  aria-describedby={
-                    errors.inventory?.[index]?.note ? `inventory-${index}-note-error` : undefined
-                  }
-                  autoComplete="off"
-                />
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      {formData.inventory.map((_, index) =>
+      {errors.address_appendix1 && <p id="address_appendix1-error-p11" className={styles.error}>{errors.address_appendix1}</p>}
+      {errors.roomNumber_appendix1 && <p id="roomNumber_appendix1-error-p11" className={styles.error}>{errors.roomNumber_appendix1}</p>}
+      {errors.dormNumber_appendix1 && <p id="dormNumber_appendix1-error-p11" className={styles.error}>{errors.dormNumber_appendix1}</p>}
+
+      <InventoryTable
+        inventory={formData.inventory}
+        errors={errors.inventory}
+        handleChange={handleChange}
+        handleFocus={handleFocus}
+        handleBlur={handleBlur}
+        inputRefs={inputRefs}
+        handleTableKeyDown={handleTableKeyDown} // Pass down the generic handler
+        defaultInventoryItems={defaultInventoryItems} // Pass default items
+      />
+       {/* Errors for inventory table will be shown by InventoryTable component if designed so, or loop here */}
+       {formData.inventory.map((_, index) => (
         errors.inventory?.[index] ? (
-          <div key={index}>
+          <div key={`inventory-error-group-${index}`}>
             {errors.inventory[index].name && (
-              <p id={`inventory-${index}-name-error`} className={styles.error}>
-                {errors.inventory[index].name}
+              <p id={`inventory-${index}-name-error-p11`} className={styles.error}>
+                {`Інвентар, рядок ${index + 1}, Назва: ${errors.inventory[index].name}`}
               </p>
             )}
             {errors.inventory[index].quantity && (
-              <p id={`inventory-${index}-quantity-error`} className={styles.error}>
-                {errors.inventory[index].quantity}
+              <p id={`inventory-${index}-quantity-error-p11`} className={styles.error}>
+                 {`Інвентар, рядок ${index + 1}, Кількість: ${errors.inventory[index].quantity}`}
               </p>
             )}
             {errors.inventory[index].note && (
-              <p id={`inventory-${index}-note-error`} className={styles.error}>
-                {errors.inventory[index].note}
+              <p id={`inventory-${index}-note-error-p11`} className={styles.error}>
+                {`Інвентар, рядок ${index + 1}, Примітка: ${errors.inventory[index].note}`}
               </p>
             )}
           </div>
         ) : null
-      )}
-      <div className={styles.signatureSection}>
-        <div className={styles.signatureBlock}>
-          <p>Здав: Завідувач гуртожитку</p>
-          <div className={styles.signatureInputs}>
-            <input
-              type="text"
-              name="dormManagerName"
-              value={formData.dormManagerName}
-              onChange={(e) => handleChange(e, "dormManagerName")}
-              onFocus={() => handleFocus("dormManagerName")}
-              onBlur={() => handleBlur("dormManagerName")}
-              className={`${styles.signatureInput} ${
-                errors.dormManagerName ? styles.errorInput : ''
-              }`}
-              placeholder="П.І.Б."
-              data-error-field="dormManagerName"
-              aria-label="П.І.Б. завідувача гуртожитку"
-              aria-invalid={!!errors.dormManagerName}
-              aria-describedby={errors.dormManagerName ? "dormManagerName-error" : undefined}
-              autoComplete="name"
-            />
-          </div>
-        </div>
-        <div className={styles.signatureBlock}>
-          <p>Прийняв: Мешканець</p>
-          <div className={styles.signatureInputs}>
-            <input
-              type="text"
-              name="residentName"
-              value={formData.residentName}
-              onChange={(e) => handleChange(e, "residentName")}
-              onFocus={() => handleFocus("residentName")}
-              onBlur={() => handleBlur("residentName")}
-              className={`${styles.signatureInput} ${errors.residentName ? styles.errorInput : ''}`}
-              placeholder="П.І.Б."
-              data-error-field="residentName"
-              aria-label="П.І.Б. мешканця"
-              aria-invalid={!!errors.residentName}
-              aria-describedby={errors.residentName ? "residentName-error" : undefined}
-              autoComplete="name"
-            />
-          </div>
-        </div>
-      </div>
-      {errors.dormManagerName && (
-        <p id="dormManagerName-error" className={styles.error}>
-          {errors.dormManagerName}
-        </p>
-      )}
-      {errors.residentName && (
-        <p id="residentName-error" className={styles.error}>
-          {errors.residentName}
-        </p>
-      )}
+      ))}
     </div>
   );
 };

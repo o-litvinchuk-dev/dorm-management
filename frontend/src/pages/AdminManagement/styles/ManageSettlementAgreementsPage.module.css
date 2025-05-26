@@ -1,0 +1,289 @@
+/* src/pages/AdminManagement/styles/ManageSettlementAgreementsPage.module.css */
+
+.layout {
+    display: flex;
+    min-height: 100vh;
+    background: var(--background-color);
+    font-family: var(--font-family-sans);
+    overflow-x: hidden;
+}
+
+.mainContent {
+    flex: 1;
+    transition: margin-left var(--transition-slow);
+    margin-left: calc(var(--sidebar-width-expanded) + var(--main-content-padding));
+    padding: 0 var(--main-content-padding) var(--main-content-padding);
+    padding-top: calc(var(--navbar-height) + var(--main-content-padding));
+    box-sizing: border-box;
+    min-height: 100vh;
+    overflow: hidden; /* Prevents scrollbars on main content if pageContainer handles it */
+}
+
+.mainContent.sidebarCollapsed {
+    margin-left: calc(var(--sidebar-width-collapsed) + var(--main-content-padding));
+}
+
+.pageContainer {
+    background: var(--card-background-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-xl);
+    padding: 24px;
+    margin-top: var(--page-container-margin-top);
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - var(--navbar-height) - var(--page-container-margin-top) - var(--main-content-padding)); /* Adjusted height */
+    overflow: hidden; /* Page container should manage its own scroll */
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px; /* Increased bottom margin */
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0; /* Prevent header from shrinking */
+}
+
+.title {
+    font-size: 1.75rem; /* Tailwind text-2xl */
+    font-weight: 600;   /* Tailwind font-semibold */
+    color: var(--text-primary);
+    margin: 0;
+    display: flex;
+    align-items: center;
+}
+
+.titleIcon {
+    width: 1.625rem; /* Tailwind h-7 w-7 approx */
+    height: 1.625rem;
+    margin-right: 0.625rem; /* Tailwind mr-2.5 */
+    color: var(--primary-color);
+}
+
+.contentWrapper {
+    flex-grow: 1;
+    overflow-y: auto; /* Allow scrolling for content within wrapper */
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 0; /* Important for flex child with overflow */
+}
+
+.filtersPanel {
+    display: flex;
+    gap: 1rem; /* Tailwind gap-4 */
+    margin-bottom: 1.5rem; /* Tailwind mb-6 */
+    flex-wrap: wrap;
+    padding: 1rem; /* Tailwind p-4 */
+    background-color: var(--background-light);
+    border-radius: var(--border-radius-lg); /* Tailwind rounded-lg */
+    border: 1px solid var(--border-color-light);
+}
+
+.inputField,
+.selectField {
+    padding: 0.625rem 0.875rem; /* Tailwind py-2.5 px-3.5 */
+    border: 1px solid var(--border-color-dark);
+    border-radius: var(--border-radius-md);
+    font-size: 0.875rem; /* Tailwind text-sm */
+    background-color: var(--card-background-color);
+    color: var(--text-primary);
+    flex-grow: 1;
+    min-width: 180px; /* Minimum width for filter inputs */
+    box-sizing: border-box;
+}
+
+.inputField:focus,
+.selectField:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px var(--primary-bg-light); /* Focus ring */
+}
+
+.loading, .emptyMessage {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-secondary);
+    font-style: italic;
+    font-size: 1rem;
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.errorMessage {
+    background: var(--error-bg-light);
+    color: var(--error-color);
+    padding: 1rem;
+    border-radius: var(--border-radius-md);
+    margin: 0 0 1.5rem 0;
+    text-align: center;
+    font-size: 1rem;
+    border: 1px solid var(--error-color);
+}
+
+.tableContainer {
+    overflow-x: auto; /* Allow horizontal scroll for table if needed */
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-lg);
+    flex-grow: 1; /* Make table container take available space */
+    min-height: 0; /* Important for flex child with overflow */
+    display: flex; /* To ensure table itself can scroll if needed */
+    flex-direction: column;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem; /* Tailwind text-sm */
+}
+
+.table th, .table td {
+    padding: 0.75rem 1rem; /* Tailwind p-3 md:p-4 */
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+    white-space: nowrap; /* Prevent text wrapping in cells */
+}
+
+.table th {
+    background-color: var(--background-light);
+    font-weight: 600; /* Tailwind font-semibold - screenshot headers are bold */
+    color: var(--text-secondary);
+    cursor: pointer;
+    user-select: none;
+    text-transform: none; /* Screenshot doesn't show uppercase */
+    position: sticky; /* Keep headers visible on scroll */
+    top: 0;
+    z-index: 1;
+}
+.table th:hover {
+    background-color: var(--primary-bg-hover-light);
+}
+
+.sortIcon {
+    width: 1rem; /* Tailwind h-4 w-4 */
+    height: 1rem;
+    margin-left: 0.25rem; /* Tailwind ml-1 */
+    vertical-align: middle;
+    color: var(--text-muted);
+}
+.table th:hover .sortIcon {
+    color: var(--primary-color);
+}
+
+.table td {
+    color: var(--text-primary);
+}
+.table tr:last-child td {
+    border-bottom: none;
+}
+.table tbody tr:hover {
+    background-color: var(--background-ultralight);
+}
+
+.statusBadge {
+    padding: 0.25rem 0.6rem;
+    border-radius: var(--border-radius-full);
+    font-size: 0.75rem; /* Tailwind text-xs */
+    font-weight: 500;   /* Tailwind font-medium */
+    display: inline-block;
+    text-align: center;
+    min-width: 90px; /* Ensure badge has some width */
+    border: 1px solid;
+}
+.statusPending { background-color: var(--warning-bg-light); color: var(--warning-color-dark); border-color: var(--warning-color); }
+.statusApproved { background-color: var(--success-bg-light); color: var(--success-color-dark); border-color: var(--success-color); }
+.statusRejected { background-color: var(--error-bg-light); color: var(--error-color-dark); border-color: var(--error-color); }
+.statusDefault { background-color: var(--neutral-bg-light); color: var(--neutral-color-dark); border-color: var(--neutral-color); }
+
+.actionsCell {
+    text-align: right; /* Align actions to the right */
+}
+
+.actionButton {
+    padding: 0.375rem 0.75rem; /* Tailwind py-1.5 px-3 */
+    font-size: 0.8125rem; /* Slightly smaller than base text */
+    border-radius: var(--border-radius-md);
+    border: 1px solid var(--primary-color);
+    background-color: var(--primary-color);
+    color: var(--text-on-primary);
+    cursor: pointer;
+    transition: background-color var(--transition-fast);
+}
+.actionButton:hover {
+    background-color: var(--primary-color-dark);
+    border-color: var(--primary-color-dark);
+}
+.actionButton:disabled {
+    background-color: var(--neutral-color);
+    border-color: var(--neutral-color);
+    cursor: not-allowed;
+}
+
+.paginationWrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-top: 20px; /* Tailwind pt-5 */
+    margin-top: 16px; /* Tailwind mt-4 */
+    border-top: 1px solid var(--border-color);
+    flex-shrink: 0; /* Prevent pagination from shrinking */
+}
+
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+    .mainContent {
+        margin-left: calc(var(--sidebar-width-collapsed) + 12px); /* Adjust based on your collapsed sidebar */
+        padding: calc(var(--navbar-height) + 12px) 12px 12px;
+    }
+    .mainContent.sidebarCollapsed { /* If you have a class for collapsed sidebar */
+        margin-left: calc(var(--sidebar-width-collapsed) + 12px);
+    }
+    .pageContainer {
+        padding: 20px;
+        margin-top: 12px; /* Adjust if needed */
+        height: calc(100vh - var(--navbar-height) - 12px - 12px); /* Adjust based on paddings */
+    }
+    .title { font-size: 1.5rem; }
+    .titleIcon { width: 1.5rem; height: 1.5rem; }
+}
+
+@media (max-width: 768px) {
+    .mainContent {
+        margin-left: 0 !important; /* Sidebar might overlay or be hidden */
+        padding: calc(var(--navbar-height) + 10px) 10px 10px;
+    }
+    .pageContainer {
+        padding: 16px;
+        margin-top: 10px;
+        height: calc(100vh - var(--navbar-height) - 10px - 10px);
+    }
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 16px;
+        padding-bottom: 12px;
+    }
+    .title { font-size: 1.375rem; }
+    .filtersPanel {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    .inputField, .selectField {
+        min-width: 100%; /* Full width on small screens */
+    }
+    .table th, .table td {
+        font-size: 0.8125rem;
+        white-space: normal; /* Allow text wrapping on small screens */
+        word-break: break-word;
+    }
+    .actionsCell {
+        text-align: left; /* Better for stacked layout if table breaks badly */
+    }
+}

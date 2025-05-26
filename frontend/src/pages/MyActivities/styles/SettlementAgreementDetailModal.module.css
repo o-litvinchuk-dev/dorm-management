@@ -1,0 +1,205 @@
+/* src/pages/MyActivities/styles/SettlementAgreementDetailModal.module.css */
+
+/* --- Base Modal Structure (can be shared or specific) --- */
+.modalInnerContentScrollable {
+  overflow-y: auto;
+  flex-grow: 1;
+  padding: 0; /* Sections will have their own padding */
+  display: flex;
+  flex-direction: column;
+  height: 100%; /* Ensure it tries to fill its container */
+}
+
+.modalHeader {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--background-light);
+  flex-shrink: 0; /* Prevent header from shrinking */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modalTitle {
+  font-size: 1.375rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.modalTitleIcon { /* General for section title icons within modal body */
+  width: 1.25rem;
+  height: 1.25rem;
+  color: var(--primary-color);
+}
+.headerIcon { /* Specific for the main icon in the modal's h2 title */
+  width: 1.625rem;
+  height: 1.625rem;
+  color: var(--primary-color);
+  margin-right: 0.625rem; /* Adjusted from .modalTitleIcon gap */
+}
+
+.modalBody {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  flex-grow: 1; /* Allow body to take available space for scrolling */
+  overflow-y: auto; /* Scroll only body if needed */
+}
+
+.modalFooter {
+  padding: 1.25rem 1.5rem;
+  border-top: 1px solid var(--border-color);
+  background-color: var(--background-light);
+  display: flex;
+  justify-content: flex-end;
+  flex-shrink: 0; /* Prevent footer from shrinking */
+}
+
+/* --- Section Styling --- */
+.modalSection {
+  background-color: var(--card-background-color); /* Or transparent if modalBody has a color */
+  padding: 1rem;
+  border-radius: var(--border-radius-lg);
+  border: 1px solid var(--border-color-light);
+}
+.modalSection:last-of-type {
+  margin-bottom: 0;
+}
+
+.modalSectionTitle {
+  font-size: 1.1rem; /* Slightly smaller than main modal title */
+  font-weight: 600; /* Changed from 500 */
+  color: var(--primary-color);
+  margin-bottom: 0.85rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--primary-bg-light);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.modalSectionTitle svg { /* Icons within section titles */
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+/* --- Grid and Item Styling --- */
+.modalInfoGrid, .modalDetailGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); /* Responsive columns */
+  gap: 0.75rem 1.25rem; /* vertical horizontal */
+}
+
+.modalInfoItem, .modalInfoItemWide {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  padding: 0.25rem 0; /* Reduced padding for compactness */
+  line-height: 1.5; /* Adjusted for readability */
+  word-break: break-word;
+  display: flex;
+  flex-direction: column; /* Stack label and value */
+  gap: 0.125rem;
+}
+
+.modalInfoItem strong { /* For the label part of the item */
+  font-weight: 500;
+  color: var(--text-primary);
+  display: block; /* Ensure it takes full width before value */
+  margin-bottom: 0.1rem; /* Small space between label and value */
+}
+
+.modalInfoItemWide {
+  grid-column: 1 / -1;
+}
+
+/* --- Status Badge Styling (Copied/adapted from MyActivitiesPage.module.css for consistency) --- */
+.statusBadgeOnModal {
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--border-radius-full);
+  font-size: 0.8rem;
+  font-weight: 500;
+  display: inline-block;
+  text-align: center;
+  min-width: 110px;
+  line-height: 1.4;
+  border: 1px solid; /* Border color will be set by specific status classes */
+}
+.statusPending { background-color: var(--warning-bg-light); color: var(--warning-color-dark); border-color: var(--warning-color); }
+.statusApproved { background-color: var(--success-bg-light); color: var(--success-color-dark); border-color: var(--success-color); }
+.statusRejected { background-color: var(--error-bg-light); color: var(--error-color-dark); border-color: var(--error-color); }
+.statusDefault { background-color: var(--neutral-bg-light); color: var(--neutral-color-dark); border-color: var(--neutral-color); }
+
+/* --- Utility and Text Styling --- */
+.inlineIconXs {
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.15em;
+  margin-right: 0.25rem;
+  display: inline-block;
+}
+.naText {
+  color: var(--text-muted);
+  font-style: italic;
+}
+.loadingMessage {
+  font-size: 1rem;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 2rem;
+  flex-grow: 1; /* To center in modalBody if it's the only content */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.infoTextModal {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin-top: 1.5rem;
+  text-align: center;
+  padding: 0.85rem 1rem;
+  background-color: var(--background-light);
+  border-radius: var(--border-radius-md);
+  border: 1px dashed var(--border-color-light);
+}
+
+/* --- Button Styling (can be shared or specific) --- */
+.commonButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.2rem;
+  border-radius: var(--border-radius-md);
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+}
+.closeModalButtonWide { /* Specific for the close button in this modal's footer */
+  padding: 0.75rem 1.5rem;
+  width: auto;
+  background-color: var(--text-muted);
+  color: var(--text-on-primary);
+  border: none;
+}
+.closeModalButtonWide:hover {
+  background-color: var(--text-secondary);
+}
+
+/* Responsive adjustments for the modal content */
+@media (max-width: 768px) {
+  .modalHeader, .modalBody, .modalFooter {
+    padding: 1rem;
+  }
+  .modalTitle {
+    font-size: 1.25rem;
+  }
+  .modalInfoGrid, .modalDetailGrid {
+    grid-template-columns: 1fr; /* Stack items on smaller screens */
+  }
+}

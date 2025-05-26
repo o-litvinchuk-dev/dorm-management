@@ -53,7 +53,7 @@ export const getEnforcer = async () => {
 
 export const assignRole = async (userId, role, assigningUserRole) => {
     const enforcer = await getEnforcer(); // Використовуємо свіжий енфорсер
-    const canAssign = await enforcer.enforce(assigningUserRole, "/roles/assign", "POST");
+    const canAssign = await enforcer.enforce(assigningUserRole, "/api/v1/users/assign-role", "POST"); // Generic endpoint
     if (!canAssign) {
         throw new Error("Недостатньо прав для призначення ролі");
     }

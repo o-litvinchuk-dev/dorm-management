@@ -1,7 +1,8 @@
 import { Navigate, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useUser } from "../contexts/UserContext";
-import { RootRedirect } from "../App"; // Переконайтесь, що імпорт правильний
+import { RootRedirect } from "../App";
+
 import LoginPage from "../pages/Auth/LoginPage";
 import RegistrationPage from "../pages/Auth/RegistrationPage";
 import ResetPasswordPage from "../pages/Auth/ResetPasswordPage";
@@ -9,6 +10,7 @@ import NewPasswordPage from "../pages/Auth/NewPasswordPage";
 import CompleteProfilePage from "../pages/Auth/CompleteProfilePage";
 import VerifyEmailPage from "../pages/Auth/VerifyEmailPage";
 import TwoFactorAuthPage from "../pages/Auth/TwoFactorAuthPage";
+
 import DashboardPage from "../pages/Dashboard/DashboardPage";
 import ServicesPage from "../pages/Services/ServicesPage";
 import ApplicationsPage from "../pages/Applications/ApplicationsPage";
@@ -16,12 +18,15 @@ import DormitoriesPage from "../pages/Dormitories/DormitoriesPage";
 import SettlementPage from "../pages/Settlement/SettlementPage";
 import UserProfilePage from "../pages/Profile/ProfilePage";
 import SettingsPage from "../pages/Settings/SettingsPage";
+import MyActivitiesPage from "../pages/MyActivities/MyActivitiesPage";
+
 import ContractApplicationPage from "../pages/Services/ContractApplicationPage/ContractApplicationPage";
 import SettlementAgreementPage from "../pages/Services/Settlement agreement/SettlementAgreementPage";
 import AccommodationApplicationPage from "../pages/Services/AccommodationApplicationPage/AccommodationApplicationPage";
 import SearchRoomsPage from "../pages/Services/RoomReservation/SearchRoomsPage";
 import RoomDetailPage from "../pages/Services/RoomReservation/RoomDetailPage";
 import MyReservationsPage from "../pages/Services/RoomReservation/MyReservationsPage";
+
 import AdminApplicationsPage from "../pages/AdminApplications/AdminApplicationsPage";
 import AdminAccommodationManagementPage from "../pages/AdminApplications/AdminAccommodationManagementPage";
 import AdminManagementPage from "../pages/AdminManagement/AdminManagementPage";
@@ -29,10 +34,17 @@ import GroupsManagementPage from "../pages/Dean/GroupsPage";
 import ManageApplicationPresetsPage from "../pages/AdminManagement/ManageApplicationPresetsPage";
 import AdminRoomReservationsPage from "../pages/AdminReservations/AdminRoomReservationsPage";
 import ManageRoomsPage from "../pages/DormManager/ManageRoomsPage";
+import ManageSettlementAgreementsPage from "../pages/AdminManagement/ManageSettlementAgreementsPage";
+import StudentCouncilPage from "../pages/Dean/StudentCouncilPage";
+
+import DormManagerDashboardPage from "../pages/DormManager/DormManagerDashboardPage";
+import AdminDashboardPage from "../pages/AdminDashboard/AdminDashboardPage";
+import DeanDashboardPage from "../pages/Dean/DeanDashboardPage";
+
 import NotFoundPage from "../pages/Error/NotFoundPage";
 import UnauthorizedPage from "../pages/Error/UnauthorizedPage";
+
 import AdminProtectedRoute from "../components/AdminProtectedRoute";
-import MyActivitiesPage from "../pages/MyActivities/MyActivitiesPage"; // Новий імпорт
 
 const AuthRequiredRoute = ({ element }) => {
   const { user, isLoading } = useUser();
@@ -52,12 +64,11 @@ const AuthRequiredRoute = ({ element }) => {
       }
 
       if (isLoading) {
-        // Still waiting for user context to load
+        // Wait for user loading to complete
         return;
       }
 
-      // User context has loaded
-      if (!user) { // If user is null after loading, means token was invalid or session expired
+      if (!user) {
         if (isMounted) {
           navigate("/login", { state: { from: location }, replace: true });
           setAuthCheckComplete(true);
@@ -65,40 +76,38 @@ const AuthRequiredRoute = ({ element }) => {
         return;
       }
 
-      // If user exists but profile is not complete (and not already on complete-profile page)
       if (user && !user.is_profile_complete && location.pathname !== "/complete-profile") {
         if (isMounted) {
           navigate("/complete-profile", { state: { from: location }, replace: true });
-          // setAuthCheckComplete will be handled when this navigation occurs and this effect reruns or by the target page
         }
-        // No need to setAuthCheckComplete here, as navigation will cause a re-evaluation
-        return; 
+        // No need to setAuthCheckComplete true here, as navigation will occur
+        return;
       }
-      
+
       if (isMounted) {
         setAuthCheckComplete(true);
       }
     };
 
     verifyAuth();
+
     return () => {
-      isMounted = false;
+      isMounted = false; // Cleanup function to prevent state updates on unmounted component
     };
   }, [user, isLoading, navigate, location]);
+
 
   if (isLoading || !authCheckComplete) {
     return <div>Перевірка автентифікації...</div>;
   }
 
-  // If authCheck is complete but there's still no user, redirect (double check)
+  // This check is crucial: if auth check is done and still no user, redirect.
   if (!user && authCheckComplete) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
-  
-  // If user is loaded, profile is complete (or on complete-profile page), render the element
+
   return element;
 };
-
 
 const routesConfig = [
   { path: "/", element: <RootRedirect /> },
@@ -109,7 +118,7 @@ const routesConfig = [
   { path: "/verify-email", element: <VerifyEmailPage /> },
   { path: "/verify-2fa", element: <TwoFactorAuthPage /> },
   { path: "/complete-profile", element: <AuthRequiredRoute element={<CompleteProfilePage />} /> },
-  
+
   { path: "/dashboard", element: <AuthRequiredRoute element={<DashboardPage />} /> },
   { path: "/services", element: <AuthRequiredRoute element={<ServicesPage />} /> },
   {
@@ -121,7 +130,7 @@ const routesConfig = [
     element: <AuthRequiredRoute element={<SettlementAgreementPage />} />,
   },
   {
-    path: "/services/contract-creation",
+    path: "/services/contract-creation", // Might be deprecated or placeholder
     element: <AuthRequiredRoute element={<ContractApplicationPage />} />,
   },
   {
@@ -132,20 +141,23 @@ const routesConfig = [
     path: "/services/rooms/:roomId",
     element: <AuthRequiredRoute element={<RoomDetailPage />} />,
   },
-  { path: "/my-accommodation-applications", element: <AuthRequiredRoute element={<MyActivitiesPage />} /> },
+  { path: "/my-accommodation-applications", element: <AuthRequiredRoute element={<MyActivitiesPage />} /> }, // Consolidated page for user's applications and reservations
   {
     path: "/my-reservations",
     element: <AuthRequiredRoute element={<MyReservationsPage />} />,
   },
   { path: "/settings", element: <AuthRequiredRoute element={<SettingsPage />} /> },
   { path: "/profile", element: <AuthRequiredRoute element={<UserProfilePage />} /> },
+
+  // Legacy or generic, might be unused directly if MyActivitiesPage is preferred
   { path: "/applications", element: <AuthRequiredRoute element={<ApplicationsPage />} /> },
   { path: "/dormitories", element: <AuthRequiredRoute element={<DormitoriesPage />} /> },
   { path: "/settlement", element: <AuthRequiredRoute element={<SettlementPage />} /> },
-  
+
+
   // Admin Routes
   {
-    path: "/adminApplications", // Consider renaming to be more specific or integrating
+    path: "/adminApplications", // This seems like a general entry point, maybe for a menu
     element: (
       <AuthRequiredRoute
         element={
@@ -158,21 +170,7 @@ const routesConfig = [
     ),
   },
   {
-    path: "/admin/accommodation-applications", // Main route for new applications
-    element: (
-      <AuthRequiredRoute
-        element={
-          <AdminProtectedRoute
-            element={<AdminAccommodationManagementPage />}
-            allowedRoles={["admin", "superadmin", "faculty_dean_office", "dorm_manager", "student_council_head", "student_council_member"]}
-          />
-        }
-      />
-    ),
-  },
-  // This might be redundant if AdminApplicationsPage is a general hub
-  {
-    path: "/admin/applications/accommodation", 
+    path: "/admin/accommodation-applications", // Specific management page
     element: (
       <AuthRequiredRoute
         element={
@@ -185,13 +183,40 @@ const routesConfig = [
     ),
   },
   {
-    path: "/admin/management",
+    // Duplicate of the above, keeping for now if used somewhere, should be consolidated
+    path: "/admin/applications/accommodation",
+    element: (
+      <AuthRequiredRoute
+        element={
+          <AdminProtectedRoute
+            element={<AdminAccommodationManagementPage />}
+            allowedRoles={["admin", "superadmin", "faculty_dean_office", "dorm_manager", "student_council_head", "student_council_member"]}
+          />
+        }
+      />
+    ),
+  },
+  {
+    path: "/admin/management", // Superadmin system management
     element: (
       <AuthRequiredRoute
         element={
           <AdminProtectedRoute
             element={<AdminManagementPage />}
             allowedRoles={["superadmin"]}
+          />
+        }
+      />
+    ),
+  },
+  {
+    path: "/admin/settlement-agreements",
+    element: (
+      <AuthRequiredRoute
+        element={
+          <AdminProtectedRoute
+            element={<ManageSettlementAgreementsPage />}
+            allowedRoles={["admin", "superadmin", "dorm_manager"]}
           />
         }
       />
@@ -217,7 +242,7 @@ const routesConfig = [
         element={
           <AdminProtectedRoute
             element={<ManageApplicationPresetsPage />}
-            allowedRoles={["admin", "superadmin", "faculty_dean_office", "dorm_manager"]} // <-- ДОДАНО DORM_MANAGER
+            allowedRoles={["admin", "superadmin", "faculty_dean_office", "dorm_manager"]}
           />
         }
       />
@@ -249,6 +274,61 @@ const routesConfig = [
       />
     ),
   },
+  {
+    path: "/dean/student-council",
+    element: (
+      <AuthRequiredRoute
+        element={
+          <AdminProtectedRoute
+            element={<StudentCouncilPage />}
+            allowedRoles={["faculty_dean_office", "admin", "superadmin"]}
+          />
+        }
+      />
+    ),
+  },
+
+  // Dashboards per role
+  {
+    path: "/dorm-manager/dashboard",
+    element: (
+      <AuthRequiredRoute
+        element={
+          <AdminProtectedRoute
+            element={<DormManagerDashboardPage />}
+            allowedRoles={["dorm_manager"]}
+          />
+        }
+      />
+    ),
+  },
+  {
+    path: "/admin/dashboard",
+    element: (
+      <AuthRequiredRoute
+        element={
+          <AdminProtectedRoute
+            element={<AdminDashboardPage />}
+            allowedRoles={["admin", "superadmin"]}
+          />
+        }
+      />
+    ),
+  },
+  {
+    path: "/dean/dashboard",
+    element: (
+      <AuthRequiredRoute
+        element={
+          <AdminProtectedRoute
+            element={<DeanDashboardPage />}
+            allowedRoles={["faculty_dean_office"]}
+          />
+        }
+      />
+    ),
+  },
+
   { path: "/unauthorized", element: <UnauthorizedPage /> },
   { path: "*", element: <NotFoundPage /> },
 ];

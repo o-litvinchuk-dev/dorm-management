@@ -1,0 +1,63 @@
+/* src/components/Dean/styles/BatchGroupForm.module.css */
+@import "./GroupForm.module.css"; /* Імпортуємо базові стилі модалки */
+.instructions {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+  background-color: var(--info-bg-light); /* Інший фон для інструкцій */
+  padding: 0.75rem 1rem;
+  border-radius: var(--border-radius-md);
+  line-height: 1.6;
+  border-left: 3px solid var(--primary-color);
+}
+.instructions strong {
+  font-weight: 600; /* Змінено з 500 для більшого акценту */
+  color: var(--text-primary);
+}
+.textareaField { /* Перевизначення з GroupForm.module.css, якщо потрібно */
+  min-height: 150px; /* Більша висота для списку */
+  font-family: var(--font-family-mono);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+.resultsContainer {
+  margin-top: 1.25rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  max-height: 180px; /* Обмеження висоти для результатів */
+  overflow-y: auto;
+  font-size: 0.8125rem;
+  background-color: var(--background-light);
+}
+.resultsContainer h4 {
+  margin-top: 0;
+  margin-bottom: 0.625rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+.resultsContainer ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+.resultsContainer li {
+  padding: 0.375rem 0;
+  border-bottom: 1px dashed var(--border-color-light);
+}
+.resultsContainer li:last-child {
+  border-bottom: none;
+}
+.resultSuccess {
+  color: var(--success-color-dark);
+}
+.resultSuccess strong {
+  color: var(--success-color-dark); /* Темніший для кращого контрасту */
+}
+.resultError {
+  color: var(--error-color-dark);
+}
+.resultError strong {
+  color: var(--error-color-dark); /* Темніший для кращого контрасту */
+}

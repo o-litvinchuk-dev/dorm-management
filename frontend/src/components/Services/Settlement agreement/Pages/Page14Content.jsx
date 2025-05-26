@@ -8,24 +8,78 @@ const Page14Content = ({
   handleFocus,
   handleBlur,
   inputRefs,
+  displayFacultyName,
+  displayGroupName,
+  displayDormName,
+  handleInputKeyDown, // For checkbox navigation
 }) => {
+
+  const formatDateForDisplay = (day, month, yearShort) => {
+    if (!day || !month || !yearShort || String(yearShort).length !== 2) return "Не вказано";
+    const currentCentury = Math.floor(new Date().getFullYear() / 100) * 100;
+    const fullYear = currentCentury + parseInt(yearShort, 10);
+    return `${String(day).padStart(2, '0')}.${String(month).padStart(2, '0')}.${fullYear}`;
+  };
+
   return (
     <div className={styles.page14ContractText} role="region" aria-labelledby="final-steps-title">
       <h3 id="final-steps-title" className={styles.page14CenteredTitle}>Фінальний Крок: Подача Договору</h3>
 
       <div className={styles.page14InfoSection}>
-        <h4 className={styles.page14SectionTitle}>Перевірте Дані</h4>
-        <p className={styles.page14JustifiedText}>
-          Перед подачею переконайтеся, що ПІБ, паспортні дані, ідентифікаційний номер, контакти, номер гуртожитку та кімнати введено правильно. Помилки можуть затримати поселення.
+        <h4 className={styles.page14SectionTitle}>Будь ласка, перевірте введені дані:</h4>
+        <div className={styles.summaryGrid}>
+          <div className={styles.summaryItem}>
+            <strong>П.І.Б. студента:</strong>
+            <span>{formData.fullName || "Не вказано"}</span>
+          </div>
+          <div className={styles.summaryItem}>
+            <strong>Факультет:</strong>
+            <span>{displayFacultyName || "Не обрано"}</span>
+          </div>
+          <div className={styles.summaryItem}>
+            <strong>Група:</strong>
+            <span>{displayGroupName || "Не обрано"}</span>
+          </div>
+          <div className={styles.summaryItem}>
+            <strong>Курс:</strong>
+            <span>{formData.course || "Не вказано"}</span>
+          </div>
+          <div className={styles.summaryItem}>
+            <strong>Паспорт:</strong>
+            <span>{formData.passportSeries || "XX"} №{formData.passportNumber || "000000"}</span>
+          </div>
+          <div className={styles.summaryItem}>
+            <strong>ІПН:</strong>
+            <span>{(formData.taxId || []).join("") || "Не вказано"}</span>
+          </div>
+           <div className={styles.summaryItem}>
+            <strong>Телефон:</strong>
+            <span>{formData.residentPhone ? `${formData.residentPhone.startsWith('+380') ? '' : '+380'}${formData.residentPhone.replace('+380','')}` : "Не вказано"}</span>
+          </div>
+          <div className={styles.summaryItem}>
+            <strong>Гуртожиток:</strong>
+            <span>{displayDormName || "Не обрано"}</span>
+          </div>
+          <div className={styles.summaryItem}>
+            <strong>Кімната №:</strong>
+            <span>{formData.roomNumber || "Не вказано"}</span>
+          </div>
+          <div className={styles.summaryItem}>
+            <strong>Період проживання:</strong>
+            <span>
+              {formatDateForDisplay(formData.startDay, formData.startMonth, formData.startYear)} - {formatDateForDisplay(formData.endDay, formData.endMonth, formData.endYear)}
+            </span>
+          </div>
+           <div className={styles.summaryItem}>
+            <strong>Дата договору:</strong>
+            <span>{formatDateForDisplay(formData.contractDay, formData.contractMonth, formData.contractYear)}</span>
+          </div>
+        </div>
+        <p className={styles.page14JustifiedText} style={{ marginTop: '15px', color: '#c0392b', fontWeight: '500' }}>
+          Увага! Перед подачею переконайтеся, що всі дані вірні. Помилки можуть затримати процес поселення.
         </p>
       </div>
 
-      <div className={styles.page14InfoSection}>
-        <h4 className={styles.page14SectionTitle}>Підтвердження</h4>
-        <p className={styles.page14JustifiedText}>
-          Після натискання «Подати заявку» ви отримаєте повідомлення про успіх. Збережіть скріншот. Якщо підтвердження немає, зверніться до деканату.
-        </p>
-      </div>
 
       <div className={styles.page14InfoSection}>
         <h4 className={styles.page14SectionTitle}>Підтвердження Згоди</h4>
@@ -41,18 +95,17 @@ const Page14Content = ({
               onChange={(e) => handleChange(e, "dataProcessingConsent")}
               onFocus={() => handleFocus("dataProcessingConsent")}
               onBlur={() => handleBlur("dataProcessingConsent")}
+              onKeyDown={(e) => handleInputKeyDown(e, "dataProcessingConsent", "contractTermsConsent", "residentSignature_appendix3")} // prev from Page 13 sig
               className={`${styles.page14CheckboxInput} ${errors.dataProcessingConsent ? styles.page14ErrorInput : ""}`}
               required
-              ref={(el) => (inputRefs.current.dataProcessingConsent = el)}
+              ref={(el) => { inputRefs.current["dataProcessingConsent"] = el;}}
               data-error-field="dataProcessingConsent"
               aria-label="Згода на обробку персональних даних"
-              aria-invalid={!!errors.dataProcessingConsent}
-              aria-describedby={errors.dataProcessingConsent ? "dataProcessingConsent-error" : undefined}
             />
             Я надаю згоду на обробку моїх персональних даних відповідно до Закону України «Про захист персональних даних».
           </label>
           {errors.dataProcessingConsent && (
-            <p id="dataProcessingConsent-error" className={styles.page14Error}>
+            <p id="dataProcessingConsent-error-p14" className={styles.page14Error}>
               {errors.dataProcessingConsent}
             </p>
           )}
@@ -65,18 +118,17 @@ const Page14Content = ({
               onChange={(e) => handleChange(e, "contractTermsConsent")}
               onFocus={() => handleFocus("contractTermsConsent")}
               onBlur={() => handleBlur("contractTermsConsent")}
+              onKeyDown={(e) => handleInputKeyDown(e, "contractTermsConsent", "dataAccuracyConsent", "dataProcessingConsent")}
               className={`${styles.page14CheckboxInput} ${errors.contractTermsConsent ? styles.page14ErrorInput : ""}`}
               required
-              ref={(el) => (inputRefs.current.contractTermsConsent = el)}
+              ref={(el) => { inputRefs.current["contractTermsConsent"] = el; }}
               data-error-field="contractTermsConsent"
               aria-label="Згода з умовами договору"
-              aria-invalid={!!errors.contractTermsConsent}
-              aria-describedby={errors.contractTermsConsent ? "contractTermsConsent-error" : undefined}
             />
             Я ознайомлений(а) та згоден(на) з умовами цього Договору та Правилами внутрішнього розпорядку гуртожитку.
           </label>
           {errors.contractTermsConsent && (
-            <p id="contractTermsConsent-error" className={styles.page14Error}>
+            <p id="contractTermsConsent-error-p14" className={styles.page14Error}>
               {errors.contractTermsConsent}
             </p>
           )}
@@ -89,74 +141,22 @@ const Page14Content = ({
               onChange={(e) => handleChange(e, "dataAccuracyConsent")}
               onFocus={() => handleFocus("dataAccuracyConsent")}
               onBlur={() => handleBlur("dataAccuracyConsent")}
+              onKeyDown={(e) => handleInputKeyDown(e, "dataAccuracyConsent", null, "contractTermsConsent")} // Last interactive element before submit
               className={`${styles.page14CheckboxInput} ${errors.dataAccuracyConsent ? styles.page14ErrorInput : ""}`}
               required
-              ref={(el) => (inputRefs.current.dataAccuracyConsent = el)}
+              ref={(el) => { inputRefs.current["dataAccuracyConsent"] = el; }}
               data-error-field="dataAccuracyConsent"
               aria-label="Підтвердження правильності даних"
-              aria-invalid={!!errors.dataAccuracyConsent}
-              aria-describedby={errors.dataAccuracyConsent ? "dataAccuracyConsent-error" : undefined}
             />
             Я підтверджую, що всі введені дані є правильними, і беру на себе відповідальність за їх достовірність.
           </label>
           {errors.dataAccuracyConsent && (
-            <p id="dataAccuracyConsent-error" className={styles.page14Error}>
+            <p id="dataAccuracyConsent-error-p14" className={styles.page14Error}>
               {errors.dataAccuracyConsent}
             </p>
           )}
         </div>
       </div>
-
-      <div className={styles.page14SignatureSection}>
-        <div className={styles.page14SignatureBlock}>
-          <p className={styles.page14SignatureLabel}>Підтверджую правильність даних: Мешканець</p>
-          <div className={styles.page14SignatureInputs}>
-            <input
-              type="text"
-              name="residentName"
-              value={formData.residentName || ""}
-              onChange={(e) => handleChange(e, "residentName")}
-              onFocus={() => handleFocus("residentName")}
-              onBlur={() => handleBlur("residentName")}
-              className={`${styles.page14SignatureInput} ${errors.residentName ? styles.page14ErrorInput : ""}`}
-              placeholder="П.І.Б."
-              required
-              ref={(el) => (inputRefs.current.residentName = el)}
-              data-error-field="residentName"
-              aria-label="П.І.Б. мешканця"
-              aria-invalid={!!errors.residentName}
-              aria-describedby={errors.residentName ? "residentName-error" : undefined}
-            />
-          </div>
-        </div>
-        <div className={styles.page14SignatureBlock}>
-          <p className={styles.page14SignatureLabel}>Прийняв: Завідувач гуртожитку</p>
-          <div className={styles.page14SignatureInputs}>
-            <input
-              type="text"
-              name="dormManagerName"
-              value={formData.dormManagerName || ""}
-              onChange={(e) => handleChange(e, "dormManagerName")}
-              onFocus={() => handleFocus("dormManagerName")}
-              onBlur={() => handleBlur("dormManagerName")}
-              className={`${styles.page14SignatureInput} ${errors.dormManagerName ? styles.page14ErrorInput : ""}`}
-              placeholder="П.І.Б."
-              required
-              ref={(el) => (inputRefs.current.dormManagerName = el)}
-              data-error-field="dormManagerName"
-              aria-label="П.І.Б. завідувача гуртожитку"
-              aria-invalid={!!errors.dormManagerName}
-              aria-describedby={errors.dormManagerName ? "dormManagerName-error" : undefined}
-            />
-          </div>
-        </div>
-      </div>
-      {errors.residentName && (
-        <p id="residentName-error" className={styles.page14Error}>{errors.residentName}</p>
-      )}
-      {errors.dormManagerName && (
-        <p id="dormManagerName-error" className={styles.page14Error}>{errors.dormManagerName}</p>
-      )}
 
       <div className={styles.page14SubmitSection}>
         <p className={styles.page14CenteredText}>

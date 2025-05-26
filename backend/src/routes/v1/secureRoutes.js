@@ -14,9 +14,11 @@ import {
   getAccommodationApplications,
   getDashboardData,
   getMyAccommodationApplications,
-  createAccommodationApplication, // This seems like a service, not typically 'secure' data fetch
+  createAccommodationApplication,
   getAccommodationApplicationById,
   cancelAccommodationApplication,
+  getMySettlementAgreements, // Added new controller
+  getSettlementAgreementByIdForUser, // Added new controller
 } from "../../controllers/secureController.js";
 import User from "../../models/User.js";
 import {
@@ -87,7 +89,7 @@ router.get(
 
 router.get(
   "/accommodation-applications",
-  authorize("GET", "/api/v1/admin/accommodation-applications"), // Re-using admin perm for now
+  authorize("GET", "/api/v1/admin/accommodation-applications"),
   getAccommodationApplications
 );
 
@@ -122,6 +124,19 @@ router.delete(
   "/my-reservations/:reservationId",
   authorize("DELETE", "/api/v1/secure/my-reservations/:reservationId"),
   cancelMyReservation
+);
+
+// New settlement agreement routes
+router.get(
+  "/my-settlement-agreements",
+  authorize("GET", "/api/v1/secure/my-settlement-agreements"),
+  getMySettlementAgreements
+);
+
+router.get(
+  "/my-settlement-agreements/:id",
+  authorize("GET", "/api/v1/secure/my-settlement-agreements/:id"),
+  getSettlementAgreementByIdForUser
 );
 
 export default router;

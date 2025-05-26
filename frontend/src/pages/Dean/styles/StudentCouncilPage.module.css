@@ -1,0 +1,596 @@
+/* Uses global CSS variables defined in :root */
+
+.layout {
+    display: flex;
+    min-height: 100vh;
+    background-color: var(--background-color); /* Updated */
+}
+
+.mainContent {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    transition: margin-left var(--transition-base);
+    margin-left: var(--sidebar-width-expanded);
+}
+
+.mainContent.sidebarCollapsed {
+    margin-left: var(--sidebar-width-collapsed);
+}
+
+.pageContainer {
+    padding: var(--main-content-padding);
+    margin-top: var(--navbar-height); /* Space for Navbar */
+    overflow-y: auto; /* If content overflows */
+    flex-grow: 1; /* Takes remaining vertical space */
+    /* Styles for the main content card itself, not the wrapper */
+    background-color: var(--card-background-color); /* Updated */
+    border-radius: var(--border-radius-lg); /* Updated */
+    /* box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.07); */ /* Using generic shadow from vars if available, or keep specific */
+    /* For this exercise, I'll remove direct shadow and assume it might be part of a global card class or not desired */
+    margin-left: var(--main-content-padding); /* Added margin to match overall padding */
+    margin-right: var(--main-content-padding);
+    margin-bottom: var(--main-content-padding);
+    display: flex;
+    flex-direction: column; /* Ensure header, contentWrapper, pagination stack correctly */
+}
+
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px; /* 1.25rem */
+    padding-bottom: 10px; /* 0.625rem */
+    border-bottom: 1px solid var(--border-color); /* Updated */
+    flex-shrink: 0;
+}
+
+.title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--text-primary); /* Updated */
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.titleIcon {
+    width: 28px;
+    height: 28px;
+    color: var(--primary-color); /* Updated */
+}
+
+.actionButtonMain {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.2rem;
+    background-color: var(--primary-color); /* Updated */
+    color: var(--text-on-primary); /* Updated */
+    border: none;
+    border-radius: var(--border-radius-md); /* Updated */
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color var(--transition-fast);
+}
+
+.actionButtonMain:hover:not(:disabled) {
+    background-color: var(--primary-color-dark); /* Updated */
+}
+
+.actionButtonMain:disabled {
+    background-color: var(--neutral-color); /* Updated - uses new neutral color */
+    color: var(--text-muted); /* Added for better contrast on disabled */
+    cursor: not-allowed;
+}
+
+.buttonIcon {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+.buttonIconSm {
+    width: 1rem;
+    height: 1rem;
+}
+
+.contentWrapper {
+    /* This is the area for filters, table, messages */
+    /* background-color: var(--card-background-color); */ /* Already on pageContainer */
+    /* padding: 1.5rem; */ /* Padding is now on pageContainer or handled by children */
+    /* border-radius: var(--border-radius-lg); */ /* Already on pageContainer */
+    /* box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.07); */ /* Already on pageContainer */
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0; /* For proper scrolling within flex child */
+}
+
+.filtersPanel {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    align-items: center; /* Changed to center for better alignment with different height inputs */
+    padding: 1rem; /* Added padding for visual separation */
+    background-color: var(--background-light); /* Updated */
+    border-radius: var(--border-radius-md); /* Updated */
+}
+
+.inputField,
+.selectField { /* Combined as they share many styles */
+    padding: 0.6rem 0.8rem;
+    border: 1px solid var(--border-color-dark); /* Updated */
+    border-radius: var(--border-radius-md); /* Updated */
+    font-size: 0.9rem;
+    color: var(--text-primary); /* Updated */
+    background-color: var(--card-background-color); /* Updated - ensures inputs are white */
+    flex-grow: 1;
+    min-width: 150px;
+    box-sizing: border-box;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.inputField:focus, .selectField:focus {
+    outline: none;
+    border-color: var(--primary-color); /* Updated */
+    box-shadow: 0 0 0 2px var(--primary-bg-light); /* Updated - using primary-bg-light for a softer focus shadow */
+}
+.inputField:disabled, .selectField:disabled {
+    background-color: var(--border-color-light); /* Updated */
+    color: var(--text-placeholder); /* Updated */
+    cursor: not-allowed;
+}
+
+.resetFilterButton {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.6rem 1rem;
+    background-color: var(--blue-gray-100); /* Maintained from user's :root */
+    color: var(--blue-gray-900);           /* Maintained from user's :root */
+    border: 1px solid var(--blue-gray-300); /* Maintained from user's :root */
+    border-radius: var(--border-radius-md); /* Updated */
+    font-size: 0.9rem;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color var(--transition-fast);
+}
+.resetFilterButton:hover:not(:disabled) {
+    background-color: var(--blue-gray-300); /* Maintained from user's :root */
+}
+.resetFilterButton:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+
+.loading,
+.emptyMessage {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-secondary); /* Updated */
+    font-size: 1.1rem; /* Kept from original StudentCouncilPage */
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+.emptyMessage { /* More specific styling for empty state */
+    background-color: var(--background-light); /* Updated */
+    border-radius: var(--border-radius-md); /* Updated */
+    border: 1px dashed var(--border-color-dark); /* Updated */
+    gap: 0.75rem;
+}
+.emptyMessage svg {
+    width: 40px;
+    height: 40px;
+    color: var(--text-muted); /* Updated */
+}
+
+.errorMessage { /* For critical errors shown on the page */
+    text-align: center;
+    padding: 1rem; /* StudentCouncilPage had 2rem, this page had 1rem, keeping 1rem */
+    color: var(--error-color-dark);   /* Updated */
+    background-color: var(--error-bg-light); /* Updated */
+    border: 1px solid var(--error-color); /* Updated */
+    border-radius: var(--border-radius-md); /* Updated */
+    font-size: 1rem; /* StudentCouncilPage had 1.1rem */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+}
+.errorMessage svg {
+    width: 40px; /* Matched to emptyMessage svg */
+    height: 40px;
+    color: var(--error-color); /* Updated */
+}
+
+
+.tableContainer {
+    overflow-x: auto;
+    border: 1px solid var(--border-color); /* Updated */
+    border-radius: var(--border-radius-md); /* Updated */
+    flex-grow: 1; /* Allow table to take space */
+    display: flex; /* Ensure table inside can grow */
+    flex-direction: column;
+    min-height: 0; /* For flex scrolling */
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.table th, /* Combined .th and .td as .table th and .table td for specificity */
+.table td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color-light); /* Updated - lighter border for rows */
+}
+
+.table th { /* Specific to <th> */
+    background-color: var(--background-light); /* Updated */
+    font-weight: 600;
+    color: var(--text-secondary); /* Updated */
+    cursor: default;
+    user-select: none;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.table th.sortableHeader { /* Using class for sortable */
+    cursor: pointer;
+}
+.table th.sortableHeader:hover {
+    background-color: var(--primary-bg-hover-light); /* Updated */
+    color: var(--primary-color); /* Added for text color change on hover */
+}
+
+.headerContent { /* For icon and text in header */
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.sortIcon {
+    width: 1rem;
+    height: 1rem;
+    color: var(--text-muted); /* Updated */
+}
+.table th.sortableHeader:hover .sortIcon {
+    color: var(--primary-color); /* Updated */
+}
+
+.table td { /* Specific to <td> */
+    color: var(--text-primary); /* Updated */
+}
+.table tr:last-child td { /* Corrected selector */
+    border-bottom: none;
+}
+.table tbody tr:hover td { /* Targeting td for background hover */
+    background-color: var(--primary-bg-light); /* Updated */
+}
+
+.actionsCell {
+    text-align: right;
+    white-space: nowrap;
+}
+.actionsHeader {
+    text-align: right;
+}
+
+.actionButton { /* Table action buttons */
+    padding: 0.3rem 0.5rem;
+    margin-left: 0.5rem;
+    border: none;
+    border-radius: var(--border-radius-sm); /* Updated */
+    cursor: pointer;
+    transition: opacity var(--transition-fast), color var(--transition-fast); /* Added color transition */
+    background-color: transparent;
+    color: var(--text-muted); /* Default color for icons */
+}
+.actionButton svg {
+    width: 1.15rem;
+    height: 1.15rem;
+    vertical-align: middle;
+}
+.actionButton:hover:not(:disabled) {
+    opacity: 1; /* Full opacity on hover */
+}
+.actionButton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.editButton:hover:not(:disabled) svg { /* Target svg for color change */
+    color: var(--warning-color); /* Updated - using warning color */
+}
+.deleteButton:hover:not(:disabled) svg { /* Target svg for color change */
+    color: var(--error-color); /* Updated - using error color */
+}
+
+
+.paginationWrapper {
+    margin-top: 1.5rem;
+    display: flex;
+    justify-content: center;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color); /* Updated */
+    flex-shrink: 0;
+}
+
+.modalOverlayGlobal {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(31, 41, 55, 0.6); /* Gray 800 with opacity, good dark overlay */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000; /* Standard modal z-index */
+    padding: 1rem;
+    backdrop-filter: blur(3px); /* Softer blur */
+}
+
+.modalContentGlobal {
+    background-color: var(--card-background-color); /* Updated */
+    /* padding: 1.5rem 2rem; Combined into modal parts */
+    border-radius: var(--border-radius-lg); /* Updated */
+    /* box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1); Removed for now */
+    width: 100%;
+    max-width: 550px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    display: flex;
+    flex-direction: column; /* Important for stacking header/body/footer */
+}
+
+.closeButtonIconGlobal {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.3rem;
+    color: var(--text-muted); /* Updated */
+    border-radius: var(--border-radius-full); /* For hover effect */
+    transition: color var(--transition-fast), background-color var(--transition-fast);
+}
+.closeButtonIconGlobal svg {
+    width: 1.5rem;
+    height: 1.5rem;
+    display: block; /* Prevents descender space */
+}
+.closeButtonIconGlobal:hover {
+    color: var(--text-primary); /* Updated */
+    background-color: var(--border-color-light); /* Updated */
+}
+
+/* Modal Form specific styles (shared by GroupForm, BatchGroupForm) */
+.modalInnerContent { /* Add this class to the direct child of modalContentGlobal in your form components */
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1; /* Allows inner content to fill the modal if modalContentGlobal is flex */
+    padding: 0; /* Reset padding, handled by header/body/footer */
+}
+
+.modalHeader {
+    padding: 1rem 1.5rem; /* Consistent padding */
+    /* margin-bottom: 1.5rem; No margin, use padding on body */
+    border-bottom: 1px solid var(--border-color); /* Updated */
+    flex-shrink: 0;
+}
+
+.modalTitle {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--text-primary); /* Updated */
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0; /* Reset default heading margin */
+}
+.modalTitleIcon {
+    width: 1.75rem;
+    height: 1.75rem;
+    color: var(--primary-color); /* Updated */
+}
+
+.modalBody {
+    padding: 1.5rem; /* Body padding */
+    display: flex;
+    flex-direction: column;
+    gap: 1rem; /* Space between form groups */
+    flex-grow: 1; /* Allows body to expand */
+    overflow-y: auto; /* If body content itself is too long */
+}
+
+.formGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem; /* Small gap for label and input */
+}
+
+.inputLabel {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-secondary); /* Updated */
+    /* margin-bottom: 0.3rem; Replaced by gap in formGroup */
+}
+
+/* .selectField uses .inputField styles via composes or direct class application */
+.inputError { /* Add this class to .inputField/.selectField on error */
+    border-color: var(--error-color) !important; /* Updated */
+}
+.inputError:focus {
+    box-shadow: 0 0 0 2px var(--error-bg-light) !important; /* Updated */
+}
+
+.formErrorMessage { /* For validation messages under inputs */
+    font-size: 0.8rem;
+    color: var(--error-color-dark); /* Updated */
+    margin-top: 0.25rem;
+}
+
+.modalFooter {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem; /* Consistent padding */
+    /* margin-top: 2rem; No margin, handled by body padding */
+    border-top: 1px solid var(--border-color); /* Updated */
+    flex-shrink: 0;
+}
+
+.formButton { /* Base for buttons in footer */
+    display: inline-flex; /* For better alignment with icons */
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.6rem 1.2rem;
+    border-radius: var(--border-radius-md); /* Updated */
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    border: 1px solid transparent;
+    white-space: nowrap; /* Prevent button text wrapping */
+}
+.formButton svg {
+    width: 1.1rem;
+    height: 1.1rem;
+}
+
+.formButton.submitButton {
+    background-color: var(--primary-color); /* Updated */
+    color: var(--text-on-primary); /* Updated */
+}
+.formButton.submitButton:hover:not(:disabled) {
+    background-color: var(--primary-color-dark); /* Updated */
+}
+.formButton.submitButton:disabled {
+    background-color: var(--neutral-color); /* Updated */
+    color: var(--text-muted); /* Updated */
+    cursor: not-allowed;
+}
+
+.formButton.cancelButton {
+    background-color: var(--card-background-color); /* Updated - to make it look less prominent */
+    color: var(--text-secondary); /* Updated */
+    border-color: var(--border-color-dark); /* Updated */
+}
+.formButton.cancelButton:hover:not(:disabled) {
+    background-color: var(--border-color-light); /* Updated */
+    border-color: var(--border-color-dark); /* Ensure border stays visible */
+}
+.formButton.cancelButton:disabled {
+    background-color: var(--border-color-light);
+    color: var(--text-placeholder);
+    border-color: var(--border-color);
+    cursor: not-allowed;
+}
+
+
+@media (max-width: 768px) {
+    .pageContainer {
+        margin-left: var(--main-content-padding);
+        margin-right: var(--main-content-padding);
+        padding: 1rem; /* Reduced padding */
+        border-radius: var(--border-radius-md);
+    }
+    .title {
+        font-size: 1.5rem;
+    }
+    .titleIcon {
+        width: 24px;
+        height: 24px;
+    }
+    .header { /* Stack header items on small screens */
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+    }
+    .actionButtonMain {
+        width: 100%;
+        justify-content: center;
+    }
+    .filtersPanel {
+        flex-direction: column;
+        gap: 0.75rem;
+        align-items: stretch; /* Make filter items full width */
+        padding: 0.75rem;
+    }
+    .inputField, .selectField, .resetFilterButton {
+        width: 100%;
+        min-width: auto; /* Override min-width */
+    }
+    /* Responsive Table */
+    .table thead {
+        display: none;
+    }
+    .table, .table tbody, .table tr, .table td {
+        display: block;
+        width: 100% !important; /* Important to override inline styles or specificity */
+    }
+    .table tr {
+        margin-bottom: 1rem;
+        border: 1px solid var(--border-color); /* Updated */
+        border-radius: var(--border-radius-md); /* Updated */
+        padding: 0.5rem 0; /* Padding for the "card" */
+        background-color: var(--card-background-color); /* Each row as a card */
+    }
+    .table td {
+        text-align: right;
+        padding-left: 50%; /* Space for label */
+        position: relative;
+        border-bottom: 1px solid var(--border-color-light); /* Updated */
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+        white-space: normal; /* Allow cell content to wrap */
+    }
+    .table td:last-child {
+        border-bottom: none;
+    }
+    .table td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 0.75rem;
+        width: calc(50% - 1.5rem); /* Adjust label width */
+        padding-right: 0.5rem;
+        font-weight: 600;
+        text-align: left;
+        color: var(--text-secondary); /* Updated */
+        white-space: nowrap; /* Prevent label wrap */
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .actionsCell { /* Ensure actions cell is still usable */
+        text-align: right;
+        padding-left: 0.75rem; /* Reset padding for action cell if label is hidden */
+    }
+    .actionsCell::before { /* Hide label for actions */
+        display: none;
+    }
+    .actionButton {
+        margin-left: 0.3rem;
+        padding: 0.5rem; /* Easier to tap */
+    }
+    .modalContentGlobal {
+        width: calc(100% - 2rem); /* More screen estate */
+        margin: 1rem; /* Center it */
+        padding: 0; /* Inner components handle padding */
+        max-height: calc(100vh - 2rem);
+    }
+    .modalHeader, .modalBody, .modalFooter {
+        padding: 1rem; /* Simplified padding for smaller modals */
+    }
+    .modalTitle {
+        font-size: 1.2rem;
+    }
+}

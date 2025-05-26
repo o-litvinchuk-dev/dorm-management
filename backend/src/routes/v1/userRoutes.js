@@ -1,6 +1,5 @@
 import express from "express";
 import {
-    assignFacultyDeanOfficeRole,
     assignFacultyDeanOffice,
     assignDormManagerRole,
     assignStudentCouncilRole,
@@ -17,32 +16,33 @@ router.get(
   authorize("GET", "/api/v1/users/all"),
   getAllUsers
 );
+
 router.put(
   "/:id/role",
   authenticate,
-  authorize("PUT", "/api/v1/users/:id/role"),
+  authorize("PUT", "/api/v1/users/:id/role"), // This should be a generic permission for admins to change roles
   updateUserRole
 );
 
 router.post(
   "/assign-faculty-dean-office",
   authenticate,
-  authorize("POST", "/api/v1/users/assign-faculty-dean-office"),
+  authorize("POST", "/api/v1/users/assign-role"), // Changed to a more generic permission
   assignFacultyDeanOffice
 );
+
 router.post(
   "/assign-dorm-manager",
   authenticate,
-  authorize("POST", "/api/v1/users/assign-dorm-manager"),
+  authorize("POST", "/api/v1/users/assign-role"), // Changed to a more generic permission
   assignDormManagerRole
 );
+
 router.post(
   "/assign-student-council",
   authenticate,
-  authorize("POST", "/api/v1/users/assign-student-council"),
+  authorize("POST", "/api/v1/users/assign-role"), // Changed to a more generic permission
   assignStudentCouncilRole
 );
-router.get("/all", authenticate, authorize("GET", "/api/v1/users/all"), getAllUsers);
-router.put("/:id/role", authenticate, authorize("PUT", "/api/v1/users/:id/role"), updateUserRole);
 
 export default router;

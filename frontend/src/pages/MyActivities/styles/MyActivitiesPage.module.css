@@ -1,46 +1,49 @@
-/* Variables are now expected to be in a global scope (e.g. :root in index.css or variables.css) */
+/* src/pages/MyActivities/styles/MyActivitiesPage.module.css */
 
 .layout {
   display: flex;
   min-height: 100vh;
   background-color: var(--background-color);
+  font-family: var(--font-family-sans);
 }
 .mainContent {
   flex-grow: 1;
   display: flex;
   flex-direction: column;
   transition: margin-left var(--transition-slow);
-  margin-left: var(--sidebar-width-expanded); 
-  padding-top: var(--navbar-height); 
+  margin-left: var(--sidebar-width-expanded);
+  padding-top: var(--navbar-height);
   box-sizing: border-box;
+  overflow-x: hidden;
 }
 .mainContent.sidebarCollapsed {
   margin-left: var(--sidebar-width-collapsed);
 }
 
 .pageContainer {
-  padding: var(--main-content-padding, 1.5rem); 
+  padding: var(--main-content-padding, 1.5rem);
   background-color: var(--card-background-color);
   flex-grow: 1;
   border-radius: var(--border-radius-xl);
   margin: var(--page-container-margin-top, 1rem) var(--main-content-padding, 1.5rem) var(--main-content-padding, 1.5rem);
   border: 1px solid var(--border-color);
-  display: flex; 
-  flex-direction: column; 
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
 }
 
 .pageTitle {
   font-size: 1.8rem;
   font-weight: 700;
   color: var(--text-primary);
-  margin-top: 0; 
+  margin-top: 0;
   margin-bottom: 1.5rem;
   display: flex;
   align-items: center;
   padding-bottom: 1rem;
   border-bottom: 1px solid var(--border-color-light);
 }
-.titleIcon {
+.titleIcon { /* General for page title icon */
   width: 26px;
   height: 26px;
   margin-right: 0.75rem;
@@ -55,7 +58,7 @@
   text-align: center;
   font-size: 1.1rem;
   color: var(--text-secondary);
-  flex-grow: 1; 
+  flex-grow: 1;
 }
 .noResultsMessage svg {
   width: 48px;
@@ -79,86 +82,95 @@
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  min-width: 180px;
 }
 .filterGroup label {
   font-size: 0.8rem;
   color: var(--text-muted);
   font-weight: 500;
+  margin-bottom: 0.25rem;
 }
 .filterSelect {
-  padding: 0.5rem 0.75rem;
+  padding: 0.6rem 0.8rem;
   border: 1px solid var(--border-color-dark);
   border-radius: var(--border-radius-md);
   font-size: 0.9rem;
   background-color: var(--card-background-color);
   color: var(--text-primary);
-  min-width: 180px;
+  width: 100%;
+  box-sizing: border-box;
 }
 .filterSelect:focus {
   outline: none;
   border-color: var(--primary-color);
   box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb, 59, 130, 246), 0.2);
 }
-.filterButtonMobile { /* Кнопка для оновлення фільтрів на мобільних */
-    display: none; /* За замовчуванням прихована */
-    padding: 0.5rem 1rem;
-    background-color: var(--primary-color);
-    color: var(--text-on-primary);
-    border: none;
-    border-radius: var(--border-radius-md);
-    cursor: pointer;
-    font-size: 0.9rem;
-    align-items: center;
-    gap: 0.5rem;
+.filterButtonMobile {
+  display: none;
+  padding: 0.6rem 1rem;
+  background-color: var(--primary-color);
+  color: var(--text-on-primary);
+  border: none;
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  font-size: 0.9rem;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
 }
 .filterButtonMobile svg {
-    width: 16px;
-    height: 16px;
+  width: 16px;
+  height: 16px;
 }
 
 .activitiesGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
   gap: 1.5rem;
-  flex-grow: 1; 
-  align-content: start; 
+  flex-grow: 1;
+  align-content: start;
 }
 
 .activityCard {
   background-color: var(--card-background-color);
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius-lg);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
   display: flex;
   flex-direction: column;
-  overflow: hidden; 
-  cursor: pointer; /* Вказуємо, що картка клікабельна */
-  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
 }
-.activityCard:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+.activityCard:hover, .activityCard:focus-visible {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05);
+  border-color: var(--primary-color-light);
+  outline: none;
 }
-
+.activityCard:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
 
 .cardHeader {
   display: flex;
   align-items: center;
-  padding: 0.75rem 1rem;
+  padding: 0.85rem 1.25rem;
   border-bottom: 1px solid var(--border-color-light);
-  background-color: var(--background-ultralight); 
+  background-color: var(--background-ultralight);
 }
 
-.cardIcon {
-  width: 20px;
+.cardIcon { /* Icon for ActivityCard */
+  width: 20px; /* Smaller than page title icon */
   height: 20px;
   color: var(--primary-color);
-  margin-right: 0.75rem;
+  margin-right: 0.85rem;
   flex-shrink: 0;
 }
 
 .cardTitle {
-  font-size: 1.1rem;
+  font-size: 1.1rem; /* Consistent with modal section title */
   font-weight: 600;
   color: var(--text-primary);
   margin: 0;
@@ -168,14 +180,14 @@
 }
 
 .cardBody {
-  padding: 1rem;
+  padding: 1.25rem;
   font-size: 0.9rem;
   line-height: 1.6;
   color: var(--text-secondary);
   flex-grow: 1;
 }
 .cardBody p {
-  margin: 0 0 0.5rem 0;
+  margin: 0 0 0.6rem 0;
 }
 .cardBody p:last-child {
   margin-bottom: 0;
@@ -185,29 +197,52 @@
   color: var(--text-primary);
 }
 
-.statusBadge {
-  padding: 0.2rem 0.6rem;
+.cardDetailItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.detailIcon {
+  width: 16px;
+  height: 16px;
+  color: var(--primary-color-light);
+  flex-shrink: 0;
+}
+.cardStatusItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.statusBadge { /* Base badge style */
+  padding: 0.25rem 0.75rem;
   border-radius: var(--border-radius-full);
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   font-weight: 500;
   text-transform: capitalize;
   display: inline-block;
-  border: 1px solid; 
+  border: 1px solid;
+  line-height: 1.4;
 }
-.statusPending, .statusPendingConfirmation, .statusPendingRoomRes { 
+/* Specific status styles for cards, can be reused by modals if modalStyles.statusBadgeOnModal is not defined or points here */
+.statusPending, .statusPendingRoomRes, .statusPendingAgreement,
+.statusPendingConfirmation {
   background-color: var(--warning-bg-light);
   color: var(--warning-color-dark);
   border-color: var(--warning-color);
 }
-.statusApproved, .statusApprovedByFaculty, .statusApprovedByDorm, .statusConfirmed, .statusCheckedIn, .statusApprovedRoomRes, .statusCheckedInRoomRes {
+.statusApproved, .statusConfirmedRoomRes, .statusApprovedAgreement,
+.statusApprovedByFaculty, .statusApprovedByDorm, .statusCheckedInRoomRes {
   background-color: var(--success-bg-light);
   color: var(--success-color-dark);
   border-color: var(--success-color);
 }
-.statusRejected, .statusRejectedByFaculty, .statusRejectedByDorm, .statusCancelledByUser, .statusRejectedByAdmin, .statusExpired, .statusRejectedRoomRes, .statusCancelledRoomRes, .statusExpiredRoomRes {
-  background-color: var(--neutral-bg-light);
-  color: var(--neutral-color-dark);
-  border-color: var(--neutral-color);
+.statusRejected, .statusCancelledRoomRes, .statusRejectedAgreement, .statusArchivedAgreement,
+.statusRejectedByFaculty, .statusRejectedByDorm, .statusCancelledByUser, .statusRejectedByAdmin, .statusExpiredRoomRes {
+  background-color: var(--error-bg-light);
+  color: var(--error-color-dark);
+  border-color: var(--error-color);
 }
 .statusSettled, .statusCheckedOut, .statusSettledRoomRes, .statusCheckedOutRoomRes {
   background-color: var(--primary-bg-light);
@@ -215,13 +250,13 @@
   border-color: var(--primary-color);
 }
 .statusDefault {
-  background-color: var(--border-color-light);
-  color: var(--text-muted);
-  border-color: var(--border-color-dark);
+  background-color: var(--neutral-bg-light);
+  color: var(--neutral-color-dark);
+  border-color: var(--neutral-color);
 }
 
 .cardFooter {
-  padding: 0.75rem 1rem;
+  padding: 0.85rem 1.25rem;
   border-top: 1px solid var(--border-color-light);
   background-color: var(--background-ultralight);
   display: flex;
@@ -234,79 +269,233 @@
   color: var(--text-muted);
 }
 
-.detailsLink { /* Стиль для текстового "Детальніше" */
-  font-size: 0.85rem;
+.detailsLink {
+  font-size: 0.875rem;
   color: var(--primary-color);
   font-weight: 500;
   cursor: pointer;
+  padding: 0.25rem 0;
 }
 .detailsLink:hover {
   text-decoration: underline;
   color: var(--primary-color-dark);
 }
 
-.loadingSpinner, .noResultsMessage {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 3rem 1rem;
-  text-align: center;
-  font-size: 1.1rem;
-  color: var(--text-secondary);
-  flex-grow: 1; 
-}
-.noResultsMessage svg {
-  width: 48px;
-  height: 48px;
-  margin-bottom: 1rem;
-  color: var(--primary-color-light);
-}
-
-/* Глобальні стилі для модального вікна, якщо вони не визначені в іншому місці */
 .modalOverlayGlobal {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.65); /* Трохи темніше для кращого контрасту */
+  background-color: rgba(31, 41, 55, 0.6);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1100; /* Вищий z-index */
-  padding: 1rem; /* Відступи по краях екрану */
+  z-index: 1100;
+  padding: 1rem;
+  box-sizing: border-box;
+  backdrop-filter: blur(3px);
 }
 
 .modalContentGlobal {
   background: var(--card-background-color);
-  border-radius: var(--border-radius-xl); /* Більший радіус */
+  border-radius: var(--border-radius-xl);
   width: 90%;
-  max-width: 700px; /* Збільшено ширину модалки */
-  max-height: 90vh; /* Обмеження по висоті */
+  max-width: 720px;
+  max-height: 90vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.2); /* Виразніша тінь */
-  position: relative; /* Для позиціонування кнопки закриття */
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.1);
+  position: relative;
+  overflow: hidden;
 }
+.agreementModalContentSizing { /* Specific sizing for agreement modal if needed */
+  max-width: 900px;
+}
+
 
 .closeButtonIconGlobal {
   position: absolute;
-  top: 12px;
-  right: 12px;
-  background: none;
+  top: 1rem;
+  right: 1rem;
+  background: transparent;
   border: none;
   cursor: pointer;
-  padding: 4px;
+  padding: 0.375rem;
   color: var(--text-muted);
+  border-radius: var(--border-radius-full);
+  transition: color var(--transition-base), background-color var(--transition-base);
+  z-index: 10;
 }
 .closeButtonIconGlobal svg {
-  width: 24px;
-  height: 24px;
+  width: 1.5rem;
+  height: 1.5rem;
+  stroke-width: 2;
 }
 .closeButtonIconGlobal:hover {
   color: var(--text-primary);
+  background-color: var(--border-color-light);
 }
+.modalInnerContentScrollable {
+  overflow-y: auto;
+  flex-grow: 1;
+  padding: 0; /* Modal sections handle their own padding */
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--background-light);
+  flex-shrink: 0;
+}
+.modalTitle {
+  font-size: 1.375rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin: 0;
+}
+.modalTitleIcon { /* General for modal title icons (like section icons) */
+  width: 1.375rem; /* Matches font size for balance */
+  height: 1.375rem;
+  color: var(--primary-color);
+}
+.headerIcon { /* Specific for the main icon in the modal's h2 title */
+  width: 1.625rem; /* Slightly larger for the main title */
+  height: 1.625rem;
+  /* color and margin-right are inherited or set by .modalTitleIcon if this class is added alongside */
+}
+
+
+.modalBody {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+.modalFooter {
+  margin-top: auto;
+  padding: 1.25rem 1.5rem;
+  border-top: 1px solid var(--border-color);
+  background-color: var(--background-light);
+  display: flex;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+.detailSection {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color-light);
+}
+.detailSection:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+.detailSectionTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--primary-color);
+  margin-bottom: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.detailSectionTitle svg { /* Icons within section titles */
+  width: 1.2rem;
+  height: 1.2rem;
+  /* color can be inherited or set explicitly */
+}
+.modalInfoGrid, .modalDetailGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 0.6rem 1.25rem;
+}
+.modalInfoItem, .modalInfoItemWide {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  padding: 0.2rem 0;
+  line-height: 1.6;
+  word-break: break-word;
+}
+.modalInfoItem strong {
+  color: var(--text-primary);
+  font-weight: 500;
+  margin-right: 0.375rem;
+}
+.modalInfoItemWide {
+  grid-column: 1 / -1;
+}
+.statusBadgeOnModal { /* Used in modals */
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--border-radius-full);
+  font-size: 0.8rem;
+  font-weight: 500;
+  display: inline-block;
+  text-align: center;
+  min-width: 110px;
+  line-height: 1.4;
+  /* Color styles are inherited from .statusPending, .statusApproved etc. */
+}
+
+.infoTextModal {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin-top: 1.5rem;
+  text-align: center;
+  padding: 0.85rem 1rem;
+  background-color: var(--background-light);
+  border-radius: var(--border-radius-md);
+  border: 1px dashed var(--border-color-light);
+}
+.closeModalButtonWide {
+  padding: 0.75rem 1.5rem;
+  width: auto;
+  background-color: var(--text-muted);
+  color: var(--text-on-primary);
+  border: none;
+  font-weight: 500;
+}
+.closeModalButtonWide:hover {
+  background-color: var(--text-secondary);
+}
+.commonButton { /* Base for buttons in modal footer */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.2rem;
+  border-radius: var(--border-radius-md);
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.inlineIconXs {
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.15em;
+  margin-right: 0.25rem;
+  display: inline-block;
+}
+.naText {
+  color: var(--text-muted);
+  font-style: italic;
+}
+.loadingMessage {
+  font-size: 1rem;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 2rem;
+}
+
 @media (max-width: 768px) {
   .pageContainer {
     padding: 1rem;
@@ -321,17 +510,23 @@
   .filterSelect {
     width: 100%;
   }
-   .filterButtonMobile { 
+   .filterButtonMobile {
     display: inline-flex;
     width: 100%;
     justify-content: center;
     margin-top: 0.5rem;
   }
   .activitiesGrid {
-    grid-template-columns: 1fr; 
+    grid-template-columns: 1fr;
   }
   .modalContentGlobal {
     max-width: 95%;
+    padding: 0;
+  }
+  .modalHeader, .modalBody, .modalFooter {
     padding: 1rem;
+  }
+  .modalTitle {
+    font-size: 1.25rem;
   }
 }
