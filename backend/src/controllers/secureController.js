@@ -6,6 +6,7 @@ import Joi from "joi";
 import User from "../models/User.js"; // Потрібно для перевірки faculty_id
 import { SettlementContract } from "../models/SettlementContract.js";
 import DormitoryPass from "../models/DormitoryPass.js";
+import Event from "../models/Event.js";
 
 export const getDashboardData = async (req, res) => {
   try {
@@ -593,6 +594,48 @@ export const getMyRoommates = async (req, res) => {
     res.status(500).json({ error: "Помилка сервера при отриманні списку сусідів", details: error.message });
   }
 };
+export const getSecureEvents = async (req, res) => {
+  try {
+    const { userId, role, dormitory_id, faculty_id, group_id, course } = req.user;
+    const { category, dateFrom, dateTo } = req.query; // Example filters
+
+    const filters = {};
+    if (category) filters.category = category;
+    if (dateFrom) filters.dateFrom = dateFrom;
+    if (dateTo) filters.dateTo = dateTo;
+
+    const events = await Event.findAllForUser(
+      userId,
+      role,
+      dormitory_id,
+      faculty_id,
+      group_id,
+      course,
+      filters
+    );
+    res.json(events);
+  } catch (error) {
+    console.error("[SecureController] Помилка отримання подій:", error);
+    res.status(500).json({ error: "Помилка сервера при отриманні подій" });
+  }
+};
+
+export const getSecureEventById = async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return res.status(404).json({ error: "Подію не знайдено" });
+    }
+    // Further authorization to check if user can see this specific event might be needed here
+    // or can rely on Event.targets structure if Event.findById was enhanced.
+    // For now, RBAC at route level is the primary guard.
+    res.json(event);
+  } catch (error) {
+    console.error(`[SecureController] Помилка отримання події ${req.params.eventId}:`, error);
+    res.status(500).json({ error: "Помилка сервера при отриманні події" });
+  }
+};
 export default {
   getDashboardData,
   getApplications, 
@@ -606,4 +649,6 @@ export default {
   getMySettlementAgreements,
   getSettlementAgreementByIdForUser,
   getMyRoommates,
+  getSecureEvents,
+  getSecureEventById,
 };

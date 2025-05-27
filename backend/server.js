@@ -26,7 +26,6 @@ import dormManagerRoutes from "./src/routes/v1/dormManagerRoutes.js";
 import adminSettlementContractRoutes from "./src/routes/v1/adminSettlementContractRoutes.js";
 import dormitoryPassRoutes from "./src/routes/v1/dormitoryPassRoutes.js";
 import settlementScheduleAdminRoutes from "./src/routes/v1/settlementScheduleAdminRoutes.js";
-import eventRoutes from "./src/routes/v1/eventRoutes.js";
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -76,7 +75,6 @@ app.use((req, res, next) => {
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/secure", secureRoutes);
 app.use("/api/v1/admin", authenticate, adminRoutes);
-app.use("/api/v1", eventRoutes); 
 app.use("/api/v1/faculties", facultyRoutes);
 app.use("/api/v1/faculty-dormitories", facultyDormitoryRoutes);
 app.use("/api/v1/users", userRoutes);

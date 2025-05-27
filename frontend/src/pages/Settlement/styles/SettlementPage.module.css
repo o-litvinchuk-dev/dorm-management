@@ -1,3 +1,4 @@
+/* src/pages/SettlementPage/styles/SettlementPage.module.css */
 
 .layout {
     display: flex;
@@ -11,9 +12,9 @@
     transition: margin-left var(--transition-slow);
     margin-left: calc(var(--sidebar-width-expanded) + var(--main-content-padding));
     box-sizing: border-box;
-    display: flex; /* Added for new layout */
-    flex-direction: column; /* Added for new layout */
-    overflow: hidden; /* Prevent double scrollbars */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; 
 }
 
 .mainContent.sidebarCollapsed {
@@ -28,10 +29,10 @@
     margin-top: var(--page-container-margin-top);
     width: 100%;
     box-sizing: border-box;
-    flex-grow: 1; /* Allows container to take available space */
+    flex-grow: 1;
     display: flex;
     flex-direction: column;
-    overflow: hidden; /* Prevent content overflow from breaking layout */
+    overflow: hidden; 
 }
 
 .header {
@@ -41,7 +42,7 @@
     margin-bottom: 1.5rem;
     padding-bottom: 1rem;
     border-bottom: 1px solid var(--border-color);
-    flex-shrink: 0; /* Prevent header from shrinking */
+    flex-shrink: 0; 
     flex-wrap: wrap;
     gap: 0.75rem;
 }
@@ -64,45 +65,19 @@
     color: var(--primary-color);
 }
 
-/* Admin actions in header */
-.adminActionsHeader {
-    display: flex;
-    gap: 0.75rem;
-    align-items: center;
-}
-
-.adminCreateButton {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background-color: var(--primary-color);
-    color: var(--text-on-primary);
-    border: none;
-    border-radius: var(--border-radius-md);
-    font-size: 0.875rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color var(--transition-fast);
-}
-.adminCreateButton svg { width: 1rem; height: 1rem;}
-.adminCreateButton:hover { background-color: var(--primary-color-dark); }
-
-
-/* Content Grid for Calendar and Dorm Details */
 .contentGrid {
     display: grid;
-    grid-template-columns: 2fr 1fr; /* Calendar takes more space */
+    grid-template-columns: 2fr 1fr; 
     gap: 1.5rem;
-    flex-grow: 1; /* Allow grid to fill container */
-    overflow: hidden; /* Prevent internal scrollbars if not needed */
-    min-height: 0; /* Fix for flexbox/grid overflow issues */
+    flex-grow: 1; 
+    overflow: hidden; 
+    min-height: 0; 
 }
 
-.calendarSection, .dormitoryDetailsSection {
+.calendarSection, .scheduleListSection {
     display: flex;
     flex-direction: column;
-    overflow: hidden; /* Child will handle its own scroll if necessary */
+    overflow: hidden; 
     background-color: var(--background-light);
     padding: 1rem;
     border-radius: var(--border-radius-lg);
@@ -110,28 +85,47 @@
 }
 
 .calendarSection {
-    min-height: 500px; /* Ensure calendar has enough space */
+    min-height: 500px; 
 }
-.dormitoryDetailsSection {
-    max-height: calc(100vh - var(--navbar-height) - var(--main-content-padding)*2 - var(--page-container-margin-top) - 80px); /* Adjust 80px for header and other paddings */
+
+.scheduleListSection {
+    max-height: calc(100vh - var(--navbar-height) - var(--main-content-padding)*2 - var(--page-container-margin-top) - 80px); 
     overflow-y: auto;
 }
 
-
 .calendarContainer {
-    flex-grow: 1; /* Calendar takes available space in its section */
-    min-height: 400px; /* Fallback height */
+    flex-grow: 1; 
+    min-height: 400px; 
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius-md);
+    /* Ensure the calendar itself respects the container bounds */
+    display: flex; /* Use flex to make child (Calendar) fill height */
+    flex-direction: column; /* So Calendar component can grow */
 }
+
+/* Ensure react-big-calendar elements respect their container */
+.calendarContainer :global(.rbc-calendar) {
+    height: 100% !important; /* Override default fixed height if any */
+    display: flex;
+    flex-direction: column;
+}
+.calendarContainer :global(.rbc-time-view),
+.calendarContainer :global(.rbc-month-view) {
+    flex-grow: 1; /* Allow view to expand */
+}
+
 
 .calendarEventItem {
     padding: 2px 5px;
     border-radius: 4px;
     font-size: 0.8em;
-    color: white !important;
+    color: white !important; 
     border: none !important;
     cursor: pointer;
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 .calendarEventItem:hover {
     opacity: 0.85;
@@ -151,16 +145,6 @@
     width: 1.25rem; height: 1.25rem; margin-right: 0.5rem; color: var(--primary-color);
 }
 
-.dormSelect {
-    width: 100%;
-    padding: 0.6rem 0.8rem;
-    border: 1px solid var(--border-color-dark);
-    border-radius: var(--border-radius-md);
-    font-size: 0.9rem;
-    margin-bottom: 1rem;
-    background-color: var(--card-background-color);
-}
-
 .detailsList {
     list-style: none;
     padding: 0;
@@ -173,13 +157,28 @@
     font-size: 0.9rem;
 }
 .detailItem:last-child { border-bottom: none; }
-.detailItem strong { font-weight: 600; color: var(--text-primary); }
-.detailItem p { margin: 0.25rem 0; color: var(--text-secondary); display: flex; align-items: center; gap: 0.3rem;}
-.detailItem p svg { width: 1rem; height: 1rem; color: var(--primary-color-light); }
+.detailItem strong { 
+    font-weight: 600; 
+    color: var(--text-primary); 
+    display: block; 
+    margin-bottom: 0.25rem;
+}
+.detailItem p { 
+    margin: 0.25rem 0; 
+    color: var(--text-secondary); 
+    display: flex; 
+    align-items: flex-start; /* Changed from center to flex-start for better multi-line text alignment */
+    gap: 0.3rem;
+}
+.detailItem p svg { 
+    width: 1rem; 
+    height: 1rem; 
+    color: var(--primary-color-light); 
+    flex-shrink: 0; 
+    margin-top: 0.1em; /* Small top margin to align icon with first line of text */
+}
 
-
-/* Loading, Empty, Error States */
-.loadingMessage, .emptyMessage, .errorMessage, .pageLoadingState {
+.loadingMessage, .emptyMessage, .errorMessage, .pageLoadingState, .loadingMessageSmall {
     text-align: center;
     padding: 2rem;
     color: var(--text-muted);
@@ -190,6 +189,10 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
+}
+.loadingMessageSmall {
+    padding: 1rem;
+    font-size: 0.9rem;
 }
 .pageLoadingState {
     height: 100%;
@@ -217,7 +220,6 @@
     padding: 1rem;
 }
 
-/* Detail Modal */
 .modalOverlay {
     position: fixed;
     top: 0;
@@ -278,7 +280,7 @@
     font-size: 0.95rem;
     color: var(--text-secondary);
     display: flex;
-    align-items: flex-start;
+    align-items: flex-start; 
     gap: 0.5rem;
 }
 .modalBody p svg {
@@ -286,74 +288,12 @@
     height: 1.125rem;
     color: var(--primary-color);
     flex-shrink: 0;
-    margin-top: 0.125rem;
+    margin-top: 0.125rem; 
 }
 .modalBody p strong {
     font-weight: 500;
     color: var(--text-primary);
 }
-
-.modalAdminActions {
-    margin-top: 1.5rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--border-color-light);
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.75rem;
-}
-
-.adminActionButton {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.375rem;
-    padding: 0.5rem 1rem;
-    border-radius: var(--border-radius-md);
-    font-size: 0.875rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color var(--transition-base);
-}
-.adminActionButton svg { width: 1rem; height: 1rem; }
-.editButton {
-    background-color: var(--warning-bg-light);
-    color: var(--warning-color-dark);
-    border: 1px solid var(--warning-color);
-}
-.editButton:hover { background-color: var(--warning-color); color: white; }
-.deleteButton {
-    background-color: var(--error-bg-light);
-    color: var(--error-color-dark);
-    border: 1px solid var(--error-color);
-}
-.deleteButton:hover { background-color: var(--error-color); color: white; }
-
-/* Admin Form Modals Overlay (re-using class names for simplicity, can be separated) */
-.adminModalOverlay {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background-color: rgba(0,0,0,0.65);
-    display: flex; justify-content: center; align-items: center;
-    z-index: 1100; /* Higher than detail modal */
-    padding: 1rem;
-}
-.adminModalContent {
-    background: var(--card-background-color);
-    border-radius: var(--border-radius-xl);
-    width: 100%;
-    max-width: 700px; /* Can be adjusted per form */
-    max-height: 90vh;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    box-shadow: var(--shadow-xl);
-    overflow: hidden; /* Ensure children components handle their own scroll */
-}
-.adminModalContent > button:first-child { /* Close button */
-    position: absolute;
-    top: 1rem; right: 1rem;
-    z-index: 10;
-}
-
 
 @media (max-width: 1024px) {
     .mainContent {
@@ -367,15 +307,15 @@
         padding: 20px;
     }
     .contentGrid {
-        grid-template-columns: 1fr; /* Stack on smaller screens */
+        grid-template-columns: 1fr; 
         overflow: visible;
     }
     .calendarSection {
-        min-height: 450px; /* Adjust as needed */
+        min-height: 450px; 
         max-height: 60vh;
     }
-    .dormitoryDetailsSection {
-        max-height: none; /* Allow it to take needed space when stacked */
+    .scheduleListSection { 
+        max-height: none; 
         overflow-y: visible;
     }
 }
@@ -394,16 +334,8 @@
         gap: 0.5rem;
     }
     .title { font-size: 1.5rem; }
-    .adminActionsHeader {
-        width: 100%;
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-    .adminActionsHeader .adminCreateButton {
-        width: 100%;
-        justify-content: center;
-    }
-    .adminModalContent {
+    
+    .modalContent {
         max-width: 95%;
     }
 }

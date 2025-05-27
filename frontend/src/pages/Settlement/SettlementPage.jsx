@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Navbar from "../../components/UI/Navbar/Navbar";
 import Sidebar from "../../components/UI/Sidebar/Sidebar";
 import api from "../../utils/api";
@@ -10,57 +10,58 @@ import 'moment/locale/uk';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import {
     CalendarDaysIcon, InformationCircleIcon, ClockIcon, MapPinIcon, TagIcon, UsersIcon,
-    XMarkIcon as CloseModalIcon, BuildingOffice2Icon, PlusIcon, PencilIcon, TrashIcon
+    XMarkIcon as CloseModalIcon, UserCircleIcon, BuildingOffice2Icon
 } from '@heroicons/react/24/outline';
 import { useUser } from "../../contexts/UserContext";
-// Admin modals will be imported by the admin management page
-// import SettlementScheduleFormModal from "../../components/Admin/SettlementScheduleFormModal";
-// import EventFormModal from "../../components/Admin/EventFormModal";
 
 moment.locale('uk');
 const localizer = momentLocalizer(moment);
 
+// Функція для форматування цільової групи для модального вікна та списку
+const formatTargetGroupDisplay = (entry) => {
+    if (!entry || !entry.target_group_type) return 'Не вказано';
+    const targetTypeToLabel = (type) => {
+        const map = { all: 'Усі', faculty: 'Факультет', dormitory: 'Гуртожиток', course: 'Курс', group: 'Група', all_settled: 'Усі поселені' };
+        return map[type] || type;
+    };
+
+    if (entry.target_group_type === 'all') return 'Для всіх';
+    if (entry.target_group_type === 'all_settled') return 'Для всіх поселених';
+    
+    let name = '';
+    // Використовуємо поля, які приходять з моделі SettlementScheduleEntry
+    if (entry.target_group_type === 'faculty') name = entry.faculty_name || `Факультет ID: ${entry.target_group_id}`;
+    else if (entry.target_group_type === 'dormitory') name = entry.dormitory_name || `Гуртожиток ID: ${entry.target_group_id}`;
+    else if (entry.target_group_type === 'course') name = `Курс: ${entry.target_group_id}`;
+    else if (entry.target_group_type === 'group') name = entry.group_name_for_target || `Група ID: ${entry.target_group_id}`;
+    
+    return name || `${targetTypeToLabel(entry.target_group_type)}: ${entry.target_group_id || 'не вказано'}`;
+};
+
 const ItemDetailModal = ({ item, onClose }) => {
     if (!item || !item.resource) return null;
     const { resource } = item;
-    const isGeneralEvent = resource.type === 'event';
+    const isEvent = resource.type === 'event';
 
     const formatDate = (dateStr, includeTime = true) => {
         if (!dateStr) return 'Не вказано';
         const date = new Date(dateStr);
         if (isNaN(date.getTime())) return 'Недійсна дата';
         const options = { year: 'numeric', month: 'long', day: 'numeric' };
-        if (includeTime && dateStr.includes('T')) { // Crude check for datetime string
+        if (includeTime && dateStr.includes('T') && dateStr.length > 10) {
             options.hour = '2-digit';
             options.minute = '2-digit';
         }
         return date.toLocaleString('uk-UA', options);
     };
-
-    const targetTypeToLabel = (type) => {
-        const map = { all: 'Усі', faculty: 'Факультет', dormitory: 'Гуртожиток', course: 'Курс', group: 'Група', all_settled: 'Усі поселені' };
-        return map[type] || type;
-    }
-
-    const formatTargetGroupDisplay = (entry) => {
-        if (!entry || !entry.target_group_type || entry.target_group_type === 'all') return 'Усіх';
-        let name = '';
-        if (entry.target_group_type === 'faculty') name = entry.faculty_name || `Факультет ID: ${entry.target_group_id}`;
-        else if (entry.target_group_type === 'dormitory') name = entry.dormitory_name || `Гуртожиток ID: ${entry.target_group_id}`;
-        else if (entry.target_group_type === 'course') name = `Курс: ${entry.target_group_id}`;
-        else if (entry.target_group_type === 'group') name = entry.group_name_for_target || `Група ID: ${entry.target_group_id}`; // using alias from model
-        else if (entry.target_group_type === 'all_settled') return 'Усіх поселених';
-        return name || `${targetTypeToLabel(entry.target_group_type)}: ${entry.target_group_id || 'не вказано'}`;
-    };
-
-
+    
     return (
-        <div className={styles.modalOverlay} onClick={onClose}>
+        <div className={styles.modalOverlay} onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="modalTitle">
             <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
                 <button onClick={onClose} className={styles.modalCloseButton} aria-label="Закрити деталі">
                     <CloseModalIcon />
                 </button>
-                <h3 className={styles.modalTitle}>{item.title}</h3>
+                <h3 id="modalTitle" className={styles.modalTitle}>{item.title}</h3>
                 <div className={styles.modalBody}>
                     <p><ClockIcon /> <strong>Початок:</strong> {formatDate(resource.start_time || resource.start_date, !item.allDay)}</p>
                     {(resource.end_time || resource.end_date) &&
@@ -69,13 +70,13 @@ const ItemDetailModal = ({ item, onClose }) => {
                     {resource.location && <p><MapPinIcon /> <strong>Місце:</strong> {resource.location}</p>}
                     {resource.description && <p><InformationCircleIcon /> <strong>Опис:</strong> {resource.description}</p>}
                     
-                    {isGeneralEvent && resource.category && <p><TagIcon /> <strong>Категорія:</strong> {resource.category}</p>}
+                    {isEvent && resource.category && <p><TagIcon /> <strong>Категорія:</strong> {resource.category}</p>}
                     
-                    {isGeneralEvent && resource.targets && resource.targets.length > 0 && (
-                        <p><UsersIcon /> <strong>Для:</strong> {resource.targets.map(t => formatTargetGroup(t)).join(', ')}</p>
+                    {isEvent && resource.targets && resource.targets.length > 0 && (
+                        <p><UsersIcon /> <strong>Для:</strong> {resource.targets.map(t => formatTargetGroupDisplay(t)).join(', ')}</p>
                     )}
-                    {!isGeneralEvent && resource.target_group_type && (
-                         <p><UsersIcon /> <strong>Для:</strong> {formatTargetGroup(resource)}</p>
+                    {!isEvent && resource.target_group_type && (
+                         <p><UsersIcon /> <strong>Для:</strong> {formatTargetGroupDisplay(resource)}</p>
                     )}
 
                     {resource.creator_name && <p><UserCircleIcon /> <strong>Створив:</strong> {resource.creator_name}</p>}
@@ -87,11 +88,9 @@ const ItemDetailModal = ({ item, onClose }) => {
 
 
 const SettlementPage = () => {
-    const { user, isLoading: userIsLoading } = useUser();
+    const { user, isLoading: userIsLoading } = useUser(); // user тепер містить faculty_id, dormitory_id, group_id, course
     const [calendarItems, setCalendarItems] = useState([]);
-    const [allDormitories, setAllDormitories] = useState([]); // For filtering dormitory details
-    const [selectedDormitoryId, setSelectedDormitoryId] = useState('');
-    const [dormitoryScheduleDetails, setDormitoryScheduleDetails] = useState([]);
+    const [visibleScheduleEntries, setVisibleScheduleEntries] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const [isSidebarExpanded, setIsSidebarExpanded] = useState(() => {
@@ -111,8 +110,12 @@ const SettlementPage = () => {
             const isEvent = type === 'event';
             const startDateString = isEvent ? item.start_time : item.start_date;
             const endDateString = isEvent ? item.end_time : item.end_date;
-            const titlePrefix = isEvent ? 'Подія: ' : 'Розклад: ';
-            const defaultColor = isEvent ? '#3b82f6' : '#f59e0b'; // Blue for events, Orange for schedule
+            // Для подій title може бути просто item.title, для розкладу - item.title
+            const titlePrefix = ''; // Прибираємо префікс, щоб назва була чистішою
+            const baseTitle = item.title || (isEvent ? 'Подія без назви' : 'Запис розкладу');
+            const calendarTitle = `${titlePrefix}${baseTitle}`;
+
+            const defaultColor = isEvent ? '#3b82f6' : '#f59e0b';
 
             if (!startDateString) {
                 console.warn(`[CalendarTransform] Item ID ${item.id} of type ${type} has no start_date/start_time.`);
@@ -123,56 +126,65 @@ const SettlementPage = () => {
             let end = endDateString ? new Date(endDateString) : null;
             let allDay = false;
 
-            // Check if it's a date-only string (YYYY-MM-DD)
             if (startDateString && !startDateString.includes('T') && startDateString.length === 10) {
                 allDay = true;
-                // For all-day events, react-big-calendar expects the end date to be exclusive
                 if (end && endDateString && !endDateString.includes('T') && endDateString.length === 10) {
-                    end.setDate(end.getDate() + 1);
-                } else if (!end) { // If no end date, make it a single full day event
+                    const tempEnd = new Date(end);
+                    tempEnd.setDate(tempEnd.getDate() + 1);
+                    end = tempEnd;
+                } else if (!end) {
                     end = new Date(start);
                     end.setDate(start.getDate() + 1);
                 }
-            } else if (end && start > end) { // If end is before start (invalid), make it 1 hour long
-                end = new Date(start.getTime() + 60*60*1000);
-            } else if (!end) { // If no end date for timed event, make it 1 hour long
-                 end = new Date(start.getTime() + 60*60*1000);
+            } else if (end && start.getTime() === end.getTime()) {
+                end = new Date(start.getTime() + 60 * 60 * 1000);
+            } else if (end && start > end) {
+                end = new Date(start.getTime() + 60 * 60 * 1000);
+            } else if (!end) {
+                 end = new Date(start.getTime() + 60 * 60 * 1000);
             }
-
 
             return {
                 id: `${type}-${item.id}`,
-                title: `${titlePrefix}${item.title}`,
+                title: calendarTitle,
                 start,
                 end,
                 allDay,
-                resource: { ...item, type }, // Store original item and its type
+                resource: { ...item, type }, 
                 hexColor: item.color_tag || defaultColor,
             };
-        }).filter(Boolean); // Remove null items (e.g., those without start_date)
+        }).filter(Boolean);
     };
-
 
     const fetchData = useCallback(async () => {
         setIsLoading(true);
         setError(null);
+        if (!user) { // Якщо користувач ще не завантажений, не робимо запит
+            setIsLoading(false);
+            return;
+        }
         try {
-            const [eventsRes, scheduleRes, dormsRes] = await Promise.allSettled([
-                api.get("/secure/events"),
-                api.get("/secure/settlement-schedule"),
-                api.get("/dormitories")
+            // Запити вже повинні враховувати контекст користувача на бекенді
+            const [eventsRes, scheduleRes] = await Promise.allSettled([
+                api.get("/secure/events"), 
+                api.get("/secure/settlement-schedule") 
             ]);
 
-            const eventsData = eventsRes.status === 'fulfilled' ? (eventsRes.value.data?.events || eventsRes.value.data || []) : [];
-            const scheduleData = scheduleRes.status === 'fulfilled' ? (scheduleRes.value.data?.entries || scheduleRes.value.data || []) : [];
-            const dormsData = dormsRes.status === 'fulfilled' ? (dormsRes.value.data || []) : [];
+            const eventsData = eventsRes.status === 'fulfilled' ? (eventsRes.value.data || []) : [];
+            // Якщо eventsRes.value.data має 'events', використовуємо його, інакше самі дані
+            const actualEvents = Array.isArray(eventsData.events) ? eventsData.events : Array.isArray(eventsData) ? eventsData : [];
+
+
+            const scheduleData = scheduleRes.status === 'fulfilled' ? (scheduleRes.value.data || []) : [];
+             // scheduleData може бути масивом або об'єктом { entries: [...] }
+            const actualScheduleEntries = Array.isArray(scheduleData) ? scheduleData : (scheduleData && Array.isArray(scheduleData.entries)) ? scheduleData.entries : [];
             
-            setAllDormitories(dormsData);
-
-            const transformedEvents = transformToCalendarItems(eventsData, 'event');
-            const transformedSchedule = transformToCalendarItems(scheduleData, 'schedule');
-
+            const transformedEvents = transformToCalendarItems(actualEvents, 'event');
+            const transformedSchedule = transformToCalendarItems(actualScheduleEntries, 'schedule'); // Використовуємо відфільтровані записи для календаря
+            
             setCalendarItems([...transformedEvents, ...transformedSchedule]);
+            // Встановлюємо відфільтровані записи для списку
+            setVisibleScheduleEntries(actualScheduleEntries.sort((a, b) => new Date(a.start_date) - new Date(b.start_date)));
 
         } catch (error) {
             console.error("Помилка завантаження даних для календаря:", error);
@@ -181,25 +193,14 @@ const SettlementPage = () => {
         } finally {
             setIsLoading(false);
         }
-    }, []);
+    }, [user]); // Додаємо user до залежностей, щоб перезавантажити дані, коли користувач зміниться
 
     useEffect(() => {
-        if(!userIsLoading && user){
+        if(!userIsLoading){ // Переконуємося, що дані користувача завантажені
            fetchData();
         }
-    }, [user, userIsLoading, fetchData]);
+    }, [userIsLoading, fetchData]); // fetchData вже містить user у своїх залежностях
 
-    useEffect(() => {
-        if (selectedDormitoryId && calendarItems.length > 0) {
-            const details = calendarItems
-                .filter(item => item.resource.type === 'schedule' && String(item.resource.target_group_id) === String(selectedDormitoryId) && item.resource.target_group_type === 'dormitory')
-                .map(item => item.resource)
-                .sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
-            setDormitoryScheduleDetails(details);
-        } else {
-            setDormitoryScheduleDetails([]);
-        }
-    }, [selectedDormitoryId, calendarItems]);
 
     const handleSelectCalendarItem = useCallback((item) => {
         setSelectedCalendarItem(item);
@@ -216,11 +217,11 @@ const SettlementPage = () => {
             ...(event.hexColor && {
                 style: {
                     backgroundColor: event.hexColor,
-                    borderColor: event.hexColor, // Make border same as background for solid look
-                    color: 'white', // Assuming dark colors for bg, light text. Adjust if needed.
+                    borderColor: event.hexColor, 
+                    color: 'white', 
                 },
             }),
-            className: styles.calendarEventItem, // Add a general class for other styles
+            className: styles.calendarEventItem, 
         }),
         []
     );
@@ -236,14 +237,18 @@ const SettlementPage = () => {
         agenda: 'Порядок денний',
         date: 'Дата',
         time: 'Час',
-        event: 'Подія', // Or use item.title if you want specific event title
-        noEventsInRange: 'Немає подій у цьому діапазоні.',
+        event: 'Захід', 
+        noEventsInRange: 'Немає запланованих заходів.',
         showMore: total => `+ Ще ${total}`,
     };
     
-    if (userIsLoading) {
-        return <div className={styles.pageLoadingState}>Завантаження...</div>;
+    if (userIsLoading) { 
+        return <div className={styles.pageLoadingState}>Завантаження даних користувача...</div>;
     }
+    if (isLoading && !calendarItems.length) { // Показуємо завантаження, тільки якщо даних ще немає
+         return <div className={styles.pageLoadingState}>Завантаження розкладу...</div>;
+    }
+
 
     return (
         <div className={styles.layout}>
@@ -257,13 +262,13 @@ const SettlementPage = () => {
                     <div className={styles.header}>
                         <h1 className={styles.title}>
                             <CalendarDaysIcon className={styles.titleIcon} />
-                            Розклад Поселення та Загальні Події
+                            Розклад Поселення та Події
                         </h1>
                     </div>
 
                     <div className={styles.contentGrid}>
                         <div className={styles.calendarSection}>
-                            {isLoading ? (
+                            {isLoading && calendarItems.length === 0 ? ( // Показувати завантаження, якщо дані ще не завантажені
                                 <div className={styles.loadingMessage}>Завантаження календаря...</div>
                             ) : error ? (
                                 <div className={styles.errorMessage}>{error}</div>
@@ -285,33 +290,31 @@ const SettlementPage = () => {
                                 </div>
                             )}
                         </div>
-                        <div className={styles.dormitoryDetailsSection}>
-                            <h2 className={styles.sectionTitle}><BuildingOffice2Icon/> Деталі по Гуртожитку</h2>
-                            <select
-                                value={selectedDormitoryId}
-                                onChange={(e) => setSelectedDormitoryId(e.target.value)}
-                                className={styles.dormSelect}
-                                aria-label="Обрати гуртожиток для деталей"
-                            >
-                                <option value="">Оберіть гуртожиток...</option>
-                                {allDormitories.map(dorm => (
-                                    <option key={dorm.id} value={dorm.id}>{dorm.name}</option>
-                                ))}
-                            </select>
-
-                            {selectedDormitoryId ? (
-                                dormitoryScheduleDetails.length > 0 ? (
-                                    <ul className={styles.detailsList}>
-                                        {dormitoryScheduleDetails.map(entry => (
-                                            <li key={`detail-${entry.id}`} className={styles.detailItem}>
-                                                <strong>{entry.title}</strong>
-                                                <p><ClockIcon /> {new Date(entry.start_date).toLocaleString('uk-UA')} {entry.end_date && `- ${new Date(entry.end_date).toLocaleString('uk-UA')}`}</p>
-                                                {entry.location && <p><MapPinIcon /> {entry.location}</p>}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                ) : <p className={styles.noDetailsMessage}>Для обраного гуртожитку немає записів у розкладі.</p>
-                            ) : <p className={styles.noDetailsMessage}>Оберіть гуртожиток, щоб переглянути деталі.</p>}
+                        <div className={styles.scheduleListSection}>
+                            <h2 className={styles.sectionTitle}><BuildingOffice2Icon/> Розклад Поселення</h2>
+                            
+                            {isLoading && visibleScheduleEntries.length === 0 ? ( // Показувати завантаження, якщо дані ще не завантажені
+                                <div className={styles.loadingMessageSmall}>Завантаження розкладу...</div>
+                            ) : visibleScheduleEntries.length > 0 ? (
+                                <ul className={styles.detailsList}>
+                                    {visibleScheduleEntries.map(entry => (
+                                        <li key={`schedule-entry-${entry.id}`} className={styles.detailItem}>
+                                            <strong>{entry.title}</strong>
+                                            <p><ClockIcon /> 
+                                                {new Date(entry.start_date).toLocaleString('uk-UA', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                                {entry.end_date && ` - ${new Date(entry.end_date).toLocaleString('uk-UA', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`}
+                                            </p>
+                                            {entry.location && <p><MapPinIcon /> {entry.location}</p>}
+                                            {entry.description && <p><InformationCircleIcon /> {entry.description}</p>}
+                                            {entry.target_group_type && (
+                                                <p><UsersIcon />Для: {formatTargetGroupDisplay(entry)}</p>
+                                            )}
+                                        </li>
+                                    ))}
+                                </ul>
+                            ) : (
+                                <p className={styles.noDetailsMessage}>Немає доступних записів у розкладі поселення.</p>
+                            )}
                         </div>
                     </div>
                 </div>

@@ -38,7 +38,6 @@ import ManageRoomsPage from "../pages/DormManager/ManageRoomsPage";
 import ManageSettlementAgreementsPage from "../pages/AdminManagement/ManageSettlementAgreementsPage";
 import StudentCouncilPage from "../pages/Dean/StudentCouncilPage";
 import ManageSettlementSchedulePage from "../pages/AdminManagement/ManageSettlementSchedulePage";
-import ManageEventsPage from "../pages/AdminManagement/ManageEventsPage";
 
 import DormManagerDashboardPage from "../pages/DormManager/DormManagerDashboardPage";
 import AdminDashboardPage from "../pages/AdminDashboard/AdminDashboardPage";
@@ -341,20 +340,6 @@ const routesConfig = [
           <AdminProtectedRoute
             element={<ManageSettlementSchedulePage />}
             allowedRoles={["admin", "superadmin", "dorm_manager", "faculty_dean_office"]}
-          />
-        }
-      />
-    ),
-  },
-  // New route for event management
-  {
-    path: "/admin/manage-events", // New route
-    element: (
-      <AuthRequiredRoute
-        element={
-          <AdminProtectedRoute
-            element={<ManageEventsPage />}
-            allowedRoles={["admin", "superadmin", "faculty_dean_office", "dorm_manager"]}
           />
         }
       />

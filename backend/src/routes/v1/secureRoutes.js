@@ -18,8 +18,10 @@ import {
   getAccommodationApplicationById,
   cancelAccommodationApplication,
   getMySettlementAgreements,
-  getSettlementAgreementByIdForUser, 
+  getSettlementAgreementByIdForUser,
   getMyRoommates,
+  getSecureEvents,
+  getSecureEventById,
 } from "../../controllers/secureController.js";
 import { getScheduleEntries } from "../../controllers/SettlementScheduleController.js";
 import {
@@ -132,6 +134,18 @@ router.get(
   "/my-roommates",
   authorize("GET", "/api/v1/secure/my-roommates"),
   getMyRoommates
+);
+
+// New routes for events
+router.get(
+  "/events",
+  authorize("GET", "/api/v1/secure/events"),
+  getSecureEvents
+);
+router.get(
+  "/events/:eventId",
+  authorize("GET", "/api/v1/secure/events/:eventId"),
+  getSecureEventById
 );
 
 export default router;
