@@ -123,7 +123,6 @@ const SettlementAgreementDetailModal = ({ agreement, onClose, isModalLoading, is
               (
                 <p className={modalDetailStyles.infoTextModal}>Додаткова інформація по Додатках 1, 2, 3 (інвентар, стан приміщення, електроприлади) не заповнена в цьому договорі.</p>
               )}
-            {/* TODO: Add inventory, premisesConditions, electricalAppliances display when data is available and !isDetailLimited */}
           </>
         )}
       </div>

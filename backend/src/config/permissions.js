@@ -8,60 +8,58 @@ const __dirname = path.dirname(__filename);
 const modelPath = path.join(__dirname, "rbac_model.conf");
 const policyPath = path.join(__dirname, "rbac_policy.csv");
 
-let globalEnforcerInstance; // Зберігатимемо екземпляр енфорсера
+let globalEnforcerInstance; // Store the enforcer instance
+const enableDebugLogs = process.env.CASBIN_DEBUG_LOGS === 'true'; // Optional: control debug logs with env variable
 
 const initializeEnforcer = async () => {
-    console.log('[Casbin Init] Attempting to initialize enforcer...');
-    console.log('[Casbin Init] Model Path:', modelPath);
-    console.log('[Casbin Init] Policy Path:', policyPath);
+    // If enforcer is already initialized, return it
+    if (globalEnforcerInstance) {
+        return globalEnforcerInstance;
+    }
+
     try {
         const enforcer = await newEnforcer(modelPath, policyPath);
-        console.log('[Casbin Init] Enforcer created successfully.');
         
-        // Логування всієї завантаженої політики
-        const loadedPolicy = await enforcer.getPolicy();
-        console.log('[Casbin Init] Loaded Policy Rules:');
-        if (loadedPolicy.length === 0) {
-            console.log('[Casbin Init] No policy rules were loaded!');
-        } else {
-            loadedPolicy.forEach(rule => console.log('[Casbin Init] Rule:', rule.join(', ')));
+        if (enableDebugLogs) {
+            console.log('[Casbin Init] Enforcer created successfully.');
+            // Log all loaded policy rules
+            const loadedPolicy = await enforcer.getPolicy();
+            console.log('[Casbin Init] Loaded Policy Rules:');
+            if (loadedPolicy.length === 0) {
+                console.log('[Casbin Init] No policy rules were loaded!');
+            } else {
+                loadedPolicy.forEach(rule => console.log('[Casbin Init] Rule:', rule.join(', ')));
+            }
+
+            // Check specific rule for dorm_manager
+            const testRuleExists = loadedPolicy.some(rule => 
+                rule[0] === 'dorm_manager' && 
+                rule[1] === '/api/v1/application-presets' && 
+                rule[2] === 'GET'
+            );
+            console.log('[Casbin Init] Test: Rule "p, dorm_manager, /api/v1/application-presets, GET" exists in loaded policy:', testRuleExists);
         }
 
-        // Перевірка конкретного правила для dorm_manager
-        const testRuleExists = loadedPolicy.some(rule => 
-            rule[0] === 'dorm_manager' && 
-            rule[1] === '/api/v1/application-presets' && 
-            rule[2] === 'GET'
-        );
-        console.log('[Casbin Init] Test: Rule "p, dorm_manager, /api/v1/application-presets, GET" exists in loaded policy:', testRuleExists);
-
-        globalEnforcerInstance = enforcer; // Зберігаємо в глобальну змінну
+        globalEnforcerInstance = enforcer; // Store in global variable
         return enforcer;
     } catch (err) {
         console.error('[Casbin Init] Error creating or loading policy for enforcer:', err);
-        throw err; // Перекидаємо помилку, щоб сервер не стартував або проблема була очевидною
+        throw err; // Rethrow to ensure server doesn't start if there's an issue
     }
 };
 
 export const getEnforcer = async () => {
-    // Якщо енфорсер ще не ініціалізований (наприклад, при першому запиті після старту, якщо не було await у server.js)
-    // або якщо ми хочемо завжди переініціалізовувати (що зараз і відбувається)
-    // Для продакшена краще ініціалізувати один раз при старті.
-    // Поточна логіка initializeEnforcer() викликається при кожному запиті authorize, що має підхоплювати зміни CSV.
+    // Always return the initialized enforcer (or initialize it if not yet done)
     return await initializeEnforcer();
 };
 
 export const assignRole = async (userId, role, assigningUserRole) => {
-    const enforcer = await getEnforcer(); // Використовуємо свіжий енфорсер
+    const enforcer = await getEnforcer(); // Get the enforcer instance
     const canAssign = await enforcer.enforce(assigningUserRole, "/api/v1/users/assign-role", "POST"); // Generic endpoint
     if (!canAssign) {
         throw new Error("Недостатньо прав для призначення ролі");
     }
     await enforcer.addRoleForUser(userId.toString(), role);
-    // Важливо: якщо політика зберігається лише в файлі, зміни тут не будуть персистентними
-    // без перезавантаження політики з файлу або збереження змін назад у файл.
-    // Для динамічного оновлення політики в пам'яті цього достатньо, але вона скинеться при перезапуску.
-    // Щоб зробити зміни персистентними, потрібно enforcer.savePolicy() якщо адаптер це підтримує,
-    // або оновлювати CSV файл і перезавантажувати енфорсер.
+    // Note: Changes are not persistent unless saved to the policy file or adapter supports it
     return true;
 };

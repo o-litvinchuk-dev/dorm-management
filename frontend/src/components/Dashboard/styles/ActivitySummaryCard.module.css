@@ -1,0 +1,81 @@
+.summaryCard {
+  background-color: var(--card-background-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: var(--text-primary);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  min-height: 120px; /* Ensure cards have some height */
+}
+
+.summaryCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.cardIconWrapper {
+  background-color: var(--primary-bg-light);
+  border-radius: var(--border-radius-md);
+  padding: 0.6rem;
+  display: inline-flex;
+  color: var(--primary-color);
+}
+
+.summaryCardIcon { /* Додано цей клас */
+  width: 20px;
+  height: 20px;
+}
+
+.cardTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.cardBody {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* Center count and description if card grows */
+}
+
+.count {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin: 0 0 0.25rem 0;
+}
+
+.description {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.4;
+}
+
+@media (max-width: 768px) {
+  .summaryCard {
+    padding: 0.8rem;
+    min-height: 100px;
+  }
+  .cardTitle {
+    font-size: 1rem;
+  }
+  .count {
+    font-size: 1.5rem;
+  }
+  .description {
+    font-size: 0.8rem;
+  }
+}

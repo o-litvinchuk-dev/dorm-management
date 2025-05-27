@@ -8,6 +8,7 @@ import UnauthorizedPage from "./pages/Error/UnauthorizedPage";
 import routesConfig from "./routes/routes";
 import NotFoundPage from "./pages/Error/NotFoundPage";
 import './styles/variables.css';
+import 'leaflet/dist/leaflet.css';
 
 export function RootRedirect() {
   const { user, isLoading } = useUser();

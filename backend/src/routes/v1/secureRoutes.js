@@ -17,10 +17,11 @@ import {
   createAccommodationApplication,
   getAccommodationApplicationById,
   cancelAccommodationApplication,
-  getMySettlementAgreements, // Added new controller
-  getSettlementAgreementByIdForUser, // Added new controller
+  getMySettlementAgreements,
+  getSettlementAgreementByIdForUser, 
+  getMyRoommates,
 } from "../../controllers/secureController.js";
-import User from "../../models/User.js";
+import { getScheduleEntries } from "../../controllers/SettlementScheduleController.js";
 import {
   getMyReservations,
   cancelMyReservation,
@@ -28,20 +29,6 @@ import {
 
 const router = Router();
 router.use(authenticate);
-
-router.get(
-  "/users",
-  authorize("GET", "/api/v1/secure/users"),
-  async (req, res) => {
-    try {
-      const users = await User.findByFacultyId(req.user.faculty_id || null);
-      res.json(users);
-    } catch (error) {
-      console.error("[SecureRoutes] Помилка отримання користувачів:", error);
-      res.status(500).json({ error: "Помилка сервера" });
-    }
-  }
-);
 
 router.get("/profile", authorize("GET", "/api/v1/secure/profile"), getProfile);
 router.patch(
@@ -81,10 +68,12 @@ router.get(
   authorize("GET", "/api/v1/secure/dormitories"),
   getDormitories
 );
+
+// Changed route from "/settlement" to "/settlement-schedule"
 router.get(
-  "/settlement",
-  authorize("GET", "/api/v1/settlement"),
-  getSettlements
+  "/settlement-schedule",
+  authorize("GET", "/api/v1/settlement-schedule"),
+  getScheduleEntries
 );
 
 router.get(
@@ -137,6 +126,12 @@ router.get(
   "/my-settlement-agreements/:id",
   authorize("GET", "/api/v1/secure/my-settlement-agreements/:id"),
   getSettlementAgreementByIdForUser
+);
+
+router.get(
+  "/my-roommates",
+  authorize("GET", "/api/v1/secure/my-roommates"),
+  getMyRoommates
 );
 
 export default router;

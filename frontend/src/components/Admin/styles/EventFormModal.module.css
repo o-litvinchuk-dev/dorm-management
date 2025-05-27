@@ -1,0 +1,295 @@
+/* src/components/Admin/styles/EventFormModal.module.css */
+/* Using existing styles from ManageApplicationPresetsPage modal as a base and adapting */
+.modalInnerContent {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-height: calc(90vh - 40px); /* Account for padding/margins if any */
+}
+
+.modalHeader {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border-color-light);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+}
+
+.modalTitle {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+    display: flex;
+    align-items: center;
+}
+
+.modalTitleIcon {
+    width: 1.5rem;
+    height: 1.5rem;
+    margin-right: 0.625rem;
+    color: var(--primary-color);
+}
+
+.modalBody {
+    padding: 1.25rem 1.5rem;
+    overflow-y: auto;
+    flex-grow: 1;
+}
+
+.formGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem 1.25rem;
+    margin-bottom: 1rem;
+}
+
+.formGroup {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0.75rem; /* Reduced margin for items within grid */
+}
+.formGroup.fullWidth {
+    grid-column: 1 / -1;
+}
+
+.formGroup label, .inputLabel { /* .inputLabel for consistency */
+    display: block;
+    margin-bottom: 0.375rem;
+    font-weight: 500;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.formGroup input[type="text"],
+.formGroup input[type="datetime-local"],
+.formGroup input[type="number"],
+.formGroup textarea,
+.formGroup select,
+.selectField, /* For standalone selects if any */
+.inputField { /* For standalone inputs if any */
+    width: 100%;
+    padding: 0.625rem 0.875rem;
+    border: 1px solid var(--border-color-dark);
+    border-radius: var(--border-radius-md);
+    font-size: 0.9rem;
+    font-family: var(--font-family-sans);
+    background-color: var(--card-background-color);
+    color: var(--text-primary);
+    transition: border-color var(--transition-base), box-shadow var(--transition-base);
+    box-sizing: border-box;
+}
+
+.formGroup input:focus,
+.formGroup textarea:focus,
+.formGroup select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb, 59, 130, 246), 0.2);
+}
+
+.formGroup input:disabled, 
+.formGroup textarea:disabled, 
+.formGroup select:disabled {
+    background-color: var(--background-light);
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.textareaField { /* If used outside formGroup directly */
+    min-height: 80px;
+    resize: vertical;
+}
+
+.inputError {
+    border-color: var(--error-color) !important;
+}
+.inputError:focus {
+    box-shadow: 0 0 0 2px rgba(var(--error-color-rgb, 239, 68, 68), 0.2) !important;
+}
+
+.errorMessage {
+    font-size: 0.75rem;
+    color: var(--error-color-dark);
+    margin-top: 0.25rem;
+}
+
+.colorPickerWrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.colorTagInput {
+    flex-grow: 1;
+}
+
+.targetsSection {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color-light);
+}
+.targetsTitle {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+}
+.targetsTitle svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: var(--primary-color);
+}
+
+.targetItem {
+    display: flex;
+    align-items: flex-start; /* Align items to top for multi-line error messages */
+    gap: 0.75rem;
+    padding: 0.75rem;
+    margin-bottom: 0.75rem;
+    border: 1px solid var(--border-color-light);
+    border-radius: var(--border-radius-md);
+    background-color: var(--background-ultralight);
+    position: relative; /* For absolute positioned error messages if needed */
+}
+.targetInputs {
+    flex-grow: 1;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 0.5rem;
+}
+.targetInputs select, .targetInputs input {
+    width: 100%; /* Ensure inputs/selects take full width of their grid cell */
+    padding: 0.5rem 0.75rem; /* Slightly smaller padding for target inputs */
+    font-size: 0.85rem;
+}
+.removeTargetButton {
+    background: transparent;
+    border: none;
+    color: var(--error-color);
+    cursor: pointer;
+    padding: 0.5rem; /* Make it easier to click */
+    margin-top: 0; /* Align with the top of the inputs */
+    align-self: center; /* Vertically center if inputs are single line */
+}
+.removeTargetButton svg {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+.removeTargetButton:hover {
+    color: var(--error-color-dark);
+}
+.targetErrorMessage {
+    grid-column: 1 / -1; /* Span across all columns in the targetInputs grid */
+    margin-top: 0.25rem;
+    font-size: 0.7rem;
+}
+
+.addTargetButton {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.5rem 1rem;
+    background-color: var(--success-bg-light);
+    color: var(--success-color-dark);
+    border: 1px solid var(--success-color);
+    border-radius: var(--border-radius-md);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+}
+.addTargetButton svg {
+    width: 1rem;
+    height: 1rem;
+}
+.addTargetButton:hover {
+    background-color: var(--success-color);
+    color: var(--text-on-primary);
+}
+
+.modalFooter {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--border-color-light);
+    background-color: var(--background-light);
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    flex-shrink: 0;
+    margin-top: auto; /* Pushes footer to bottom if modal body is short */
+}
+
+.formButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.2rem;
+    border-radius: var(--border-radius-md);
+    border: 1px solid transparent;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+}
+.formButton svg {
+    width: 18px;
+    height: 18px;
+}
+.cancelButton {
+    background-color: var(--background-light);
+    color: var(--text-secondary);
+    border-color: var(--border-color);
+}
+.cancelButton:hover:not(:disabled) {
+    background-color: var(--border-color-light);
+}
+.submitButton {
+    background-color: var(--primary-color);
+    color: var(--text-on-primary);
+}
+.submitButton:hover:not(:disabled) {
+    background-color: var(--primary-color-dark);
+}
+.formButton:disabled {
+    background-color: var(--text-placeholder);
+    color: var(--text-on-dark);
+    cursor: not-allowed;
+    border-color: transparent;
+}
+
+@media (max-width: 600px) {
+    .modalHeader, .modalBody, .modalFooter {
+        padding: 0.75rem 1rem;
+    }
+    .modalTitle {
+        font-size: 1.15rem;
+    }
+    .formGrid {
+        grid-template-columns: 1fr; /* Single column on small screens */
+        gap: 0.75rem;
+    }
+    .targetItem {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .targetInputs {
+      grid-template-columns: 1fr; /* Stack target inputs vertically */
+    }
+    .removeTargetButton {
+      align-self: flex-end; /* Move remove button to the right */
+      margin-top: 0.5rem;
+    }
+    .formButton {
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+    }
+    .modalFooter {
+        flex-direction: column-reverse;
+    }
+    .formButton {
+        width: 100%;
+    }
+}

@@ -1,68 +1,409 @@
-/* Variables are now expected to be in a global scope (e.g. :root in index.css or variables.css) */
 
 .layout {
-  display: flex;
-  min-height: 100vh;
-  background-color: var(--background-color); /* Standard page background */
+    display: flex;
+    min-height: 100vh;
+    background-color: var(--background-color);
 }
+
 .mainContent {
-  flex: 1;
-  padding: calc(var(--navbar-height) + var(--main-content-padding)) var(--main-content-padding) var(--main-content-padding); /* Consistent with other pages */
-  transition: margin-left var(--transition-slow);
-  margin-left: calc(var(--sidebar-width-expanded) + var(--main-content-padding)); /* Consistent with other pages */
-  box-sizing: border-box;
+    flex: 1;
+    padding: calc(var(--navbar-height) + var(--main-content-padding)) var(--main-content-padding) var(--main-content-padding);
+    transition: margin-left var(--transition-slow);
+    margin-left: calc(var(--sidebar-width-expanded) + var(--main-content-padding));
+    box-sizing: border-box;
+    display: flex; /* Added for new layout */
+    flex-direction: column; /* Added for new layout */
+    overflow: hidden; /* Prevent double scrollbars */
 }
+
 .mainContent.sidebarCollapsed {
-  margin-left: calc(var(--sidebar-width-collapsed) + var(--main-content-padding)); /* Consistent with other pages */
+    margin-left: calc(var(--sidebar-width-collapsed) + var(--main-content-padding));
 }
+
 .container {
     background: var(--card-background-color);
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius-xl);
     padding: 24px;
-    margin-top: var(--page-container-margin-top); /* Consistent with pageContainer */
+    margin-top: var(--page-container-margin-top);
     width: 100%;
     box-sizing: border-box;
-    min-height: calc(100vh - var(--navbar-height) - (var(--page-container-margin-top) * 2) - var(--main-content-padding)); /* Adjusted height */
-}
-h2 {
-    font-size: 1.75rem; /* Consistent with pageTitle */
-    font-weight: 600;
-    color: var(--text-primary);
-    margin: 0 0 1.5rem 0;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid var(--border-color-light);
-}
-ul {
-  list-style: none;
-  padding: 0;
-}
-li {
-    padding: 10px;
-    border-bottom: 1px solid var(--border-color-light);
-}
-li:last-child {
-    border-bottom: none;
+    flex-grow: 1; /* Allows container to take available space */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* Prevent content overflow from breaking layout */
 }
 
-@media (max-width: 1024px) {
-  .mainContent {
-    margin-left: calc(var(--sidebar-width-collapsed) + 12px);
-    padding: calc(var(--navbar-height) + 12px) 12px 12px;
-  }
-  .mainContent.sidebarCollapsed {
-     margin-left: calc(var(--sidebar-width-collapsed) + 12px);
-  }
-   .container {
-    height: calc(100vh - var(--navbar-height) - (12px*3) );
-  }
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0; /* Prevent header from shrinking */
+    flex-wrap: wrap;
+    gap: 0.75rem;
 }
+
+.title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    flex-grow: 1;
+    min-width: 280px;
+}
+
+.titleIcon {
+    width: 1.625rem;
+    height: 1.625rem;
+    margin-right: 0.625rem;
+    color: var(--primary-color);
+}
+
+/* Admin actions in header */
+.adminActionsHeader {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.adminCreateButton {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background-color: var(--primary-color);
+    color: var(--text-on-primary);
+    border: none;
+    border-radius: var(--border-radius-md);
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color var(--transition-fast);
+}
+.adminCreateButton svg { width: 1rem; height: 1rem;}
+.adminCreateButton:hover { background-color: var(--primary-color-dark); }
+
+
+/* Content Grid for Calendar and Dorm Details */
+.contentGrid {
+    display: grid;
+    grid-template-columns: 2fr 1fr; /* Calendar takes more space */
+    gap: 1.5rem;
+    flex-grow: 1; /* Allow grid to fill container */
+    overflow: hidden; /* Prevent internal scrollbars if not needed */
+    min-height: 0; /* Fix for flexbox/grid overflow issues */
+}
+
+.calendarSection, .dormitoryDetailsSection {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* Child will handle its own scroll if necessary */
+    background-color: var(--background-light);
+    padding: 1rem;
+    border-radius: var(--border-radius-lg);
+    border: 1px solid var(--border-color-light);
+}
+
+.calendarSection {
+    min-height: 500px; /* Ensure calendar has enough space */
+}
+.dormitoryDetailsSection {
+    max-height: calc(100vh - var(--navbar-height) - var(--main-content-padding)*2 - var(--page-container-margin-top) - 80px); /* Adjust 80px for header and other paddings */
+    overflow-y: auto;
+}
+
+
+.calendarContainer {
+    flex-grow: 1; /* Calendar takes available space in its section */
+    min-height: 400px; /* Fallback height */
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+}
+
+.calendarEventItem {
+    padding: 2px 5px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    color: white !important;
+    border: none !important;
+    cursor: pointer;
+}
+.calendarEventItem:hover {
+    opacity: 0.85;
+}
+
+.sectionTitle {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 1rem 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color-light);
+    display: flex;
+    align-items: center;
+}
+.sectionTitle svg {
+    width: 1.25rem; height: 1.25rem; margin-right: 0.5rem; color: var(--primary-color);
+}
+
+.dormSelect {
+    width: 100%;
+    padding: 0.6rem 0.8rem;
+    border: 1px solid var(--border-color-dark);
+    border-radius: var(--border-radius-md);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    background-color: var(--card-background-color);
+}
+
+.detailsList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.detailItem {
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--border-color-light);
+    font-size: 0.9rem;
+}
+.detailItem:last-child { border-bottom: none; }
+.detailItem strong { font-weight: 600; color: var(--text-primary); }
+.detailItem p { margin: 0.25rem 0; color: var(--text-secondary); display: flex; align-items: center; gap: 0.3rem;}
+.detailItem p svg { width: 1rem; height: 1rem; color: var(--primary-color-light); }
+
+
+/* Loading, Empty, Error States */
+.loadingMessage, .emptyMessage, .errorMessage, .pageLoadingState {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-muted);
+    font-style: italic;
+    font-size: 1.1rem;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+.pageLoadingState {
+    height: 100%;
+    width: 100%;
+    font-size: 1.2rem;
+}
+
+.emptyMessage svg {
+    width: 3rem;
+    height: 3rem;
+    margin-bottom: 1rem;
+    color: var(--primary-color-light);
+}
+
+.errorMessage {
+    color: var(--error-color-dark);
+    background-color: var(--error-bg-light);
+    border: 1px solid var(--error-color);
+    border-radius: var(--border-radius-md);
+}
+.noDetailsMessage {
+    color: var(--text-muted);
+    font-style: italic;
+    text-align: center;
+    padding: 1rem;
+}
+
+/* Detail Modal */
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1050;
+    backdrop-filter: blur(3px);
+    padding: 1rem;
+}
+
+.modalContent {
+    background: var(--card-background-color);
+    padding: 1.5rem;
+    border-radius: var(--border-radius-lg);
+    width: 90%;
+    max-width: 550px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    position: relative;
+    animation: modalFadeIn 0.3s ease-out;
+}
+@keyframes modalFadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.modalCloseButton {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.25rem;
+    color: var(--text-muted);
+}
+.modalCloseButton svg { width: 1.5rem; height: 1.5rem; }
+.modalCloseButton:hover svg { color: var(--text-primary); }
+
+.modalTitle {
+    font-size: 1.35rem;
+    font-weight: 600;
+    margin-top: 0;
+    margin-bottom: 1.25rem;
+    color: var(--text-primary);
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-color-light);
+}
+
+.modalBody p {
+    margin-bottom: 0.85rem;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+.modalBody p svg {
+    width: 1.125rem;
+    height: 1.125rem;
+    color: var(--primary-color);
+    flex-shrink: 0;
+    margin-top: 0.125rem;
+}
+.modalBody p strong {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.modalAdminActions {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color-light);
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+}
+
+.adminActionButton {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius-md);
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color var(--transition-base);
+}
+.adminActionButton svg { width: 1rem; height: 1rem; }
+.editButton {
+    background-color: var(--warning-bg-light);
+    color: var(--warning-color-dark);
+    border: 1px solid var(--warning-color);
+}
+.editButton:hover { background-color: var(--warning-color); color: white; }
+.deleteButton {
+    background-color: var(--error-bg-light);
+    color: var(--error-color-dark);
+    border: 1px solid var(--error-color);
+}
+.deleteButton:hover { background-color: var(--error-color); color: white; }
+
+/* Admin Form Modals Overlay (re-using class names for simplicity, can be separated) */
+.adminModalOverlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(0,0,0,0.65);
+    display: flex; justify-content: center; align-items: center;
+    z-index: 1100; /* Higher than detail modal */
+    padding: 1rem;
+}
+.adminModalContent {
+    background: var(--card-background-color);
+    border-radius: var(--border-radius-xl);
+    width: 100%;
+    max-width: 700px; /* Can be adjusted per form */
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    box-shadow: var(--shadow-xl);
+    overflow: hidden; /* Ensure children components handle their own scroll */
+}
+.adminModalContent > button:first-child { /* Close button */
+    position: absolute;
+    top: 1rem; right: 1rem;
+    z-index: 10;
+}
+
+
+@media (max-width: 1024px) {
+    .mainContent {
+        margin-left: calc(var(--sidebar-width-collapsed) + 12px);
+        padding: calc(var(--navbar-height) + 12px) 12px 12px;
+    }
+    .mainContent.sidebarCollapsed {
+        margin-left: calc(var(--sidebar-width-collapsed) + 12px);
+    }
+    .container {
+        padding: 20px;
+    }
+    .contentGrid {
+        grid-template-columns: 1fr; /* Stack on smaller screens */
+        overflow: visible;
+    }
+    .calendarSection {
+        min-height: 450px; /* Adjust as needed */
+        max-height: 60vh;
+    }
+    .dormitoryDetailsSection {
+        max-height: none; /* Allow it to take needed space when stacked */
+        overflow-y: visible;
+    }
+}
+
 @media (max-width: 768px) {
-  .mainContent {
-    margin-left: 0 !important;
-    padding: calc(var(--navbar-height) + 10px) 10px 10px;
-  }
-  .container {
-    height: calc(100vh - var(--navbar-height) - (10px*3) );
-  }
+    .mainContent {
+        margin-left: 0 !important;
+        padding: calc(var(--navbar-height) + 10px) 10px 10px;
+    }
+    .container {
+        padding: 1rem;
+    }
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    .title { font-size: 1.5rem; }
+    .adminActionsHeader {
+        width: 100%;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    .adminActionsHeader .adminCreateButton {
+        width: 100%;
+        justify-content: center;
+    }
+    .adminModalContent {
+        max-width: 95%;
+    }
 }

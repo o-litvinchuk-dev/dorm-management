@@ -15,6 +15,7 @@ p, superadmin, /api/v1/users/assign-faculty-dean-office, POST
 p, superadmin, /api/v1/auth/validate-token, GET
 p, superadmin, /api/v1/application-presets, *
 p, superadmin, /api/v1/application-presets/:id, *
+p, superadmin, /api/v1/admin/settlement-schedule, *
 
 p, admin, /api/v1/faculties, GET
 p, admin, /api/v1/faculties, POST
@@ -22,7 +23,7 @@ p, admin, /api/v1/faculties/:id, GET
 p, admin, /api/v1/faculties/:id, PUT
 p, admin, /api/v1/faculties/:id, DELETE
 p, admin, /api/v1/dormitories, GET
-p, admin, /api/v1/dormitories, POST
+p, admin, /api/v1/dorm holidays, POST
 p, admin, /api/v1/dormitories/:id, GET
 p, admin, /api/v1/dormitories/:id, PUT
 p, admin, /api/v1/dormitories/:id, DELETE
@@ -72,9 +73,11 @@ p, admin, /api/v1/admin/dormitories/:id, PUT
 p, admin, /api/v1/admin/dormitories/:id, DELETE
 p, admin, /api/v1/dormitories/:dormitoryId/rooms, *
 p, admin, /api/v1/rooms/:id, *
+p, admin, /api/v1/admin/settlement-schedule, *
 p, admin, /api/v1/application-presets, *
 p, admin, /api/v1/application-presets/:id, *
 p, admin, /api/v1/services/settlement-agreement, POST
+p, admin, /api/v1/admin/passes/:passId/revoke, PUT
 
 p, faculty_dean_office, /api/v1/admin/accommodation-applications, GET
 p, faculty_dean_office, /api/v1/admin/accommodation-applications/:id, GET
@@ -101,8 +104,15 @@ p, faculty_dean_office, /api/v1/application-presets, POST
 p, faculty_dean_office, /api/v1/application-presets/:id, GET
 p, faculty_dean_office, /api/v1/application-presets/:id, PUT
 p, faculty_dean_office, /api/v1/application-presets/:id, DELETE
+p, faculty_dean_office, /api/v1/settlement-schedule, GET 
 p, faculty_dean_office, /api/v1/services/settlement-agreement, POST
 p, faculty_dean_office, /api/v1/users/all, GET
+p, faculty_dean_office, /api/v1/admin/passes/:passId/revoke, PUT
+p, faculty_dean_office, /api/v1/admin/settlement-schedule, GET
+p, faculty_dean_office, /api/v1/admin/settlement-schedule, POST
+p, faculty_dean_office, /api/v1/admin/settlement-schedule/:id, PUT
+p, faculty_dean_office, /api/v1/admin/settlement-schedule/:id, DELETE
+p, faculty_dean_office, /api/v1/admin/settlement-schedule/:id, GET 
 
 p, dorm_manager, /api/v1/admin/accommodation-applications, GET
 p, dorm_manager, /api/v1/admin/accommodation-applications/:id, GET
@@ -139,7 +149,14 @@ p, dorm_manager, /api/v1/admin/settlement-agreements/:id, GET
 p, dorm_manager, /api/v1/admin/settlement-agreements/:id, PUT
 p, dorm_manager, /api/v1/dormitories/:dormitoryId/rooms, *
 p, dorm_manager, /api/v1/rooms/:id, *
+p, dorm_manager, /api/v1/settlement-schedule, GET 
 p, dorm_manager, /api/v1/services/settlement-agreement, POST
+p, dorm_manager, /api/v1/admin/passes/:passId/revoke, PUT
+p, dorm_manager, /api/v1/admin/settlement-schedule, GET
+p, dorm_manager, /api/v1/admin/settlement-schedule, POST
+p, dorm_manager, /api/v1/admin/settlement-schedule/:id, PUT
+p, dorm_manager, /api/v1/admin/settlement-schedule/:id, DELETE
+p, dorm_manager, /api/v1/admin/settlement-schedule/:id, GET
 
 p, student_council_head, /api/v1/admin/accommodation-applications, GET
 p, student_council_head, /api/v1/admin/accommodation-applications/:id, GET
@@ -157,6 +174,7 @@ p, student_council_head, /api/v1/settlement, GET
 p, student_council_head, /api/v1/faculties, GET
 p, student_council_head, /api/v1/faculty-dormitories, GET
 p, student_council_head, /api/v1/auth/validate-token, GET
+p, student_council_head, /api/v1/settlement-schedule, GET
 p, student_council_head, /api/v1/services/settlement-agreement, POST
 
 p, student_council_member, /api/v1/admin/accommodation-applications, GET
@@ -175,6 +193,7 @@ p, student_council_member, /api/v1/settlement, GET
 p, student_council_member, /api/v1/faculties, GET
 p, student_council_member, /api/v1/faculty-dormitories, GET
 p, student_council_member, /api/v1/auth/validate-token, GET
+p, student_council_member, /api/v1/settlement-schedule, GET
 p, student_council_member, /api/v1/services/settlement-agreement, POST
 
 p, student, /api/v1/services/accommodation-application, POST
@@ -191,7 +210,7 @@ p, student, /api/v1/secure/notifications, GET
 p, student, /api/v1/secure/notifications/:id/read, PUT
 p, student, /api/v1/secure/notifications/:id, DELETE
 p, student, /api/v1/dormitories, GET
-p, student, /api/v1/applications, GET
+p, student, /api/v1/settlement-schedule, GET
 p, student, /api/v1/settlement, GET
 p, student, /api/v1/faculties/:facultyId/groups, GET
 p, student, /api/v1/faculty-dormitories, GET
@@ -203,5 +222,56 @@ p, student, /api/v1/services/rooms/:roomId, GET
 p, student, /api/v1/services/rooms/:roomId/reserve, POST
 p, student, /api/v1/secure/my-reservations, GET
 p, student, /api/v1/secure/my-reservations/:reservationId, DELETE
-p, student, /api/v1/secure/my-settlement-agreements, GET   
+p, student, /api/v1/secure/my-settlement-agreements, GET
 p, student, /api/v1/secure/my-settlement-agreements/:id, GET
+p, student, /api/v1/secure/my-pass, GET
+p, student, /api/v1/secure/my-roommates, GET
+p, student, /api/v1/dormitories/:id, GET
+
+p, superadmin, /api/v1/admin/passes/:passId/revoke, PUT
+p, dorm_manager, /api/v1/admin/passes/:passId/revoke, PUT
+p, faculty_dean_office, /api/v1/admin/passes/:passId/revoke, PUT
+
+p, admin, /api/v1/admin/events, *
+p, superadmin, /api/v1/admin/events, *
+p, faculty_dean_office, /api/v1/admin/events, POST
+p, faculty_dean_office, /api/v1/admin/events/:eventId, PUT
+p, faculty_dean_office, /api/v1/admin/events/:eventId, DELETE
+p, faculty_dean_office, /api/v1/admin/events, GET
+p, dorm_manager, /api/v1/admin/events, POST
+p, dorm_manager, /api/v1/admin/events/:eventId, PUT
+p, dorm_manager, /api/v1/admin/events/:eventId, DELETE
+p, dorm_manager, /api/v1/admin/events, GET
+
+# Public view access (already in your provided file)
+p, student, /api/v1/settlement-schedule, GET
+
+# Admin view access for all (*) is already covered by:
+# p, admin, /api/v1/admin/settlement-schedule, *
+# p, superadmin, /api/v1/admin/settlement-schedule, *
+
+# Specific CRUD for faculty_dean_office on ADMIN settlement schedule
+p, faculty_dean_office, /api/v1/admin/settlement-schedule, GET
+p, faculty_dean_office, /api/v1/admin/settlement-schedule, POST
+p, faculty_dean_office, /api/v1/admin/settlement-schedule/:id, GET
+p, faculty_dean_office, /api/v1/admin/settlement-schedule/:id, PUT
+p, faculty_dean_office, /api/v1/admin/settlement-schedule/:id, DELETE
+
+# Specific CRUD for dorm_manager on ADMIN settlement schedule
+p, dorm_manager, /api/v1/admin/settlement-schedule, GET
+p, dorm_manager, /api/v1/admin/settlement-schedule, POST
+p, dorm_manager, /api/v1/admin/settlement-schedule/:id, GET
+p, dorm_manager, /api/v1/admin/settlement-schedule/:id, PUT
+p, dorm_manager, /api/v1/admin/settlement-schedule/:id, DELETE
+
+# Permissions for users to view events through secure routes
+p, student, /api/v1/secure/events, GET
+p, student, /api/v1/secure/events/:eventId, GET
+p, dorm_manager, /api/v1/secure/events, GET
+p, dorm_manager, /api/v1/secure/events/:eventId, GET
+p, faculty_dean_office, /api/v1/secure/events, GET 
+p, faculty_dean_office, /api/v1/secure/events/:eventId, GET
+p, student_council_head, /api/v1/secure/events, GET
+p, student_council_head, /api/v1/secure/events/:eventId, GET
+p, student_council_member, /api/v1/secure/events, GET
+p, student_council_member, /api/v1/secure/events/:eventId, GET

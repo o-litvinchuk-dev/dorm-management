@@ -4,6 +4,7 @@ import RoomReservation from "../models/RoomReservation.js";
 import User from "../models/User.js";
 import Notification from "../models/Notification.js";
 import pool from "../config/db.js";
+import { DormitoryPassService } from "../services/dormitoryPassService.js";
 
 const statusLabels = {
   pending_confirmation: "Очікує підтвердження",
@@ -57,7 +58,7 @@ export const searchAvailableRooms = async (req, res) => {
         .status(400)
         .json({ error: "Невірні параметри пошуку", details: error.details });
     }
-    const { academic_year_for_search } = value; // Беремо academic_year з валідованих даних
+    const { academic_year_for_search } = value;
     const userQueryGender = value.gender;
     let roomsQuery = `
       SELECT r.id, r.number, r.capacity, r.floor, r.gender_type, r.description,
@@ -66,7 +67,7 @@ export const searchAvailableRooms = async (req, res) => {
       FROM rooms r
       JOIN dormitories d ON r.dormitory_id = d.id
       WHERE r.is_reservable = 1 AND (r.capacity - r.occupied_places) > 0 
-    `; // Додано перевірку, що є вільні місця
+    `;
     const queryParams = [];
 
     if (value.dormitory_id) {
@@ -75,7 +76,6 @@ export const searchAvailableRooms = async (req, res) => {
     }
 
     if (userQueryGender) {
-      // Логіка фільтрації за статтю залишається
       roomsQuery += ` AND (
         (r.gender_type = ? OR r.gender_type = 'mixed') OR 
         (r.gender_type = 'any' AND (r.current_gender_occupancy = 'empty' OR r.current_gender_occupancy = ?))
@@ -92,14 +92,13 @@ export const searchAvailableRooms = async (req, res) => {
 
     const availableRooms = [];
     for (const room of candidateRooms) {
-      // Перевіряємо доступність на конкретний academic_year
       const isTrulyAvailableForAcademicYear = await checkRoomAvailabilityForAcademicYear(
         room.id,
         academic_year_for_search,
         room.capacity
       );
       if (isTrulyAvailableForAcademicYear) {
-        room.isAvailableOnSearchDates = true; // Це поле тепер відображає доступність на академічний рік
+        room.isAvailableOnSearchDates = true; 
         availableRooms.push(room);
       } else {
         room.isAvailableOnSearchDates = false;
@@ -118,19 +117,18 @@ export const searchAvailableRooms = async (req, res) => {
 export const getRoomDetails = async (req, res) => {
   try {
     const { roomId } = req.params;
-    const { academic_year: academicYearQuery } = req.query; // Фронтенд може передавати academic_year
+    const { academic_year: academicYearQuery } = req.query;
     const room = await Room.findById(roomId);
     if (!room) {
       return res.status(404).json({ error: "Кімнату не знайдено" });
     }
 
     let isAvailableForAcademicYear = true;
-    if (academicYearQuery) { // Якщо academic_year передано, перевіряємо доступність
+    if (academicYearQuery) { 
       isAvailableForAcademicYear = await checkRoomAvailabilityForAcademicYear(
         roomId, academicYearQuery, room.capacity
       );
     }
-    // Додаємо occupied_places до відповіді, це корисно для фронтенду
     res.json({ ...room, isAvailable: isAvailableForAcademicYear, occupied_places: room.occupied_places });
   } catch (error) {
     console.error("[RoomReservationController] Error getting room details:", error);
@@ -170,7 +168,7 @@ export const reserveRoom = async (req, res) => {
         .json({ error: "Невірні дані бронювання", details: error.details });
     }
 
-    const { academic_year } = value; // Беремо academic_year з валідованих даних
+    const { academic_year } = value;
 
     const [roomRows] = await connection.query(
       "SELECT * FROM rooms WHERE id = ? FOR UPDATE",
@@ -200,7 +198,6 @@ export const reserveRoom = async (req, res) => {
         .json({ error: "На жаль, в цій кімнаті вже немає вільних місць." });
     }
 
-    // Перевірки статі
     if (room.gender_type === "male" && userGender !== "male") {
       await connection.rollback();
       console.error(`[reserveRoom] Gender mismatch: Room is 'male', user is '${userGender}'`);
@@ -228,12 +225,11 @@ export const reserveRoom = async (req, res) => {
       });
     }
 
-    // Перевірка доступності на навчальний рік
     const isAvailableForAcademicYear = await checkRoomAvailabilityForAcademicYear(
       roomId,
       academic_year,
       room.capacity,
-      null, // excludeReservationId
+      null,
       connection
     );
     if (!isAvailableForAcademicYear) {
@@ -243,7 +239,6 @@ export const reserveRoom = async (req, res) => {
       });
     }
 
-    // Перевірка, чи користувач вже має активне бронювання на цей навчальний рік
     const [userActiveReservations] = await connection.query(
       `SELECT id FROM room_reservations WHERE user_id = ? AND academic_year = ? AND status IN ('pending_confirmation', 'confirmed', 'checked_in')`,
       [userId, academic_year]
@@ -260,14 +255,13 @@ export const reserveRoom = async (req, res) => {
       {
         room_id: roomId,
         user_id: userId,
-        academic_year: academic_year, // Зберігаємо academic_year
+        academic_year: academic_year,
         notes_student: value.notes_student,
         status: "pending_confirmation",
       },
       connection
     );
 
-    // Сповіщення
     await Notification.create({
       user_id: userId,
       title: "Бронювання створено",
@@ -361,14 +355,11 @@ export const cancelMyReservation = async (req, res) => {
         .json({ error: "Не вдалося скасувати бронювання." });
     }
 
-    // Якщо статус був "confirmed", оновлюємо occupied_places та current_gender_occupancy
     if (oldStatus === "confirmed") {
       const room = await Room.findById(reservation.room_id, connection);
       if (room) {
         const newOccupiedPlaces = Math.max(0, room.occupied_places - 1);
         let newGenderOccupancy = room.current_gender_occupancy;
-        // Якщо після звільнення місця кімната стала порожньою і це кімната 'any' або 'mixed',
-        // то стать стає 'empty'
         if (newOccupiedPlaces === 0 && (room.gender_type === 'any' || room.gender_type === 'mixed')) {
           newGenderOccupancy = 'empty';
         }
@@ -423,7 +414,7 @@ export const getAllReservationsAdmin = async (req, res) => {
           "id",
           "user_name",
           "room_number",
-          "academic_year", // Оновлено поле для сортування
+          "academic_year",
           "status",
           "created_at"
         )
@@ -501,10 +492,9 @@ export const updateReservationStatusAdmin = async (req, res) => {
     const oldStatus = reservation.status;
     let roomUpdateData = {};
 
-    // Логіка оновлення occupied_places та current_gender_occupancy
     if (
-      status === "confirmed" && // Якщо новий статус "confirmed"
-      oldStatus !== "confirmed" && oldStatus !== "checked_in" // і старий статус НЕ був "confirmed" або "checked_in"
+      status === "confirmed" &&
+      oldStatus !== "confirmed" && oldStatus !== "checked_in"
     ) {
       if (room.occupied_places >= room.capacity) {
         await connection.rollback();
@@ -512,12 +502,10 @@ export const updateReservationStatusAdmin = async (req, res) => {
           .status(409)
           .json({ error: "Неможливо підтвердити: кімната вже повна." });
       }
-      const studentGender = reservation.user_gender; // Отримуємо стать студента з даних бронювання
+      const studentGender = reservation.user_gender;
       console.log("[updateReservationStatusAdmin] Admin ID:", req.user.userId);
       console.log("[updateReservationStatusAdmin] Student Gender from reservation object:", studentGender);
       console.log("[updateReservationStatusAdmin] Room Gender Type:", room.gender_type);
-
-      // Перевірка сумісності статі
       if (room.gender_type === "male" && studentGender !== "male") {
         await connection.rollback();
         return res
@@ -541,9 +529,7 @@ export const updateReservationStatusAdmin = async (req, res) => {
           error: `Неможливо поселити. Кімната вже частково зайнята ${genderLabel}.`,
         });
       }
-      // Якщо все гаразд, збільшуємо кількість зайнятих місць
       roomUpdateData.occupied_places = room.occupied_places + 1;
-      // Якщо кімната типу 'any' і була порожньою, встановлюємо стать першого поселенця
       if (
         room.gender_type === "any" &&
         room.current_gender_occupancy === "empty" &&
@@ -552,14 +538,12 @@ export const updateReservationStatusAdmin = async (req, res) => {
         roomUpdateData.current_gender_occupancy = studentGender;
       }
     } else if (
-      // Якщо бронювання скасовується або завершується, а раніше було підтверджено/заселено
       (status === "rejected_by_admin" ||
-        status === "cancelled_by_user" ||
-        status === "checked_out" || status === "expired") &&
+      status === "cancelled_by_user" ||
+      status === "checked_out" || status === "expired") &&
       (oldStatus === "confirmed" || oldStatus === "checked_in")
     ) {
       roomUpdateData.occupied_places = Math.max(0, room.occupied_places - 1);
-      // Якщо після звільнення місця кімната типу 'any' або 'mixed' стала порожньою, скидаємо стать
       if (roomUpdateData.occupied_places === 0 && (room.gender_type === 'any' || room.gender_type === 'mixed')) {
         roomUpdateData.current_gender_occupancy = "empty";
       }
@@ -583,11 +567,20 @@ export const updateReservationStatusAdmin = async (req, res) => {
         .json({ error: "Не вдалося оновити статус бронювання." });
     }
 
-    // Сповіщення студенту
+    // === ПОЧАТОК БЛОКУ ГЕНЕРАЦІЇ ПЕРЕПУСТКИ ===
+    if (status === "checked_in" && reservation) { 
+      try {
+        await DormitoryPassService.ensurePassForReservation(reservation.id, req.user.userId);
+      } catch (passError) {
+        console.error(`[RoomReservationCtrl] Failed to ensure pass for reservation ${reservation.id}:`, passError);
+      }
+    }
+    // === КІНЕЦЬ БЛОКУ ГЕНЕРАЦІЇ ПЕРЕПУСТКИ ===
+
     let studentNotificationTitle = "Статус вашого бронювання оновлено";
     let studentNotificationDesc = `Статус вашого бронювання кімнати №${room.number
-    } (гуртожиток ${room.dormitory_name || "N/A"}, ID бронювання: ${reservationId
-    }) на ${reservation.academic_year} н.р. змінено на "${statusLabels[status] || status}".`; // Додано academic_year
+      } (гуртожиток ${room.dormitory_name || "N/A"}, ID бронювання: ${reservationId
+      }) на ${reservation.academic_year} н.р. змінено на "${statusLabels[status] || status}".`;
     if (notes_admin) {
       studentNotificationDesc += ` Коментар адміністрації: ${notes_admin}`;
     }
@@ -596,7 +589,6 @@ export const updateReservationStatusAdmin = async (req, res) => {
       title: studentNotificationTitle,
       description: studentNotificationDesc,
     });
-
     await connection.commit();
     res.json({ message: "Статус бронювання оновлено." });
   } catch (error) {

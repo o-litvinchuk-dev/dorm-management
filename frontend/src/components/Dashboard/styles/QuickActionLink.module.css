@@ -1,0 +1,75 @@
+.quickAction {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem; /* Increased gap */
+  padding: 0.8rem 1.2rem; /* Increased padding */
+  background-color: var(--card-background-color); /* Match card background */
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg); /* More rounded */
+  color: var(--text-primary);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: all var(--transition-base);
+  box-shadow: var(--shadow-xs);
+}
+
+.quickAction:hover {
+  background-color: var(--primary-bg-light);
+  border-color: var(--primary-color-light);
+  color: var(--primary-color-dark);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+.quickAction:focus-visible { /* Added focus style */
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+.actionIcon {
+  display: inline-flex;
+  color: var(--primary-color);
+  transition: color var(--transition-base);
+}
+
+.quickAction:hover .actionIcon {
+  color: var(--primary-color-dark);
+}
+
+.quickActionIconSvg { /* Class to be applied to the SVG icon itself */
+  width: 20px; /* Ensure SVG uses this size */
+  height: 20px;
+}
+
+.actionLabel {
+  flex-grow: 1;
+  font-weight: 500; /* Make label text a bit bolder */
+}
+
+/* Primary action style */
+.quickAction.isPrimary {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+  color: var(--text-on-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.quickAction.isPrimary .actionIcon,
+.quickAction.isPrimary:hover .actionIcon { /* Icon color for primary button */
+  color: var(--text-on-primary);
+}
+
+.quickAction.isPrimary:hover {
+  background-color: var(--primary-color-dark);
+  border-color: var(--primary-color-dark);
+  color: var(--text-on-primary);
+  box-shadow: var(--shadow-md);
+}
+
+
+@media (max-width: 768px) {
+  .quickAction {
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+  }
+}

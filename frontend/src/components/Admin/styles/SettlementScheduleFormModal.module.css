@@ -1,0 +1,241 @@
+/* src/components/Admin/styles/SettlementScheduleFormModal.module.css */
+.modalInnerContent {
+    padding: 20px;
+    background-color: var(--background-color-light);
+    border-radius: 8px;
+    max-height: 90vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.modalHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border-color-light);
+}
+
+.modalTitle {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-color-primary);
+    display: flex;
+    align-items: center;
+}
+
+.modalTitleIcon {
+    width: 28px;
+    height: 28px;
+    margin-right: 10px;
+    color: var(--primary-color);
+}
+
+.modalBody {
+    flex-grow: 1;
+}
+
+.formGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.formGroup {
+    display: flex;
+    flex-direction: column;
+}
+
+.formGroup.fullWidth {
+    grid-column: 1 / -1;
+}
+
+.formGroup label {
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: var(--text-color-secondary);
+    font-size: 0.9rem;
+}
+
+.formGroup input[type="text"],
+.formGroup input[type="datetime-local"],
+.formGroup input[type="number"],
+.formGroup input[type="color"],
+.formGroup select,
+.formGroup textarea {
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 1rem;
+    background-color: var(--input-background-color);
+    color: var(--input-text-color);
+    transition: border-color 0.2s ease;
+}
+
+.formGroup input:focus,
+.formGroup select:focus,
+.formGroup textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px var(--primary-color-light);
+}
+
+.formGroup input.inputError,
+.formGroup select.inputError,
+.formGroup textarea.inputError {
+    border-color: var(--danger-color);
+}
+
+.errorMessage {
+    color: var(--danger-color);
+    font-size: 0.8rem;
+    margin-top: 4px;
+}
+
+.colorPickerWrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.colorTagInput {
+    flex-grow: 1;
+}
+
+
+.targetsSection {
+    margin-top: 25px;
+    padding-top: 15px;
+    border-top: 1px solid var(--border-color-light);
+}
+
+.targetsTitle {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-color-primary);
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+}
+.targetsTitle svg {
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+}
+
+.targetItem {
+    background-color: var(--background-color);
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    border: 1px solid var(--border-color);
+}
+
+.targetInputs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 15px;
+    align-items: center;
+    margin-bottom: 10px; /* Space before error messages if any */
+}
+
+.targetInputs select,
+.targetInputs input {
+    width: 100%;
+}
+
+.removeTargetButton {
+    background: none;
+    border: none;
+    color: var(--danger-color);
+    cursor: pointer;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto; /* Pushes button to the right if targetInputs are few */
+}
+.removeTargetButton svg {
+    width: 18px;
+    height: 18px;
+}
+
+.addTargetButton {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 15px;
+    background-color: var(--secondary-color);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+}
+.addTargetButton:hover {
+    background-color: var(--secondary-color-dark);
+}
+.addTargetButton svg {
+    width: 18px;
+    height: 18px;
+}
+.targetErrorMessage {
+    grid-column: 1 / -1; /* Span across all columns if needed */
+    margin-top: 0;
+}
+
+
+.modalFooter {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color-light);
+    margin-top: 20px;
+}
+
+.formButton {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease, opacity 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.95rem;
+}
+.formButton svg {
+    width: 18px;
+    height: 18px;
+}
+
+.submitButton {
+    background-color: var(--primary-color);
+    color: #fff;
+}
+.submitButton:hover {
+    background-color: var(--primary-color-dark);
+}
+.submitButton:disabled {
+    background-color: var(--disabled-bg-color);
+    color: var(--disabled-text-color);
+    cursor: not-allowed;
+}
+
+.cancelButton {
+    background-color: var(--secondary-button-bg);
+    color: var(--secondary-button-text);
+    border: 1px solid var(--secondary-button-border);
+}
+.cancelButton:hover {
+    background-color: var(--secondary-button-bg-hover);
+}
+.cancelButton:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}

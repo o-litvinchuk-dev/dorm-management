@@ -1,0 +1,20 @@
+/* src/pages/AdminManagement/styles/ManageEventsPage.module.css */
+/* Using existing styles from ManageApplicationPresetsPage as a base */
+@import "./ManageApplicationPresetsPage.module.css";
+
+.targetHeader {
+    min-width: 250px;
+}
+
+.targetCell {
+    max-width: 300px;
+    white-space: normal; /* Allow wrapping for long target summaries */
+    word-break: break-word;
+}
+
+.titleCell {
+    max-width: 250px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

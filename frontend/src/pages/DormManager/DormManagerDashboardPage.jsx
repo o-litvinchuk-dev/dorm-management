@@ -12,7 +12,9 @@ import {
     BuildingStorefrontIcon,
     BuildingLibraryIcon,
     WrenchScrewdriverIcon,
-    UserGroupIcon as StudentCouncilIcon // Додано імпорт іконки для студрад
+    UserGroupIcon as StudentCouncilIcon,
+    CalendarDaysIcon as EventsIcon, // For Managing Events
+    ListBulletIcon as ScheduleAdminIcon // For Managing Settlement Schedule
 } from '@heroicons/react/24/outline';
 import { useUser } from '../../contexts/UserContext';
 
@@ -87,7 +89,7 @@ const DormManagerDashboardPage = () => {
         if (user && user.role === 'dorm_manager' && user.dormitory_id) {
             fetchStats();
         } else if (user && (user.role !== 'dorm_manager' || !user.dormitory_id)) {
-            setIsLoading(false);
+            setIsLoading(false); // Ensure loading stops if user is not a dorm manager or has no dorm
         }
     }, [fetchStats, user]);
 
@@ -125,10 +127,10 @@ const DormManagerDashboardPage = () => {
         );
     }
 
-    const formatStatCount = (count, labelPrefix = "") => {
-        if (isLoading && count === 0 && !labelPrefix.includes("Налаштування")) return "...";
+    const formatStatCount = (count, labelPrefix = "", itemTitle = "") => {
+        if (isLoading && count === 0 && !itemTitle.includes("Налаштування") && !itemTitle.includes("Подіями") && !itemTitle.includes("Розклад")) return "...";
         if (count === '?') return "?";
-        if (!labelPrefix && labelPrefix.includes("Налаштування")) return undefined;
+        if (!labelPrefix && (itemTitle.includes("Налаштування") || itemTitle.includes("Подіями") || itemTitle.includes("Розклад"))) return undefined;
         return `${labelPrefix}${count}`;
     };
 
@@ -137,7 +139,9 @@ const DormManagerDashboardPage = () => {
         { title: "Бронювання Кімнат", countKey: "roomReservationsCount", labelPrefix: "Активних: ", icon: BookmarkSquareIcon, linkTo: "/admin/room-reservations", description: "Управління бронюваннями кімнат у вашому гуртожитку." },
         { title: "Договори на Поселення", countKey: "settlementAgreementsCount", labelPrefix: "На розгляді: ", icon: ContractIcon, linkTo: "/admin/settlement-agreements", description: "Перегляд та адміністрування договорів на поселення для вашого гуртожитку." },
         { title: "Керування Кімнатами", icon: BuildingLibraryIcon, linkTo: "/dorm-manager/rooms", description: "Додавання, редагування та видалення кімнат у вашому гуртожитку." },
-        { title: "Студентські Ради", icon: StudentCouncilIcon, linkTo: "/dean/student-council", description: "Перегляд інформації про студентські ради факультетів." }, // Нова картка
+        { title: "Керування Подіями", icon: EventsIcon, linkTo: "/admin/manage-events", description: "Створення та редагування подій для вашого гуртожитку та університету."},
+        { title: "Розклад Поселення (Адмін)", icon: ScheduleAdminIcon, linkTo: "/admin/manage-settlement-schedule", description: "Адміністрування записів у загальному розкладі поселення."},
+        { title: "Студентські Ради", icon: StudentCouncilIcon, linkTo: "/dean/student-council", description: "Перегляд інформації про студентські ради факультетів." },
         { title: "Налаштування Заяв", icon: WrenchScrewdriverIcon, linkTo: "/admin/application-presets", description: "Конфігурація параметрів подачі заяв для вашого гуртожитку." },
     ];
 
@@ -171,7 +175,7 @@ const DormManagerDashboardPage = () => {
                                         <StatCard
                                             key={section.linkTo}
                                             title={section.title}
-                                            count={section.countKey ? formatStatCount(stats[section.countKey], section.labelPrefix) : undefined}
+                                            count={section.countKey ? formatStatCount(stats[section.countKey], section.labelPrefix, section.title) : undefined}
                                             icon={section.icon}
                                             linkTo={section.linkTo}
                                             onNavigate={handleNavigate}

@@ -1,0 +1,445 @@
+/* src/pages/AdminManagement/styles/ManageSettlementSchedulePage.module.css */
+
+.layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--background-color);
+}
+
+.mainContent {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  transition: margin-left var(--transition-slow);
+  margin-left: var(--sidebar-width-expanded); /* Default for expanded sidebar */
+}
+
+.mainContent.sidebarCollapsed {
+  margin-left: var(--sidebar-width-collapsed);
+}
+
+.pageContainer {
+  padding: var(--main-content-padding);
+  padding-top: calc(var(--navbar-height) + var(--main-content-padding));
+  flex-grow: 1;
+  overflow-y: auto;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.pageTitle {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.titleIcon {
+  width: 28px;
+  height: 28px;
+  color: var(--primary-color);
+}
+
+.actionButtonMain {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.2rem;
+  background-color: var(--primary-color);
+  color: var(--text-on-primary);
+  border: none;
+  border-radius: var(--border-radius-md);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.actionButtonMain:hover:not(:disabled) {
+  background-color: var(--primary-color-dark);
+}
+
+.actionButtonMain:disabled {
+  background-color: var(--neutral-color);
+  cursor: not-allowed;
+}
+
+.buttonIcon {
+  width: 20px;
+  height: 20px;
+}
+
+.contentWrapper {
+  background-color: var(--card-background-color);
+  padding: 20px;
+  border-radius: var(--border-radius-lg);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03);
+}
+
+.loading, .emptyMessage, .errorMessage {
+  text-align: center;
+  padding: 40px 20px;
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+.emptyMessage svg, .errorMessage svg {
+    width: 32px;
+    height: 32px;
+    margin-bottom: 8px;
+    color: var(--primary-color-light);
+}
+.errorMessage {
+    color: var(--error-color-dark);
+}
+.errorMessage svg {
+    color: var(--error-color);
+}
+
+
+.tableContainer {
+  overflow-x: auto;
+  margin-top: 20px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.table th, .table td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color-light);
+}
+
+.table th {
+  background-color: var(--background-light);
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+}
+
+.actionsHeader {
+  text-align: right !important;
+}
+
+.actionsCell {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.actionButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  margin-left: 8px;
+  border-radius: var(--border-radius-sm);
+  transition: background-color var(--transition-fast);
+}
+.actionButton:hover:not(:disabled) {
+    background-color: var(--primary-bg-light);
+}
+.actionButton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+.actionButton svg {
+  width: 18px;
+  height: 18px;
+  color: var(--text-muted);
+}
+.editButton svg { color: var(--primary-color); }
+.deleteButton svg { color: var(--error-color); }
+
+.editButton:hover:not(:disabled) svg { color: var(--primary-color-dark); }
+.deleteButton:hover:not(:disabled) svg { color: var(--error-color-dark); }
+
+
+.titleCell {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Modal Styles */
+.modalOverlayGlobal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modalContentGlobal {
+  background-color: var(--card-background-color);
+  padding: 25px 30px;
+  border-radius: var(--border-radius-lg);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+  max-width: 650px; /* Default max width */
+  width: 100%;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh; /* Ensure modal fits in viewport */
+}
+
+.modalInnerContent {
+  /* flex-grow: 1; Allow content to grow */
+  overflow-y: auto; /* Add scroll for long content */
+}
+
+
+.closeButtonIconGlobal {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+}
+.closeButtonIconGlobal svg {
+  width: 24px;
+  height: 24px;
+  color: var(--text-muted);
+}
+.closeButtonIconGlobal:hover svg {
+  color: var(--text-primary);
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  padding-bottom: 15px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.modalTitle {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+.modalTitle .titleIcon {
+  width: 24px;
+  height: 24px;
+  margin-right: 10px;
+  color: var(--primary-color);
+}
+
+
+.modalBody {
+  margin-bottom: 20px;
+  /* overflow-y: auto; */
+  /* max-height: calc(80vh - 160px); Consider adjusting if modal has fixed height */
+}
+
+.formGroup {
+  margin-bottom: 18px;
+}
+.formGroup label, .inputLabel {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 6px;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+.formGroup input[type="text"],
+.formGroup input[type="datetime-local"],
+.formGroup input[type="number"],
+.formGroup textarea,
+.formGroup select,
+.selectField,
+.inputField {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border-color-dark);
+  border-radius: var(--border-radius-md);
+  font-size: 0.95rem;
+  box-sizing: border-box;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.formGroup input:focus,
+.formGroup textarea:focus,
+.formGroup select:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px var(--primary-bg-light);
+  outline: none;
+}
+.inputError {
+  border-color: var(--error-color) !important;
+}
+.inputError:focus {
+  box-shadow: 0 0 0 2px var(--error-bg-light) !important;
+}
+.errorMessage {
+  color: var(--error-color-dark);
+  font-size: 0.8rem;
+  margin-top: 4px;
+}
+
+.colorPickerWrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.colorTagInput {
+    flex-grow: 1;
+}
+
+.modalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-color-light);
+}
+
+.formButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: var(--border-radius-md);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+.formButton svg {
+    width: 18px;
+    height: 18px;
+}
+
+.submitButton {
+  background-color: var(--primary-color);
+  color: var(--text-on-primary);
+}
+.submitButton:hover:not(:disabled) {
+  background-color: var(--primary-color-dark);
+}
+.submitButton:disabled {
+  background-color: var(--neutral-color);
+}
+
+.cancelButton {
+  background-color: var(--background-light);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color-dark);
+}
+.cancelButton:hover:not(:disabled) {
+  background-color: var(--border-color-light);
+}
+.cancelButton:disabled {
+  opacity: 0.7;
+}
+
+.sortIcon {
+    width: 14px;
+    height: 14px;
+    margin-left: 4px;
+    color: var(--text-muted);
+    transition: color var(--transition-fast);
+}
+.sortableHeader:hover .sortIcon {
+    color: var(--text-primary);
+}
+
+.paginationWrapper {
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid var(--border-color-light);
+  display: flex;
+  justify-content: center;
+}
+
+@media (max-width: 768px) {
+  .mainContent {
+    margin-left: 0; /* Sidebar is likely overlayed or hidden */
+  }
+  .pageContainer {
+    padding-top: calc(var(--navbar-height) + var(--main-content-padding) / 2);
+  }
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .actionButtonMain {
+    width: 100%;
+    justify-content: center;
+  }
+  .modalContentGlobal {
+    max-width: 95%;
+    padding: 20px;
+  }
+  .table th, .table td {
+    font-size: 0.85rem;
+    padding: 8px 10px;
+  }
+  /* Responsive table if needed */
+  .table thead {
+    display: none;
+  }
+  .table tr {
+    display: block;
+    margin-bottom: 15px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    overflow: hidden;
+  }
+  .table td {
+    display: block;
+    text-align: right !important; /* Override default left align for cells */
+    padding-left: 50%; /* Make space for label */
+    position: relative;
+    border-bottom: 1px dashed var(--border-color-light);
+  }
+  .table td:last-child {
+    border-bottom: none;
+  }
+  .table td::before {
+    content: attr(data-label);
+    position: absolute;
+    left: 10px;
+    width: calc(50% - 20px); /* Label width */
+    padding-right: 10px;
+    white-space: nowrap;
+    text-align: left;
+    font-weight: bold;
+    color: var(--text-secondary);
+  }
+  .actionsCell, .actionsHeader {
+    text-align: right !important; /* Ensure actions stay right */
+  }
+  .actionsCell button {
+    margin-left: 5px;
+  }
+}

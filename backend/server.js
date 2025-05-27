@@ -24,6 +24,10 @@ import dormitoryRoutes from "./src/routes/v1/dormitoryRoutes.js";
 import dormitoryApplicationPresetRoutes from "./src/routes/v1/dormitoryApplicationPresetRoutes.js";
 import dormManagerRoutes from "./src/routes/v1/dormManagerRoutes.js";
 import adminSettlementContractRoutes from "./src/routes/v1/adminSettlementContractRoutes.js";
+import dormitoryPassRoutes from "./src/routes/v1/dormitoryPassRoutes.js";
+import settlementScheduleAdminRoutes from "./src/routes/v1/settlementScheduleAdminRoutes.js";
+import eventRoutes from "./src/routes/v1/eventRoutes.js";
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -72,18 +76,21 @@ app.use((req, res, next) => {
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/secure", secureRoutes);
 app.use("/api/v1/admin", authenticate, adminRoutes);
+app.use("/api/v1", eventRoutes); 
 app.use("/api/v1/faculties", facultyRoutes);
 app.use("/api/v1/faculty-dormitories", facultyDormitoryRoutes);
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/services", servicesRoutes);
 app.use("/api/v1/admin/accommodation-applications", adminAccommodationRoutes);
 app.use("/api/v1/admin/dormitories", adminDormitoryRoutes);
-app.use("/api/v1/admin/settlement-agreements", adminSettlementContractRoutes); // New route for settlement agreements
-app.use("/api/v1/dorm-manager", dormManagerRoutes); // New route for dorm manager specific endpoints
+app.use("/api/v1/admin/settlement-agreements", adminSettlementContractRoutes);
+app.use("/api/v1/dorm-manager", dormManagerRoutes);
 app.use("/api/v1", roomRoutes);
 app.use("/api/v1", groupRoutes);
 app.use("/api/v1", dormitoryRoutes);
 app.use("/api/v1/application-presets", dormitoryApplicationPresetRoutes);
+app.use("/api/v1", dormitoryPassRoutes);
+app.use("/api/v1/admin/settlement-schedule", settlementScheduleAdminRoutes);
 
 app.use(errorHandler);
 

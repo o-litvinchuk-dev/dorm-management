@@ -10,11 +10,12 @@ import NewPasswordPage from "../pages/Auth/NewPasswordPage";
 import CompleteProfilePage from "../pages/Auth/CompleteProfilePage";
 import VerifyEmailPage from "../pages/Auth/VerifyEmailPage";
 import TwoFactorAuthPage from "../pages/Auth/TwoFactorAuthPage";
+import PassVerificationPage from "../pages/Public/PassVerificationPage";
 
 import DashboardPage from "../pages/Dashboard/DashboardPage";
 import ServicesPage from "../pages/Services/ServicesPage";
 import ApplicationsPage from "../pages/Applications/ApplicationsPage";
-import DormitoriesPage from "../pages/Dormitories/DormitoriesPage";
+import PublicDormitoriesPage from "../pages/Dormitories/DormitoriesPage";
 import SettlementPage from "../pages/Settlement/SettlementPage";
 import UserProfilePage from "../pages/Profile/ProfilePage";
 import SettingsPage from "../pages/Settings/SettingsPage";
@@ -36,6 +37,8 @@ import AdminRoomReservationsPage from "../pages/AdminReservations/AdminRoomReser
 import ManageRoomsPage from "../pages/DormManager/ManageRoomsPage";
 import ManageSettlementAgreementsPage from "../pages/AdminManagement/ManageSettlementAgreementsPage";
 import StudentCouncilPage from "../pages/Dean/StudentCouncilPage";
+import ManageSettlementSchedulePage from "../pages/AdminManagement/ManageSettlementSchedulePage";
+import ManageEventsPage from "../pages/AdminManagement/ManageEventsPage";
 
 import DormManagerDashboardPage from "../pages/DormManager/DormManagerDashboardPage";
 import AdminDashboardPage from "../pages/AdminDashboard/AdminDashboardPage";
@@ -64,7 +67,6 @@ const AuthRequiredRoute = ({ element }) => {
       }
 
       if (isLoading) {
-        // Wait for user loading to complete
         return;
       }
 
@@ -80,7 +82,6 @@ const AuthRequiredRoute = ({ element }) => {
         if (isMounted) {
           navigate("/complete-profile", { state: { from: location }, replace: true });
         }
-        // No need to setAuthCheckComplete true here, as navigation will occur
         return;
       }
 
@@ -92,16 +93,14 @@ const AuthRequiredRoute = ({ element }) => {
     verifyAuth();
 
     return () => {
-      isMounted = false; // Cleanup function to prevent state updates on unmounted component
+      isMounted = false;
     };
   }, [user, isLoading, navigate, location]);
-
 
   if (isLoading || !authCheckComplete) {
     return <div>Перевірка автентифікації...</div>;
   }
 
-  // This check is crucial: if auth check is done and still no user, redirect.
   if (!user && authCheckComplete) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
@@ -117,6 +116,7 @@ const routesConfig = [
   { path: "/register", element: <RegistrationPage /> },
   { path: "/verify-email", element: <VerifyEmailPage /> },
   { path: "/verify-2fa", element: <TwoFactorAuthPage /> },
+  { path: "/verify-pass-public/:passIdentifier", element: <PassVerificationPage /> },
   { path: "/complete-profile", element: <AuthRequiredRoute element={<CompleteProfilePage />} /> },
 
   { path: "/dashboard", element: <AuthRequiredRoute element={<DashboardPage />} /> },
@@ -130,7 +130,7 @@ const routesConfig = [
     element: <AuthRequiredRoute element={<SettlementAgreementPage />} />,
   },
   {
-    path: "/services/contract-creation", // Might be deprecated or placeholder
+    path: "/services/contract-creation",
     element: <AuthRequiredRoute element={<ContractApplicationPage />} />,
   },
   {
@@ -141,23 +141,31 @@ const routesConfig = [
     path: "/services/rooms/:roomId",
     element: <AuthRequiredRoute element={<RoomDetailPage />} />,
   },
-  { path: "/my-accommodation-applications", element: <AuthRequiredRoute element={<MyActivitiesPage />} /> }, // Consolidated page for user's applications and reservations
+  { path: "/my-accommodation-applications", element: <AuthRequiredRoute element={<MyActivitiesPage />} /> },
   {
     path: "/my-reservations",
     element: <AuthRequiredRoute element={<MyReservationsPage />} />,
   },
   { path: "/settings", element: <AuthRequiredRoute element={<SettingsPage />} /> },
   { path: "/profile", element: <AuthRequiredRoute element={<UserProfilePage />} /> },
-
-  // Legacy or generic, might be unused directly if MyActivitiesPage is preferred
-  { path: "/applications", element: <AuthRequiredRoute element={<ApplicationsPage />} /> },
-  { path: "/dormitories", element: <AuthRequiredRoute element={<DormitoriesPage />} /> },
-  { path: "/settlement", element: <AuthRequiredRoute element={<SettlementPage />} /> },
-
-
-  // Admin Routes
+  { path: "/dormitories", element: <AuthRequiredRoute element={<PublicDormitoriesPage />} /> },
+  // Updated settlement route to use /api/v1/secure/events for event calendar
   {
-    path: "/adminApplications", // This seems like a general entry point, maybe for a menu
+    path: "/settlement",
+    element: (
+      <AuthRequiredRoute
+        element={
+          <AdminProtectedRoute
+            element={<SettlementPage />}
+            allowedRoles={["student", "faculty_dean_office", "dorm_manager", "student_council_head", "student_council_member", "admin", "superadmin"]}
+          />
+        }
+      />
+    ),
+  },
+
+  {
+    path: "/adminApplications",
     element: (
       <AuthRequiredRoute
         element={
@@ -170,7 +178,7 @@ const routesConfig = [
     ),
   },
   {
-    path: "/admin/accommodation-applications", // Specific management page
+    path: "/admin/accommodation-applications",
     element: (
       <AuthRequiredRoute
         element={
@@ -183,7 +191,6 @@ const routesConfig = [
     ),
   },
   {
-    // Duplicate of the above, keeping for now if used somewhere, should be consolidated
     path: "/admin/applications/accommodation",
     element: (
       <AuthRequiredRoute
@@ -197,7 +204,7 @@ const routesConfig = [
     ),
   },
   {
-    path: "/admin/management", // Superadmin system management
+    path: "/admin/management",
     element: (
       <AuthRequiredRoute
         element={
@@ -287,8 +294,6 @@ const routesConfig = [
       />
     ),
   },
-
-  // Dashboards per role
   {
     path: "/dorm-manager/dashboard",
     element: (
@@ -328,7 +333,33 @@ const routesConfig = [
       />
     ),
   },
-
+  {
+    path: "/admin/manage-settlement-schedule",
+    element: (
+      <AuthRequiredRoute
+        element={
+          <AdminProtectedRoute
+            element={<ManageSettlementSchedulePage />}
+            allowedRoles={["admin", "superadmin", "dorm_manager", "faculty_dean_office"]}
+          />
+        }
+      />
+    ),
+  },
+  // New route for event management
+  {
+    path: "/admin/manage-events", // New route
+    element: (
+      <AuthRequiredRoute
+        element={
+          <AdminProtectedRoute
+            element={<ManageEventsPage />}
+            allowedRoles={["admin", "superadmin", "faculty_dean_office", "dorm_manager"]}
+          />
+        }
+      />
+    ),
+  },
   { path: "/unauthorized", element: <UnauthorizedPage /> },
   { path: "*", element: <NotFoundPage /> },
 ];

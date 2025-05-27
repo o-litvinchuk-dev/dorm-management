@@ -10,7 +10,9 @@ import {
     AcademicCapIcon as GroupsIcon,
     WrenchScrewdriverIcon,
     BuildingLibraryIcon as DeanPanelTitleIcon,
-    UserGroupIcon as StudentCouncilIcon // Додано імпорт іконки для студради
+    UserGroupIcon as StudentCouncilIcon,
+    CalendarDaysIcon as EventsIcon, // For Managing Events
+    ListBulletIcon as ScheduleAdminIcon // For Managing Settlement Schedule
 } from '@heroicons/react/24/outline';
 import { useUser } from '../../contexts/UserContext';
 
@@ -66,7 +68,14 @@ const DeanDashboardPage = () => {
         let applicationsRes, groupsRes;
 
         try {
-            const appParams = { status: 'pending', limit: 1, page: 1 };
+            // For facultyApplicationsCount, we filter by faculty_id and status='pending' on the backend
+            // The /admin/accommodation-applications endpoint handles this if faculty_id is in user
+            const appParams = { 
+                status: 'pending', // Only count pending applications for this stat
+                limit: 1, // We only need the total count
+                page: 1,
+                // faculty_id_for_filter will be implicitly used by the controller based on user role
+            };
             const applicationsPromise = api.get('/admin/accommodation-applications', { params: appParams });
             const groupsPromise = api.get(`/faculties/${user.faculty_id}/groups`);
 
@@ -74,14 +83,18 @@ const DeanDashboardPage = () => {
 
             const getResultData = (promiseResult, field = 'total') => {
                 if (promiseResult.status === 'fulfilled') {
-                    return promiseResult.value.data?.[field] ?? promiseResult.value.data?.meta?.[field] ?? 0;
+                    // Check if data itself is an array (for groups) or has a specific field (for paginated results)
+                    if (Array.isArray(promiseResult.value.data) && field === 'length') {
+                        return promiseResult.value.data.length;
+                    }
+                    return promiseResult.value.data?.[field] ?? 0;
                 }
                 return '?';
             };
-
+            
             setStats({
-                facultyApplicationsCount: getResultData(applicationsRes),
-                facultyGroupsCount: groupsRes.status === 'fulfilled' ? (groupsRes.value.data?.length ?? 0) : '?',
+                facultyApplicationsCount: getResultData(applicationsRes, 'total'),
+                facultyGroupsCount: getResultData(groupsRes, 'length'),
             });
 
         } catch (err) {
@@ -91,7 +104,7 @@ const DeanDashboardPage = () => {
         } finally {
             setIsLoading(false);
             const resultsArray = [applicationsRes, groupsRes].filter(Boolean);
-            const hasErrors = resultsArray.some(res => res.status === 'rejected');
+            const hasErrors = resultsArray.some(res => res && res.status === 'rejected');
 
             if (hasErrors && !error) {
                  ToastService.warn("Не вдалося завантажити деякі дані статистики.");
@@ -146,17 +159,19 @@ const DeanDashboardPage = () => {
     }
 
     const formatSectionCount = (count, labelPrefix = "", itemTitle = "") => {
-        if (isLoading && count === 0 && !itemTitle.includes("Налаштування")) return "...";
+        if (isLoading && count === 0 && !itemTitle.includes("Налаштування") && !itemTitle.includes("Подіями") && !itemTitle.includes("Розклад")) return "...";
         if (count === '?') return "?";
-        if (!labelPrefix && itemTitle.includes("Налаштування")) return undefined;
+        if (!labelPrefix && (itemTitle.includes("Налаштування") || itemTitle.includes("Подіями") || itemTitle.includes("Розклад"))) return undefined;
         return `${labelPrefix}${count}`;
     };
 
     const deanSections = [
         { title: "Заявки на Поселення", countKey: "facultyApplicationsCount", labelPrefix: "В очікуванні: ", icon: ClipboardDocumentListIcon, linkTo: "/admin/accommodation-applications", description: "Розгляд та управління заявками студентів вашого факультету." },
         { title: "Управління Групами", countKey: "facultyGroupsCount", labelPrefix: "Груп: ", icon: GroupsIcon, linkTo: "/dean/groups", description: "Створення, редагування та видалення навчальних груп факультету." },
-        { title: "Управління Студрадою", icon: StudentCouncilIcon, linkTo: "/dean/student-council", description: "Призначення та керування членами студентської ради факультету." }, // Нова картка
+        { title: "Управління Студрадою", icon: StudentCouncilIcon, linkTo: "/dean/student-council", description: "Призначення та керування членами студентської ради факультету." },
         { title: "Налаштування Заяв", icon: WrenchScrewdriverIcon, linkTo: "/admin/application-presets", description: "Керування глобальними та факультет-специфічними налаштуваннями для подачі заяв." },
+        { title: "Керування Подіями", icon: EventsIcon, linkTo: "/admin/manage-events", description: "Створення та редагування подій для факультету та університету."},
+        { title: "Розклад Поселення (Адмін)", icon: ScheduleAdminIcon, linkTo: "/admin/manage-settlement-schedule", description: "Адміністрування записів у загальному розкладі поселення."}
     ];
 
     return (

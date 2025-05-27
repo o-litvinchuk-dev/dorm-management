@@ -2,6 +2,21 @@ import Joi from "joi";
 import pool from "../config/db.js";
 import AccommodationApplication from "../models/AccommodationApplication.js";
 import Notification from "../models/Notification.js";
+import { DormitoryPassService } from "../services/dormitoryPassService.js";
+import DormitoryPass from "../models/DormitoryPass.js";
+import Room from "../models/Room.js";
+
+const statusLabels = {
+    pending: "Очікує",
+    approved: "Затверджено",
+    rejected: "Відхилено",
+    approved_by_faculty: "Затверджено деканатом",
+    rejected_by_faculty: "Відхилено деканатом",
+    approved_by_dorm: "Затверджено гуртожитком",
+    rejected_by_dorm: "Відхилено гуртожитком",
+    settled: "Поселено",
+    cancelled_by_user: "Скасовано користувачем"
+};
 
 export const getAccommodationApplications = async (req, res) => {
   try {
@@ -10,12 +25,11 @@ export const getAccommodationApplications = async (req, res) => {
       limit: Joi.number().integer().min(1).max(100).default(10),
       search: Joi.string().allow("").default(""),
       status: Joi.string().valid("pending", "approved", "rejected", "approved_by_faculty", "rejected_by_faculty", "approved_by_dorm", "rejected_by_dorm", "settled", "").allow("").default(""),
-      // Повертаємо dateFrom/dateTo для фільтрації по даті подачі заявки
-      dateFrom: Joi.date().iso().allow("").default(""), // Будемо використовувати як applicationDateFrom
-      dateTo: Joi.date().iso().allow("").default(""),   // Будемо використовувати як applicationDateTo
+      dateFrom: Joi.date().iso().allow("").default(""),
+      dateTo: Joi.date().iso().allow("").default(""),
       dormNumber: Joi.string().allow("").default(""),
       sortBy: Joi.string()
-        .valid("id", "full_name", "email", "dorm_number", "status", "created_at", "application_date", "updated_at", "start_date", "end_date") // Додано start_date, end_date
+        .valid("id", "full_name", "email", "dorm_number", "status", "created_at", "application_date", "updated_at", "start_date", "end_date")
         .default("created_at"),
       sortOrder: Joi.string().valid("asc", "desc").default("desc"),
     });
@@ -32,13 +46,12 @@ export const getAccommodationApplications = async (req, res) => {
       return res.status(401).json({ error: "Користувач не авторизований" });
     }
     
-    // Перейменовуємо dateFrom/dateTo для передачі в модель, якщо вони для application_date
     const effectiveFilters = {
         ...validatedQueryFilters,
-        applicationDateFrom: validatedQueryFilters.dateFrom, // Передаємо як applicationDateFrom
-        applicationDateTo: validatedQueryFilters.dateTo,     // Передаємо як applicationDateTo
+        applicationDateFrom: validatedQueryFilters.dateFrom,
+        applicationDateTo: validatedQueryFilters.dateTo,
     };
-    delete effectiveFilters.dateFrom; // Видаляємо старі ключі, щоб уникнути плутанини
+    delete effectiveFilters.dateFrom;
     delete effectiveFilters.dateTo;
 
     console.log("[AdminACtrl] Initial req.query:", JSON.stringify(req.query));
@@ -88,8 +101,6 @@ export const getAccommodationApplications = async (req, res) => {
 
     console.log("[AdminACtrl] Effective Filters PASSED TO MODEL:", JSON.stringify(effectiveFilters));
 
-    // Модель AccommodationApplication.findAll вже оновлена для роботи з start_date, end_date,
-    // і може приймати applicationDateFrom/To для фільтрації по даті подачі
     const result = await AccommodationApplication.findAll(effectiveFilters);
     res.json(result);
   } catch (error) {
@@ -131,7 +142,6 @@ export const getAccommodationApplicationById = async (req, res) => {
                 return res.status(403).json({ error: "Доступ обмежено до вашого факультету" });
             }
         } else if (req.user.role === "faculty_dean_office" && req.user.faculty_id) {
-            // Декан має бачити заявки свого факультету АБО заявки на гуртожитки, що закріплені за його факультетом
             const [dormitories] = await pool.query(
                 `SELECT dormitory_id FROM faculty_dormitories WHERE faculty_id = ?`,
                 [req.user.faculty_id]
@@ -160,7 +170,7 @@ export const getAccommodationApplicationById = async (req, res) => {
 export const updateApplicationStatus = async (req, res) => {
     try {
         const { id } = req.params;
-        const { status, room_id } = req.body; // room_id тепер може прийти з фронтенду
+        const { status, room_id: roomIdFromRequest } = req.body;
 
         const allowedStatuses = {
             faculty_dean_office: ["approved_by_faculty", "rejected_by_faculty"],
@@ -172,53 +182,93 @@ export const updateApplicationStatus = async (req, res) => {
         const schema = Joi.object({
             id: Joi.number().integer().positive().required(),
             status: Joi.string().valid(...Object.values(allowedStatuses).flat()).required(),
-            room_id: Joi.number().integer().positive().optional().allow(null) // Валідація для room_id
+            room_id: Joi.number().integer().positive().optional().allow(null)
         });
 
-        const { error } = schema.validate({ id, status, room_id }); // Валідуємо всі дані
+        const { error } = schema.validate({ id, status, room_id: roomIdFromRequest });
         if (error) {
             console.error("[AdminACtrl] Joi validation error for status update:", error.details);
             return res.status(400).json({ error: "Невірні вхідні дані", details: error.details });
         }
 
         if (!allowedStatuses[req.user.role]?.includes(status)) {
+            console.log(`[AdminACtrl] Access denied for user ${req.user.userId} (role: ${req.user.role}) to set status ${status}. Allowed: ${allowedStatuses[req.user.role]?.join(', ')}`);
             return res.status(403).json({ error: "Немає прав для зміни на цей статус" });
         }
 
-        const application = await AccommodationApplication.findById(id);
-        if (!application) {
+        const applicationFromDb = await AccommodationApplication.findById(id);
+        if (!applicationFromDb) {
+            console.log(`[AdminACtrl] Application ${id} not found`);
             return res.status(404).json({ error: "Заявку не знайдено" });
         }
 
-        // Перевірки доступу до оновлення (аналогічні до getById)
         if (req.user.role === "dorm_manager" && req.user.dormitory_id) {
-            if (application.dormitory_id !== req.user.dormitory_id) {
+            if (applicationFromDb.dormitory_id !== req.user.dormitory_id) {
+                console.log(`[AdminACtrl] Access denied for dorm_manager ${req.user.userId} to app ${id}. User manages ${req.user.dormitory_id}, app is for ${applicationFromDb.dormitory_id}`);
                 return res.status(403).json({ error: "Доступ обмежено до вашого гуртожитку" });
             }
         } else if (req.user.role === "faculty_dean_office" && req.user.faculty_id) {
-             const [dormitories] = await pool.query(
+            const [dormitories] = await pool.query(
                 `SELECT dormitory_id FROM faculty_dormitories WHERE faculty_id = ?`,
                 [req.user.faculty_id]
             );
             const managedDormIds = dormitories.map(d => d.dormitory_id);
-            if (application.faculty_id !== req.user.faculty_id && !managedDormIds.includes(application.dormitory_id)) {
-                 return res.status(403).json({ error: "Доступ обмежено до керованих гуртожитків або заявок вашого факультету" });
+            if (applicationFromDb.faculty_id !== req.user.faculty_id && !managedDormIds.includes(applicationFromDb.dormitory_id)) {
+                console.log(`[AdminACtrl] Access denied for faculty_dean_office ${req.user.userId} to app ${id}. User manages faculty ${req.user.faculty_id} (dorms: ${managedDormIds.join(',')}), app is for faculty ${applicationFromDb.faculty_id} and dorm ${applicationFromDb.dormitory_id}`);
+                return res.status(403).json({ error: "Доступ обмежено до керованих гуртожитків або заявок вашого факультету" });
             }
         }
 
-        // Важливо: Модель AccommodationApplication.updateStatus має бути адаптована для прийому room_id
-        // Або тут має бути додатковий запит для оновлення room_id в заявці, якщо статус 'settled'
-        const updated = await AccommodationApplication.updateStatus(id, status, room_id); 
-
+        const updated = await AccommodationApplication.updateStatus(id, status, status === 'settled' ? roomIdFromRequest : null);
         if (!updated) {
+            console.log(`[AdminACtrl] Failed to update status for application ${id}. No changes or application not found.`);
             return res.status(500).json({ error: "Не вдалося оновити статус заявки. Можливо, заявку не знайдено або дані не змінились." });
         }
 
-        if (application) { // 'application' тут це стан *до* оновлення
+        const applicationForPass = await AccommodationApplication.findById(id);
+        let triggerPassGeneration = false;
+        let roomIdToUseForPass = null;
+
+        if (status === 'settled') {
+            triggerPassGeneration = true;
+            roomIdToUseForPass = roomIdFromRequest || applicationForPass?.current_room_id_from_settlement || applicationForPass?.room_id;
+        } else if (req.user.role === 'dorm_manager' && status === 'approved_by_dorm') {
+            triggerPassGeneration = true;
+            roomIdToUseForPass = roomIdFromRequest || applicationForPass?.preferred_room;
+        } else if (req.user.role === 'faculty_dean_office' && status === 'approved_by_faculty') {
+            triggerPassGeneration = true;
+            roomIdToUseForPass = applicationForPass?.preferred_room;
+        } else if (['admin', 'superadmin'].includes(req.user.role) && status === 'approved') {
+            triggerPassGeneration = true;
+            roomIdToUseForPass = roomIdFromRequest || applicationForPass?.preferred_room;
+        }
+
+        if (triggerPassGeneration && applicationForPass) {
+            try {
+                console.log(`[AdminACtrl] Triggering pass generation for app ${applicationForPass.id} with status ${status}, roomID for pass: ${roomIdToUseForPass}`);
+                await DormitoryPassService.ensurePassForApplication(applicationForPass.id, req.user.userId, roomIdToUseForPass);
+            } catch (passError) {
+                console.error(`[AdminACtrl] Failed to ensure pass for application ${applicationForPass.id}:`, passError);
+            }
+        }
+
+        if (applicationFromDb) {
+            let notificationDescription = `Ваша заявка (ID: ${id}) отримала новий статус: ${statusLabels[status] || status}.`;
+            if (status === 'settled' || (status === 'approved_by_dorm' && roomIdToUseForPass) || (status === 'approved_by_faculty' && roomIdToUseForPass && applicationForPass.preferred_room === roomIdToUseForPass)) {
+                const updatedApplicationWithDetails = await AccommodationApplication.findById(id);
+                const passDetails = await DormitoryPass.findActiveByUserId(applicationFromDb.user_id);
+                const roomNumberForNotification = passDetails?.room_display_number ||
+                    updatedApplicationWithDetails?.display_room_info ||
+                    (roomIdToUseForPass ? (await Room.findById(roomIdToUseForPass))?.number : null) ||
+                    applicationFromDb.preferred_room ||
+                    'не визначено';
+
+                notificationDescription += ` Вас призначено/поселено в кімнату ${roomNumberForNotification}. Перепустку згенеровано/оновлено.`;
+            }
             await Notification.create({
-                user_id: application.user_id,
+                user_id: applicationFromDb.user_id,
                 title: "Оновлення статусу заявки на поселення",
-                description: `Ваша заявка (ID: ${id}) отримала новий статус: ${status}. ${status === 'settled' && room_id ? `Вас поселено в кімнату (ID: ${room_id}).` : ''}`,
+                description: notificationDescription,
             });
         }
 
@@ -261,13 +311,12 @@ export const addApplicationComment = async (req, res) => {
             return res.status(404).json({ error: "Заявку не знайдено" });
         }
 
-        // Перевірки доступу (аналогічні до getById)
         if (req.user.role === "dorm_manager" && req.user.dormitory_id) {
             if (application.dormitory_id !== req.user.dormitory_id) {
                 return res.status(403).json({ error: "Доступ обмежено до вашого гуртожитку" });
             }
         } else if (
-            ["student_council_head"].includes(req.user.role) && // student_council_member НЕ МОЖЕ коментувати згідно з логікою (хоча політика дозволяє)
+            ["student_council_head"].includes(req.user.role) &&
             req.user.faculty_id
         ) {
             if (application.faculty_id !== req.user.faculty_id) {
@@ -282,10 +331,9 @@ export const addApplicationComment = async (req, res) => {
             if (application.faculty_id !== req.user.faculty_id && !managedDormIds.includes(application.dormitory_id)) {
                  return res.status(403).json({ error: "Доступ обмежено: заявка не стосується вашого факультету або керованих ним гуртожитків." });
             }
-        } else if (!["admin", "superadmin", "student_council_head"].includes(req.user.role)) { // Перевіряємо, чи роль має право коментувати
+        } else if (!["admin", "superadmin", "student_council_head"].includes(req.user.role)) {
             return res.status(403).json({ error: "Немає доступу до додавання коментарів" });
         }
-
 
         const commentId = await AccommodationApplication.addComment({
             application_id: id,
@@ -327,8 +375,7 @@ export const getApplicationComments = async (req, res) => {
             return res.status(404).json({ error: "Заявку не знайдено" });
         }
 
-        // Перевірки доступу (аналогічні до getById)
-         if (req.user.role === "dorm_manager" && req.user.dormitory_id) {
+        if (req.user.role === "dorm_manager" && req.user.dormitory_id) {
             if (application.dormitory_id !== req.user.dormitory_id) {
                 return res.status(403).json({ error: "Доступ обмежено до вашого гуртожитку" });
             }
@@ -351,7 +398,6 @@ export const getApplicationComments = async (req, res) => {
         } else if (!["admin", "superadmin"].includes(req.user.role)) {
             return res.status(403).json({ error: "Немає доступу до коментарів" });
         }
-
 
         const comments = await AccommodationApplication.findCommentsByApplicationId(id);
         res.json(comments);

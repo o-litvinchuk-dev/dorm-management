@@ -1,0 +1,167 @@
+/* src/components/Admin/styles/ManageSettlementSchedulePage.module.css */
+.pageContainer {
+    padding: 20px;
+    background-color: var(--background-color);
+    min-height: calc(100vh - var(--navbar-height, 60px)); /* Adjust if you have a navbar */
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--text-color-primary);
+    display: flex;
+    align-items: center;
+}
+.title svg {
+    width: 30px;
+    height: 30px;
+    margin-right: 12px;
+    color: var(--primary-color);
+}
+
+.createButton {
+    padding: 10px 20px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.createButton svg {
+    width: 20px;
+    height: 20px;
+}
+.createButton:hover {
+    background-color: var(--primary-color-dark);
+}
+.createButton:disabled {
+    background-color: var(--disabled-bg-color);
+    cursor: not-allowed;
+}
+
+.loading,
+.error {
+    text-align: center;
+    padding: 20px;
+    font-size: 1.1rem;
+    color: var(--text-color-secondary);
+}
+.error {
+    color: var(--danger-color);
+}
+
+.noEntries {
+    text-align: center;
+    padding: 20px;
+    font-size: 1.1rem;
+    color: var(--text-color-secondary);
+    border: 1px dashed var(--border-color);
+    border-radius: 8px;
+    background-color: var(--background-color-light);
+}
+
+.tableContainer {
+    background-color: var(--background-color-light);
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: var(--shadow-sm);
+    overflow-x: auto;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table th,
+.table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color-light);
+    color: var(--text-color-secondary);
+}
+
+.table th {
+    background-color: var(--table-header-bg);
+    font-weight: 600;
+    color: var(--text-color-primary);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.table tr:last-child td {
+    border-bottom: none;
+}
+
+.table tr:hover td {
+    background-color: var(--table-row-hover-bg);
+}
+
+.actionsCell button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+    margin-right: 8px;
+    color: var(--text-color-secondary);
+    transition: color 0.2s ease;
+}
+.actionsCell button:hover {
+    color: var(--primary-color);
+}
+.actionsCell button.deleteButton:hover {
+    color: var(--danger-color);
+}
+.actionsCell button svg {
+    width: 18px;
+    height: 18px;
+}
+
+.colorTagDisplay {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    margin-right: 8px;
+    vertical-align: middle;
+    border: 1px solid var(--border-color);
+}
+
+/* Basic Modal Styling (if not globally defined) */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modalContent {
+  background: var(--background-color-light);
+  padding: 0; /* Inner content will have padding */
+  border-radius: 8px;
+  width: 90%;
+  max-width: 700px; /* Adjust as needed */
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  max-height: 90vh;
+  display: flex; /* For the form modal to control its height */
+  flex-direction: column;
+}
