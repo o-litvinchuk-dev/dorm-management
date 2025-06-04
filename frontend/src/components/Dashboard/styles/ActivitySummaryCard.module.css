@@ -31,7 +31,7 @@
   color: var(--primary-color);
 }
 
-.summaryCardIcon { /* Додано цей клас */
+.summaryCardIconSvg { /* Updated class name based on JSX */
   width: 20px;
   height: 20px;
 }

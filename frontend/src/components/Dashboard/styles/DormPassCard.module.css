@@ -1,10 +1,10 @@
 .passCardContainer {
     width: 100%;
-    max-width: 380px; /* Трохи збільшено для кращого вигляду */
-    height: 230px;   /* Трохи збільшено */
+    max-width: 380px;
+    height: 230px;
     perspective: 1200px;
     cursor: pointer;
-    margin: 20px auto; /* Централізує, якщо контейнер ширший */
+    margin: 0 auto; /* Updated: Removed top/bottom margin, auto for horizontal centering if max-width applies */
     user-select: none;
 }
 .passCardContainer:focus-visible {
@@ -20,7 +20,7 @@
     transform-style: preserve-3d;
     transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     border-radius: var(--border-radius-xl);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(0,0,0,0.07); /* Посилено тінь */
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(0,0,0,0.07);
 }
 
 .passCard.isFlipped {
@@ -36,17 +36,17 @@
     display: flex;
     flex-direction: column;
     color: var(--text-primary);
-    background: linear-gradient(135deg, var(--card-background-color) 0%, var(--background-ultralight) 100%); /* Градієнт */
-    border: 1px solid var(--border-color-light); /* Світліша рамка */
+    background: linear-gradient(135deg, var(--card-background-color) 0%, var(--background-ultralight) 100%);
+    border: 1px solid var(--border-color-light);
     box-sizing: border-box;
-    overflow: hidden; /* Запобігає виходу контенту за межі */
+    overflow: hidden;
 }
 
 .passBack {
     transform: rotateY(180deg);
     align-items: center;
-    justify-content: space-around; /* Змінено для кращого розміщення QR */
-    padding: 20px; /* Збільшено паддінг */
+    justify-content: space-around;
+    padding: 20px;
     background: linear-gradient(135deg, var(--background-light) 0%, var(--card-background-color) 100%);
 }
 
@@ -55,33 +55,33 @@
     justify-content: space-between;
     align-items: center;
     padding: 12px 16px;
-    border-bottom: 1px dashed var(--border-color); /* Зроблено менш світлою */
-    background-color: var(--primary-bg-light); /* Яскравіший акцент */
+    border-bottom: 1px dashed var(--border-color);
+    background-color: var(--primary-bg-light);
     border-top-left-radius: var(--border-radius-xl);
     border-top-right-radius: var(--border-radius-xl);
 }
 .passHeader h4 {
     margin: 0;
     font-size: 0.9rem;
-    font-weight: 600; /* Жирніше */
-    color: var(--primary-color-dark); /* Темніше */
+    font-weight: 600;
+    color: var(--primary-color-dark);
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
-.passLogo { height: 24px; opacity: 0.9; } /* Збільшено та зроблено видимішим */
+.passLogo { height: 24px; opacity: 0.9; }
 
 .passBody {
     flex-grow: 1;
     display: flex;
     align-items: center;
-    padding: 16px; /* Збільшено */
-    gap: 16px; /* Збільшено */
+    padding: 16px;
+    gap: 16px;
 }
 .studentPhoto {
     flex-shrink: 0;
-    border: 3px solid var(--primary-color); /* Колір основного бренду */
+    border: 3px solid var(--primary-color);
     border-radius: 50%;
-    padding: 4px; /* Збільшено */
+    padding: 4px;
     background-color: var(--card-background-color);
     box-shadow: 0 2px 6px rgba(0,0,0,0.08);
 }
@@ -91,7 +91,7 @@
 
 .passFooter, .passFooterBack {
     padding: 10px 16px;
-    font-size: 0.75rem; /* Трохи збільшено */
+    font-size: 0.75rem;
     color: var(--text-muted);
     border-top: 1px dashed var(--border-color);
     display: flex;
@@ -102,46 +102,45 @@
     border-bottom-right-radius: var(--border-radius-xl);
 }
 .flipIndicator { display: inline-flex; align-items: center; gap: 4px; font-style: normal; font-weight: 500;}
-.flipIndicator svg { width: 14px; height: 14px; } /* Збільшено іконку */
+.flipIndicator svg { width: 14px; height: 14px; }
 
 .qrHeader {
-    font-size: 0.95rem; /* Збільшено */
+    font-size: 0.95rem;
     font-weight: 500;
     color: var(--text-secondary);
     display: flex;
     align-items: center;
-    gap: 8px; /* Збільшено */
+    gap: 8px;
     text-align: center;
-    margin-bottom: 10px; /* Відступ знизу */
+    margin-bottom: 10px;
 }
-.qrHeader svg { width: 20px; height: 20px; color: var(--primary-color); } /* Збільшено іконку */
+.qrHeader svg { width: 20px; height: 20px; color: var(--primary-color); }
 
 .qrCodeWrapper {
     background-color: #fff;
-    padding: 16px; /* Збільшено */
-    border-radius: var(--border-radius-lg); /* Збільшено заокруглення */
+    padding: 16px;
+    border-radius: var(--border-radius-lg);
     box-shadow: 0 4px 10px rgba(0,0,0,0.12);
     line-height: 0; 
 }
 
-/* Стилі для станів картки */
 .loadingState, .errorState, .noPassState {
     width: 100%;
-    max-width: 380px; /* Синхронізовано з .passCardContainer */
-    min-height: 230px; /* Синхронізовано з .passCardContainer */
+    max-width: 380px;
+    min-height: 230px; /* Matched to pass card height */
     padding: 20px;
     text-align: center;
     color: var(--text-secondary);
-    background-color: var(--card-background-color); /* Використовуємо фон картки */
+    background-color: var(--card-background-color);
     border-radius: var(--border-radius-xl);
     border: 1px solid var(--border-color-light);
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0,0,0,0.08); /* Тінь як у картки */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0,0,0,0.08);
     box-sizing: border-box;
-    margin: 20px auto; /* Для центрування, якщо окремо */
+    margin: 0 auto; /* Center placeholder if its max-width is less than container */
 }
 
 .errorState h4, .noPassState h4 { 
@@ -152,32 +151,41 @@
 }
 .errorState p, .noPassState p { 
     font-size: 0.9rem;
-    max-width: 90%; /* Обмеження ширини тексту */
+    max-width: 90%;
     line-height: 1.5;
 }
 .errorState {
-    color: var(--error-color-dark); /* Колір тексту помилки */
-    border-color: var(--error-color); /* Рамка кольору помилки */
+    color: var(--error-color-dark);
+    border-color: var(--error-color);
 }
 
-.noPassIcon, .infoIcon { /* .infoIcon для стану помилки */
-    width: 48px; /* Збільшено іконки */
+.placeholderIcon { /* General class for icons in placeholders */
+    width: 48px;
     height: 48px;
     margin-bottom: 1rem;
+    color: var(--text-muted); /* Default color */
 }
-.noPassIcon { color: var(--text-muted); }
-.infoIcon { color: var(--warning-color-dark); } /* Жовтуватий для інформації/помилки */
-
+.errorState .placeholderIcon { /* Specific color for error state */
+    color: var(--error-color); 
+}
+.noPassState .placeholderIcon { /* Specific for no pass state */
+    color: var(--primary-color);
+}
+.smallText {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 0.5rem;
+}
 
 .iconSmall { 
-    width: 14px; /* Змінено для узгодження */
+    width: 14px;
     height: 14px;
     display: inline-block;
     vertical-align: middle;
 }
 
 .iconMedium { 
-    width: 20px; /* Змінено для узгодження */
+    width: 20px;
     height: 20px;
     display: inline-block;
     vertical-align: middle;

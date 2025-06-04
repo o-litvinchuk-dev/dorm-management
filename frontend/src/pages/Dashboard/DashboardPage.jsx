@@ -4,7 +4,6 @@ import Navbar from "../../components/UI/Navbar/Navbar";
 import Sidebar from "../../components/UI/Sidebar/Sidebar";
 import DormPassCard from "../../components/Dashboard/DormPassCard";
 import QuickActionLink from "../../components/Dashboard/QuickActionLink";
-import ActivitySummaryCard from "../../components/Dashboard/ActivitySummaryCard";
 import api from "../../utils/api";
 import styles from "./styles/Dashboard.module.css";
 import { useUser } from "../../contexts/UserContext";
@@ -16,17 +15,11 @@ import {
   ClipboardDocumentCheckIcon,
   MagnifyingGlassCircleIcon,
   UserCircleIcon as ProfileIconHero,
-  BuildingStorefrontIcon,
-  AcademicCapIcon as DeanPanelIcon,
-  ShieldCheckIcon as AdminPanelIcon,
   BookmarkSquareIcon,
-  UserPlusIcon,
   ArrowRightIcon,
   CheckCircleIcon,
   XCircleIcon,
   ClockIcon,
-  HomeIcon,
-  BuildingOffice2Icon,
   UsersIcon
 } from "@heroicons/react/24/outline";
 import { HomeIcon as HomeSolidIcon } from "@heroicons/react/24/solid";
@@ -37,22 +30,22 @@ const SettlementStep = ({ title, status, isActive, isCompleted, onClick, actionT
     <div
       className={`${styles.settlementStep} ${isActive ? styles.activeStep : ''} ${isCompleted ? styles.completedStep : ''} ${isCompleted && status.toLowerCase().includes('відхилено') ? styles.rejectedCompletedStep : ''}`}
       onClick={onClick}
-      role="button"
+      role={onClick ? "button" : undefined}
       tabIndex={onClick ? 0 : -1}
       onKeyDown={onClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') onClick(); } : undefined}
       aria-label={`Етап поселення: ${title}. Статус: ${status}`}
     >
       <div className={styles.stepIconWrapper}>
         {isCompleted && !status.toLowerCase().includes('відхилено') ? <CheckCircleIcon className={styles.stepIconCompleted} /> :
-          isCompleted && status.toLowerCase().includes('відхилено') ? <XCircleIcon className={styles.stepIconRejected} /> :
-            (IconComponent ? <IconComponent className={styles.stepIcon} /> : <InformationCircleIcon className={styles.stepIcon} />)}
+         isCompleted && status.toLowerCase().includes('відхилено') ? <XCircleIcon className={styles.stepIconRejected} /> :
+         (IconComponent ? <IconComponent className={styles.stepIcon} /> : <InformationCircleIcon className={styles.stepIcon} />)}
       </div>
       <div className={styles.stepText}>
         <h4 className={styles.stepTitle}>{title}</h4>
         <p className={styles.stepStatus}>{status}</p>
         {isActive && actionText && !status.toLowerCase().includes('відхилено') && (
           <span className={styles.stepAction}>
-            {actionText} <ArrowRightIcon />
+            {actionText} <ArrowRightIcon className={styles.stepActionIcon}/>
           </span>
         )}
       </div>
@@ -131,11 +124,11 @@ const DashboardPage = () => {
       const activePassResult = passResSettled.status === 'fulfilled' ? passResSettled.value.data : null;
       const reservationsResult = reservationsResSettled.status === 'fulfilled' ? (reservationsResSettled.value.data || []) : [];
       const agreementsResult = agreementsResSettled.status === 'fulfilled' ? (agreementsResSettled.value.data?.agreements || []) : [];
-
+      
       if (!dashboardResult) {
         throw new Error("Не вдалося завантажити основні дані дашборду.");
       }
-
+      
       setDashboardData(dashboardResult);
       setActivePass(activePassResult);
 
@@ -168,7 +161,7 @@ const DashboardPage = () => {
           const pendingAgreement = agreementsResult.find(a => a.status === 'pending_review');
 
           if (activeAgreement) {
-            stageKey = 'completed';
+            stageKey = 'completed'; 
           } else if (pendingAgreement) {
             stageKey = 'agreement_review';
           } else if (activeReservation || ['approved', 'approved_by_dorm'].includes(appStatusForStage)) {
@@ -176,13 +169,13 @@ const DashboardPage = () => {
           } else if (pendingReservation) {
             stageKey = 'reservation_pending';
           } else if (['approved_by_faculty'].includes(appStatusForStage) || (appStatusForStage === 'pending' && dashboardResult.applications.length > 0)) {
-            stageKey = 'reservation';
+             stageKey = 'reservation';
           } else if (appStatusForStage === 'pending') {
             stageKey = 'application_review';
           }
         }
       }
-
+      
       setSettlementStatus({
         currentStage: stageKey,
         applicationStatus: appStatusForStage,
@@ -195,7 +188,7 @@ const DashboardPage = () => {
       const errorStatus = err.response?.status;
       const errorCode = err.response?.data?.code;
       const errorMessage = err.response?.data?.error || "Не вдалося завантажити дані для дашборду.";
-
+      
       if (errorStatus === 401 || errorStatus === 403) {
         if (errorCode === "PROFILE_INCOMPLETE_FACULTY" || errorCode === "DORMITORY_NOT_ASSIGNED" || errorMessage.includes("Оновіть профіль")) {
           setError(errorMessage);
@@ -224,7 +217,7 @@ const DashboardPage = () => {
       if (contextUser.role === 'student') {
         fetchStudentDashboardData();
       } else {
-        setIsLoadingData(false);
+        setIsLoadingData(false); 
       }
     } else if (!localStorage.getItem("accessToken")) {
       setIsLoadingData(false);
@@ -234,7 +227,6 @@ const DashboardPage = () => {
 
   const handleSidebarToggle = (state) => {
     setIsSidebarExpanded(state);
-    localStorage.setItem("sidebarOpen", JSON.stringify(state));
   };
 
   const renderApplicationItem = (app) => (
@@ -269,33 +261,33 @@ const DashboardPage = () => {
 
   if (contextUser && contextUser.role === 'student') {
     const stageDetails = {
-      initial_application: {
-        title: "1. Подача Заяви", status: "Подайте заяву на поселення, щоб розпочати",
-        actionText: "Подати заяву", actionLink: "/services/accommodation-application", icon: ClipboardDocumentCheckIcon,
-        isActive: true, isCompleted: false
+      initial_application: { 
+        title: "1. Подача Заяви", status: "Подайте заяву на поселення, щоб розпочати", 
+        actionText: "Подати заяву", actionLink: "/services/accommodation-application", icon: ClipboardDocumentCheckIcon, 
+        isActive: true, isCompleted: false 
       },
-      application_review: {
-        title: "1. Заява на Розгляді", status: `Ваша заява зі статусом: ${getStatusDetails(settlementStatus?.applicationStatus, 'application')}`,
+      application_review: { 
+        title: "1. Заява на Розгляді", status: `Ваша заява зі статусом: ${getStatusDetails(settlementStatus?.applicationStatus, 'application')}`, 
         actionText: "Переглянути заяви", actionLink: "/my-accommodation-applications", icon: ClockIcon,
-        isActive: false, isCompleted: false
+        isActive: false, isCompleted: false 
       },
       application_rejected: {
         title: "1. Заяву Відхилено", status: `Статус: ${getStatusDetails(settlementStatus?.applicationStatus, 'application')}`,
         actionText: "Подати нову заяву", actionLink: "/services/accommodation-application", icon: XCircleIcon,
         isActive: true, isCompleted: true,
       },
-      reservation: {
-        title: "2. Бронювання Кімнати", status: "Заява затверджена. Оберіть кімнату для проживання.",
+      reservation: { 
+        title: "2. Бронювання Кімнати", status: "Заява затверджена. Оберіть кімнату для проживання.", 
         actionText: "Знайти та забронювати", actionLink: "/services/rooms/search", icon: BookmarkSquareIcon,
-        isActive: true, isCompleted: false
+        isActive: true, isCompleted: false 
       },
       reservation_pending: {
         title: "2. Бронювання Очікує", status: `Бронювання кімнати №${settlementStatus?.reservationDetails?.room_number || '...'} ${getStatusDetails(settlementStatus?.reservationDetails?.status, 'reservation')}`,
         actionText: "Мої бронювання", actionLink: "/my-reservations", icon: ClockIcon,
         isActive: false, isCompleted: false
       },
-      agreement: {
-        title: "3. Оформлення Договору",
+      agreement: { 
+        title: "3. Оформлення Договору", 
         status: `Кімната №${settlementStatus?.reservationDetails?.room_number || (settlementStatus?.applicationStatus === 'approved_by_dorm' && dashboardData?.applications?.[0]?.preferred_room) || '...'} заброньована/визначена. Заповніть договір.`,
         actionText: "Заповнити договір", actionLink: "/services/settlement-agreement", icon: DocumentTextIcon,
         isActive: true, isCompleted: false
@@ -305,15 +297,15 @@ const DashboardPage = () => {
         actionText: "Мої активності", actionLink: "/my-accommodation-applications", icon: ClockIcon,
         isActive: false, isCompleted: false
       },
-      completed: {
-        title: "4. Поселення Завершено!", status: "Вітаємо! Усі етапи пройдено. Ваша перепустка активна.",
+      completed: { 
+        title: "4. Поселення Завершено!", status: "Вітаємо! Усі етапи пройдено. Ваша перепустка активна.", 
         icon: HomeSolidIcon,
-        isActive: false, isCompleted: true
+        isActive: false, isCompleted: true 
       }
     };
+
     const currentStageKey = settlementStatus?.currentStage || 'initial_application';
     const currentStageDefinition = stageDetails[currentStageKey] || stageDetails.initial_application;
-
     const stepsOrder = ['initial_application', 'reservation', 'agreement', 'completed'];
     const baseStageOfCurrent = currentStageKey.split('_')[0];
     const activeStageOrderIndex = stepsOrder.indexOf(baseStageOfCurrent);
@@ -323,152 +315,170 @@ const DashboardPage = () => {
         <Sidebar onToggle={handleSidebarToggle} isExpanded={isSidebarExpanded} />
         <div className={`${styles.mainContent} ${!isSidebarExpanded ? styles.sidebarCollapsed : ""}`}>
           <Navbar isSidebarExpanded={isSidebarExpanded} onMenuToggle={() => handleSidebarToggle(!isSidebarExpanded)} />
-          {isLoadingOverall ? (
-            <div className={styles.loadingStateFullPage}>Завантаження даних...</div>
-          ) : error ? (
-            <div className={`${styles.errorMessageContainerFullPage} ${styles.centeredMessage}`}>
-              <InformationCircleIcon className={styles.errorIconLarge} />
-              <h3>Помилка завантаження</h3>
-              <p>{error}</p>
-              <button onClick={fetchStudentDashboardData} className={styles.retryButton}>Спробувати ще раз</button>
-            </div>
-          ) : dashboardData && settlementStatus ? (
-            <> {/* Main content wrapper for student dashboard */}
-              {!contextUser.is_profile_complete && (
-                <Link to="/complete-profile" className={`${styles.completeProfilePrompt} ${styles.fullWidthPromptGridItem}`}>
-                  <InformationCircleIcon />
-                  Ваш профіль не заповнений. Будь ласка, завершіть реєстрацію для повного доступу до функцій.
-                </Link>
-              )}
-              <div className={styles.studentDashboardGrid}>
-                <div className={styles.leftColumn}> {/* Left column for settlement progress and recent activities */}
-                  <section className={`${styles.section} ${styles.settlementProgressSection}`}>
-                    <h2 className={styles.mainSectionTitle}>Мій Прогрес Поселення</h2>
-                    <div className={styles.settlementStepsContainer}>
-                      {stepsOrder.map((key, index) => {
-                        let stageToRender = stageDetails[key];
-                        let isStepActive = false;
-                        let isStepCompleted = index < activeStageOrderIndex;
-
-                        if (key === baseStageOfCurrent) {
-                          stageToRender = currentStageDefinition;
-                          isStepActive = currentStageDefinition.isActive;
-                          isStepCompleted = currentStageDefinition.isCompleted;
-                        } else if (key === 'initial_application' && currentStageKey === 'application_rejected') {
-                          stageToRender = stageDetails.application_rejected;
-                          isStepCompleted = true;
-                        }
-
-                        return (
-                          <SettlementStep
-                            key={key}
-                            title={stageToRender.title}
-                            status={stageToRender.status}
-                            isActive={isStepActive}
-                            isCompleted={isStepCompleted}
-                            onClick={stageToRender.isActive && stageToRender.actionLink ? () => navigate(stageToRender.actionLink) : undefined}
-                            actionText={stageToRender.actionText}
-                            icon={stageToRender.icon}
-                          />
-                        );
-                      })}
-                    </div>
-                  </section>
-
-                  {dashboardData.applications && dashboardData.applications.length > 0 && (
-                    <section className={`${styles.section} ${styles.listSectionItem}`}>
-                      <div className={styles.listHeader}>
-                        <h2 className={styles.sectionTitle}>Останні Заяви на Поселення</h2>
-                        <Link to="/my-accommodation-applications" className={styles.viewAllLink}>Всі заяви ({dashboardData.applications.length})</Link>
-                      </div>
-                      <div className={styles.activityList}>
-                        {dashboardData.applications.slice(0, 2).map(renderApplicationItem)}
-                      </div>
-                    </section>
-                  )}
+          <div className={styles.pageContainer}>
+            <div className={styles.contentWrapper}>
+              {isLoadingOverall ? (
+                <div className={styles.loadingStateFullPage}>Завантаження даних...</div>
+              ) : error ? (
+                <div className={`${styles.errorMessageContainerFullPage} ${styles.centeredMessage}`}>
+                  <InformationCircleIcon className={styles.errorIconLarge} />
+                  <h3>Помилка завантаження</h3>
+                  <p>{error}</p>
+                  <button onClick={fetchStudentDashboardData} className={styles.retryButton}>Спробувати ще раз</button>
                 </div>
-
-                <div className={styles.rightColumn}> {/* Right column for pass, dorm info, quick actions, notifications */}
-                  <section className={`${styles.section} ${styles.passCardWrapper}`}>
-                    <h2 className={styles.sectionTitle}>Моя Перепустка</h2>
-                    <DormPassCard />
-                  </section>
-
-                  {activePass && (contextUser.dormitory_name || contextUser.dormitory_id) && (
-                    <section className={styles.section}>
-                      <h2 className={styles.sectionTitle}><BuildingOffice2Icon className={styles.sectionTitleIconInternal} />Мій Гуртожиток</h2>
-                      <div className={styles.dormInfoBlock}>
-                        <p><strong>Назва:</strong> {contextUser.dormitory_name || `№${contextUser.dormitory_id}`}</p>
-                        {/* Consider adding dorm address if available in contextUser or activePass */}
-                        {activePass.dormitory_address && <p><strong>Адреса:</strong> {activePass.dormitory_address}</p>}
-                        {activePass.room_display_number && <p><strong>Моя кімната:</strong> {activePass.room_display_number}</p>}
-                      </div>
-                    </section>
+              ) : dashboardData && settlementStatus ? (
+                <>
+                  {!contextUser.is_profile_complete && (
+                    <Link to="/complete-profile" className={styles.completeProfilePrompt}>
+                      <InformationCircleIcon />
+                      Ваш профіль не заповнений. Будь ласка, завершіть реєстрацію для повного доступу до функцій.
+                    </Link>
                   )}
+                  
+                  <div className={styles.dashboardOuterContainer}>
+                    <div className={styles.topRowGrid}>
+                      <div className={styles.gridAreaPass}>
+                        <section className={`${styles.section} ${styles.passCardSection}`}>
+                          <h2 className={styles.sectionTitlePassCard}>Моя Перепустка</h2>
+                          <DormPassCard />
+                        </section>
+                      </div>
 
-                  {activePass && roommates.length > 0 && (
-                    <section className={styles.section}>
-                      <h2 className={styles.sectionTitle}><UsersIcon className={styles.sectionTitleIconInternal} />Мої Сусіди</h2>
-                      <div className={styles.roommatesList}>
-                        {roommates.map(mate => (
-                          <div key={mate.id} className={styles.roommateItem}>
-                            <Avatar user={{ avatar: mate.avatar, email: mate.name }} size={36} />
-                            <div className={styles.roommateInfo}>
-                              <span className={styles.roommateName}>{mate.name}</span>
-                            </div>
+                      <div className={styles.gridAreaProgress}>
+                        <section className={`${styles.section} ${styles.settlementProgressSection}`}>
+                          <h2 className={styles.mainSectionTitle}>Мій Прогрес Поселення</h2>
+                          <div className={styles.settlementStepsContainer}>
+                            {stepsOrder.map((key, index) => {
+                              let stageToRender = stageDetails[key];
+                              let isStepActive = false;
+                              let isStepCompleted = index < activeStageOrderIndex;
+
+                              if (key === baseStageOfCurrent) {
+                                stageToRender = currentStageDefinition;
+                                isStepActive = currentStageDefinition.isActive;
+                                isStepCompleted = currentStageDefinition.isCompleted;
+                              } else if (key === 'initial_application' && currentStageKey === 'application_rejected') {
+                                  stageToRender = stageDetails.application_rejected;
+                                  isStepCompleted = true; 
+                              }
+                              
+                              return <SettlementStep 
+                                        key={key} 
+                                        {...stageToRender} 
+                                        isActive={isStepActive} 
+                                        isCompleted={isStepCompleted} 
+                                        onClick={stageToRender.isActive && stageToRender.actionLink ? () => navigate(stageToRender.actionLink) : undefined} 
+                                     />;
+                            })}
                           </div>
-                        ))}
+                        </section>
                       </div>
-                    </section>
-                  )}
-                  {activePass && roommates.length === 0 && !isLoadingData && (
-                    <section className={styles.section}>
-                      <h2 className={styles.sectionTitle}><UsersIcon className={styles.sectionTitleIconInternal} />Мої Сусіди</h2>
-                      <p className={styles.noRoommatesMessage}>Інформація про сусідів наразі відсутня або Ви проживаєте один(а).</p>
-                    </section>
-                  )}
-
-                  <section className={styles.section}>
-                    <h2 className={styles.sectionTitle}>Швидкі Дії</h2>
-                    <div className={styles.quickActions}>
-                      {currentStageDefinition && currentStageDefinition.icon && currentStageDefinition.actionLink && currentStageDefinition.isActive && !currentStageDefinition.isCompleted && (
-                        <QuickActionLink
-                          to={currentStageDefinition.actionLink}
-                          label={currentStageDefinition.actionText || "Перейти до етапу"}
-                          icon={<currentStageDefinition.icon className={styles.quickActionIcon} />}
-                          isPrimary={true}
-                        />
-                      )}
-                      <QuickActionLink to="/services/accommodation-application" label="Заяви на Поселення" icon={<ClipboardDocumentCheckIcon />} />
-                      <QuickActionLink to="/services/rooms/search" label="Знайти/Змінити Кімнату" icon={<MagnifyingGlassCircleIcon />} />
-                      <QuickActionLink to="/my-accommodation-applications" label="Мої Активності" icon={<DocumentTextIcon />} />
-                      <QuickActionLink to="/my-reservations" label="Мої Бронювання" icon={<BookmarkSquareIcon />} />
-                      <QuickActionLink to="/profile" label="Мій Профіль" icon={<ProfileIconHero />} />
+                      
+                      <div className={styles.gridAreaQuickActions}>
+                        <section className={`${styles.section} ${styles.quickActionsSection}`}>
+                          <h2 className={styles.sectionTitle}>Швидкі Дії</h2>
+                          <div className={styles.quickActions}>
+                            {currentStageDefinition?.isActive && !currentStageDefinition.isCompleted && currentStageDefinition.actionLink && (
+                                <QuickActionLink 
+                                    to={currentStageDefinition.actionLink} 
+                                    label={currentStageDefinition.actionText || "Перейти до етапу"} 
+                                    icon={currentStageDefinition.icon ? React.createElement(currentStageDefinition.icon) : undefined}
+                                    isPrimary={true}
+                                />
+                            )}
+                            <QuickActionLink to="/services/accommodation-application" label="Заяви на Поселення" icon={<ClipboardDocumentCheckIcon />} />
+                            <QuickActionLink to="/services/rooms/search" label="Знайти/Змінити Кімнату" icon={<MagnifyingGlassCircleIcon />} />
+                            <QuickActionLink to="/my-accommodation-applications" label="Мої Активності" icon={<DocumentTextIcon />} />
+                            <QuickActionLink to="/my-reservations" label="Мої Бронювання" icon={<BookmarkSquareIcon />} />
+                            <QuickActionLink to="/profile" label="Мій Профіль" icon={<ProfileIconHero />} />
+                          </div>
+                        </section>
+                      </div>
                     </div>
-                  </section>
 
-                  {dashboardData.notifications && dashboardData.notifications.length > 0 && (
-                    <section className={`${styles.section}`}>
-                      <div className={styles.listHeader}>
-                        <h2 className={styles.sectionTitle}>Останні Сповіщення</h2>
-                        <Link to="/settings?category=notifications" className={styles.viewAllLink}>Всі ({dashboardData.notifications.length})</Link>
-                      </div>
-                      <div className={styles.activityList}>
-                        {dashboardData.notifications.slice(0, 3).map(renderNotificationItem)}
-                      </div>
-                    </section>
-                  )}
+                    <div className={styles.bottomContentGrid}>
+                        <div className={styles.bottomLeftColumn}>
+                             <div className={styles.gridAreaNeighbors}>
+                                {activePass ? (
+                                  <section className={`${styles.section} ${styles.roommatesSection}`}>
+                                    <h2 className={styles.sectionTitle}><UsersIcon className={styles.sectionTitleIconInternal} />Мої Сусіди</h2>
+                                    {roommates.length > 0 ? (
+                                      <div className={styles.roommatesList}>
+                                        {roommates.map(mate => (
+                                          <div key={mate.id} className={styles.roommateItem}>
+                                            <Avatar user={{ avatar: mate.avatar, email: mate.name }} size={32} />
+                                            <div className={styles.roommateInfo}><span className={styles.roommateName}>{mate.name}</span></div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    ) : ( !isLoadingData && <p className={styles.noRoommatesMessage}>Інформація про сусідів відсутня.</p> )}
+                                    {isLoadingData && !roommates.length && <p className={styles.noRoommatesMessage}>Завантаження...</p>}
+                                  </section>
+                                ) : (
+                                  <section className={`${styles.section} ${styles.roommatesSection}`}>
+                                    <h2 className={styles.sectionTitle}><UsersIcon className={styles.sectionTitleIconInternal} />Мої Сусіди</h2>
+                                    <div className={`${styles.noItemsMessage} ${styles.compactNoItems}`}>
+                                      <UsersIcon className={styles.noItemsIconSmall} />
+                                      <p>Дані про сусідів доступні після поселення.</p>
+                                    </div>
+                                  </section>
+                                )}
+                            </div>
+                            <div className={styles.gridAreaNotifications}>
+                               <section className={`${styles.section} ${styles.notificationsSection}`}>
+                                <div className={styles.listHeader}>
+                                  <h2 className={styles.sectionTitle}>Останні Сповіщення</h2>
+                                  {dashboardData.notifications?.length > 0 && (
+                                    <Link to="/settings?category=notifications" className={styles.viewAllLink}>Всі ({dashboardData.notifications.length})</Link>
+                                  )}
+                                </div>
+                                {dashboardData.notifications?.length > 0 ? (
+                                  <div className={styles.activityList}>
+                                    {dashboardData.notifications.slice(0, 5).map(renderNotificationItem)}
+                                  </div>
+                                ) : (
+                                  <div className={`${styles.noItemsMessage} ${styles.compactNoItems}`}>
+                                    <BellIcon className={styles.noItemsIconSmall} />
+                                    <p>Нових сповіщень немає.</p>
+                                  </div>
+                                )}
+                              </section>
+                            </div>
+                        </div>
+                        
+                        <div className={styles.gridAreaApplicationsFullWidth}>
+                           <section className={`${styles.section} ${styles.applicationsSection}`}>
+                            <div className={styles.listHeader}>
+                              <h2 className={styles.sectionTitle}>Останні Заяви на Поселення</h2>
+                              {dashboardData.applications?.length > 0 && (
+                                <Link to="/my-accommodation-applications" className={styles.viewAllLink}>Всі заяви ({dashboardData.applications.length})</Link>
+                              )}
+                            </div>
+                            {dashboardData.applications?.length > 0 ? (
+                              <div className={styles.activityList}>
+                                {dashboardData.applications.slice(0, 10).map(renderApplicationItem)}
+                              </div>
+                            ) : (
+                              <div className={`${styles.noItemsMessage} ${styles.compactNoItems}`}>
+                                <DocumentTextIcon className={styles.noItemsIconSmall} />
+                                <p>Активних заяв на поселення немає.</p>
+                              </div>
+                            )}
+                          </section>
+                        </div>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className={`${styles.errorMessageContainerFullPage} ${styles.centeredMessage}`}>
+                  <InformationCircleIcon className={styles.errorIconLarge} />
+                  <h3>Дані для дашборду не завантажено</h3>
+                  <p>Можливо, сервіс тимчасово недоступний або сталася помилка.</p>
+                  <button onClick={fetchStudentDashboardData} className={styles.retryButton}>Спробувати ще раз</button>
                 </div>
-              </div>
-            </>
-          ) : (
-            <div className={`${styles.errorMessageContainerFullPage} ${styles.centeredMessage}`}>
-              <InformationCircleIcon className={styles.errorIconLarge} />
-              <h3>Дані для дашборду не завантажено</h3>
-              <p>Можливо, сервіс тимчасово недоступний або сталася помилка.</p>
-              <button onClick={fetchStudentDashboardData} className={styles.retryButton}>Спробувати ще раз</button>
+              )}
             </div>
-          )}
+          </div>
         </div>
       </div>
     );
@@ -479,8 +489,12 @@ const DashboardPage = () => {
       <Sidebar onToggle={handleSidebarToggle} isExpanded={isSidebarExpanded} />
       <div className={`${styles.mainContent} ${!isSidebarExpanded ? styles.sidebarCollapsed : ""}`}>
         <Navbar isSidebarExpanded={isSidebarExpanded} onMenuToggle={() => handleSidebarToggle(!isSidebarExpanded)} />
-        <div className={styles.loadingStateFullPage}>
-          {isLoadingOverall ? "Завантаження..." : `Панель для ролі "${contextUser?.role}" в розробці або перенаправлення...`}
+        <div className={styles.pageContainer}>
+          <div className={styles.contentWrapper}>
+            <div className={styles.loadingStateFullPage}>
+              {isLoadingOverall ? "Завантаження..." : `Панель для ролі "${contextUser?.role}" в розробці або перенаправлення...`}
+            </div>
+          </div>
         </div>
       </div>
     </div>

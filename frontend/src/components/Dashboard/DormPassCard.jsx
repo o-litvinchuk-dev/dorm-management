@@ -3,9 +3,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import api from '../../utils/api';
 import styles from './styles/DormPassCard.module.css';
 import Avatar from '../UI/Avatar/Avatar';
-import { ArrowsRightLeftIcon, QrCodeIcon, TicketIcon, InformationCircleIcon } from '@heroicons/react/24/outline'; // InformationCircleIcon is already here
-// ToastService is not used in this specific component, if you need it here, ensure it's correctly imported
-// import { ToastService } from '../../utils/toastConfig';
+import { ArrowsRightLeftIcon, QrCodeIcon, TicketIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
 
 const DormPassCard = () => {
   const [passData, setPassData] = useState(null);
@@ -57,7 +55,7 @@ const DormPassCard = () => {
     );
   }
 
-  if (!passData) { // This case handles the 404 not found from backend if no error was thrown above
+  if (!passData) {
     return (
       <div className={`${styles.passCardPlaceholder} ${styles.noPassState}`}>
         <TicketIcon className={styles.placeholderIcon} />

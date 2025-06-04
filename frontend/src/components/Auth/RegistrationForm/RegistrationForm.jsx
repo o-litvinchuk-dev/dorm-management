@@ -21,7 +21,7 @@ const RegistrationForm = () => {
             .required("Обов'язкове поле"),
         password: Yup.string()
             .required("Обов'язкове поле")
-            .test("password-strength", "Помилка пароля", () => true),
+            .test("password-strength", "Помилка пароля", () => true), // Custom validation handled in validatePassword
         confirmPassword: Yup.string()
             .oneOf([Yup.ref("password"), null], "Паролі повинні співпадати")
             .required("Обов'язкове поле"),
@@ -47,17 +47,19 @@ const RegistrationForm = () => {
     const handleSubmit = async (values, { setSubmitting, setTouched }) => {
         setIsLoading(true);
         try {
-            const { confirmPassword, ...submitData } = values;
+            const { confirmPassword, ...submitData } = values; // Only email and password will be in submitData
 
-            // Перевірка обов'язкових полів через Yup
             await validationSchema.validate(values, { abortEarly: false });
 
-            // Додаткова валідація пароля
-            if (!validatePassword(values.password)) return;
+            if (!validatePassword(values.password)) {
+                 setIsLoading(false); // Stop loading if password validation fails
+                 setSubmitting(false);
+                 return;
+            }
 
             await axios.post(
                 `${API_BASE_URL}/api/v1/auth/register`,
-                submitData
+                submitData // Sending only email and password
             );
 
             navigate("/login?registered=success");
@@ -73,9 +75,7 @@ const RegistrationForm = () => {
 
                 const errorMessages = error.inner.map((e) => e.message);
                 ToastService.validationError(errorMessages);
-            }
-
-            if (error.response) {
+            } else if (error.response) {
                 const status = error.response.status;
                 const errorData = error.response.data?.error;
 
@@ -119,8 +119,8 @@ const RegistrationForm = () => {
         },
         validationSchema,
         onSubmit: handleSubmit,
-        validateOnChange: true, // Увімкнути валідацію при зміні
-        validateOnBlur: true, // Увімкнути валідацію при блурі
+        validateOnChange: true,
+        validateOnBlur: true,
     });
 
     useEffect(() => {
@@ -164,6 +164,7 @@ const RegistrationForm = () => {
                     }`}
                     placeholder="name@gmail.com"
                     onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
                     value={formik.values.email}
                 />
                 {formik.touched.email && formik.errors.email && (
@@ -192,6 +193,7 @@ const RegistrationForm = () => {
                         );
                         formik.setFieldValue("password", filteredValue);
                     }}
+                    onBlur={formik.handleBlur}
                     value={formik.values.password}
                 />
                 <div className={styles.passwordStrengthWrapper}>
@@ -239,6 +241,7 @@ const RegistrationForm = () => {
                     }`}
                     placeholder="••••••••"
                     onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
                     value={formik.values.confirmPassword}
                 />
                 {formik.touched.confirmPassword &&
@@ -252,9 +255,9 @@ const RegistrationForm = () => {
             <button
                 type="submit"
                 className={styles.loginButton}
-                disabled={isLoading || formik.isSubmitting} // Блокуємо кнопку
+                disabled={isLoading || formik.isSubmitting}
             >
-                {isLoading ? (
+                {isLoading || formik.isSubmitting ? (
                     <div className={styles.spinner}></div>
                 ) : (
                     "Зареєструватися"
