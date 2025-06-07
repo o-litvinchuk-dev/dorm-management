@@ -1,3 +1,4 @@
+// src/components/UI/Navbar/Navbar.jsx
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import api from "../../../utils/api";
@@ -6,7 +7,6 @@ import styles from "./Navbar.module.css";
 import Breadcrumb from "./Breadcrumb/Breadcrumb";
 import Avatar from "../Avatar/Avatar";
 import Notifications from "../Notifications/Notifications";
-
 import {
   BellIcon,
   MagnifyingGlassIcon,
@@ -17,6 +17,7 @@ import {
   Cog6ToothIcon,
   ArrowLeftOnRectangleIcon,
 } from "@heroicons/react/24/solid";
+// import MyProfileForm from "../../components/Profile/MyProfileForm"; // Remove if not directly rendered here
 
 const Navbar = ({ isSidebarExpanded }) => {
   const { user, isLoading, logout } = useUser();
@@ -26,7 +27,6 @@ const Navbar = ({ isSidebarExpanded }) => {
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const dropdownRef = useRef(null);
   const searchRef = useRef(null);
-
   const [notifications] = useState([
     { id: 1, title: "Нове повідомлення", text: "Ви отримали нове повідомлення", read: false },
     { id: 2, title: "Оновлення системи", text: "Заплановане ТО", read: true },
@@ -102,13 +102,11 @@ const Navbar = ({ isSidebarExpanded }) => {
         ) : (
           <Breadcrumb />
         )}
-
         {isSearchExpanded && (
           <div className={styles.searchContainer} ref={searchRef}>
             <input type="text" placeholder="Пошук..." className={styles.searchInput} autoFocus />
           </div>
         )}
-
         <div className={styles.rightSection}>
           <button
             className={styles.searchIconButton}
@@ -117,11 +115,8 @@ const Navbar = ({ isSidebarExpanded }) => {
           >
             <MagnifyingGlassIcon className={styles.searchIcon} />
           </button>
-
           <Notifications />
-
           <div className={styles.divider}></div>
-
           <div
             className={styles.profileSection}
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -138,7 +133,6 @@ const Navbar = ({ isSidebarExpanded }) => {
             <ChevronDownIcon
               className={`${styles.chevronIcon} ${isDropdownOpen ? styles.rotated : ""}`}
             />
-
             {isDropdownOpen && (
               <div className={styles.dropdownMenu}>
                 <button onClick={() => navigate("/profile")} className={styles.dropdownItem}>

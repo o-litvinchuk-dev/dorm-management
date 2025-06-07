@@ -1,11 +1,12 @@
-// frontend/src/utils/api.js
+// src/utils/api.js
 import axios from "axios";
 import { toast } from "sonner";
 
-const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+// Переконайтеся, що VITE_BACKEND_URL визначено як http://localhost:5000/api/v1 (як ми змінили у .env)
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000/api/v1";
 
 const api = axios.create({
-  baseURL: `${API_BASE_URL}/api/v1`, // /api/v1 додається тут
+  baseURL: API_BASE_URL, // Використовуємо повний URL зі змінної середовища
   withCredentials: true,
   timeout: 10000,
 });
@@ -13,14 +14,19 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("accessToken");
+    const sessionId = localStorage.getItem("sessionId"); // Отримуємо sessionId
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    // Важливо: config.url тепер має бути відносним, наприклад, 'faculties' або 'groups/1'
+    if (sessionId) { // Додаємо sessionId до заголовків
+      config.headers['X-Session-Id'] = sessionId;
+    }
+
     console.debug(
       "[API Request]",
       config.method.toUpperCase(),
-      config.baseURL + (config.url.startsWith('/') ? config.url : '/' + config.url), // Повний URL для логування
+      config.baseURL + (config.url.startsWith('/') ? config.url.substring(1) : config.url),
       config.params,
       config.data
     );
@@ -40,26 +46,32 @@ api.interceptors.response.use(
       "[API Response Error]",
       error.response?.status,
       error.response?.data,
-      originalRequest?.url // Логуємо відносний URL оригінального запиту
+      originalRequest?.url
     );
 
-    if (error.response?.status === 429) {
-      toast.error("Забагато запитів. Спробуйте через 15 хвилин");
+    const statusCode = error.response?.status;
+    const errorCode = error.response?.data?.code;
+    const errorMessage = error.response?.data?.error || error.message || "Невідома помилка";
+
+    if (statusCode === 429) {
+      ToastService.tooManyRequests();
       return Promise.reject(error);
     }
-    if (error.response?.status === 500) {
-      toast.error("Внутрішня помилка сервера. Спробуйте пізніше");
+    if (statusCode === 500) {
+      ToastService.serverError(statusCode, errorMessage);
       return Promise.reject(error);
     }
-    if (error.response?.status === 409 && error.response?.data?.code === "ROLE_CONFLICT") {
-      toast.error("Цей користувач уже має роль і не може бути призначений повторно");
+    if (statusCode === 409 && errorCode === "ROLE_CONFLICT") {
+      ToastService.conflictError(errorMessage);
       return Promise.reject(error);
     }
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      if (originalRequest._noAuth) {
+    // Обробка помилок авторизації та оновлення токенів
+    if ((statusCode === 401 || statusCode === 403) && !originalRequest._retry) {
+      if (originalRequest._noAuth) { // Якщо запит не вимагає авторизації, не намагаємося оновити токен
         return Promise.reject(error);
       }
+
       originalRequest._retry = true;
       try {
         const refreshToken = localStorage.getItem("refreshToken");
@@ -67,57 +79,68 @@ api.interceptors.response.use(
           console.warn("[API] No refresh token available, session may have ended");
           localStorage.removeItem("accessToken");
           localStorage.removeItem("refreshToken");
+          localStorage.removeItem("sessionId"); // Очищаємо sessionId
           localStorage.removeItem("user");
-          toast.error("Сесія закінчилась. Будь ласка, увійдіть знову");
-          window.location.href = "/login?session_expired=1";
+          ToastService.sessionExpired(); // Нове, більш точне повідомлення
+          if (window.location.pathname !== '/login') {
+            window.location.href = "/login?session_expired=1";
+          }
           return Promise.reject(error);
         }
 
-        // Використовуємо окремий інстанс axios для refresh-token
-        const publicApiForRefresh = axios.create({ baseURL: `${API_BASE_URL}/api/v1` });
+        // Використовуємо окремий інстанс axios, щоб уникнути рекурсії в інтерцепторі
+        const publicApiForRefresh = axios.create({ baseURL: API_BASE_URL });
         const { data } = await publicApiForRefresh.post(
-          "/auth/refresh-token", // Шлях відносний
+          "auth/refresh-token",
           { refreshToken },
-          { headers: { "Content-Type": "application/json" } }
+          { headers: { "Content-Type": "application/json", "X-Session-Id": localStorage.getItem("sessionId") || "" } } // Передаємо sessionId
         );
 
         localStorage.setItem("accessToken", data.accessToken);
-        if (data.refreshToken) {
+        if (data.refreshToken) { // Якщо refresh token теж оновлюється
           localStorage.setItem("refreshToken", data.refreshToken);
         }
-        
+        // sessionId не оновлюється тут, бо він вже має бути в новому access token і він фіксований для сесії
+
         originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
-        return api(originalRequest); // Повторюємо оригінальний запит з новим токеном
+        return api(originalRequest); // Повторюємо оригінальний запит
       } catch (refreshError) {
         console.error("[API Refresh Token Error]", refreshError.response?.data || refreshError.message);
-        if (refreshError.response?.status === 401 || refreshError.response?.status === 403) {
-          localStorage.removeItem("accessToken");
-          localStorage.removeItem("refreshToken");
-          localStorage.removeItem("user");
-          toast.error("Сесія закінчилась. Будь ласка, увійдіть знову");
-          if (window.location.pathname !== '/login') { // Запобігаємо циклічному редиректу
-            window.location.href = "/login?session_expired=1";
+        const refreshStatusCode = refreshError.response?.status;
+        const refreshErrorCode = refreshError.response?.data?.code;
+
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        localStorage.removeItem("sessionId"); // Очищаємо sessionId
+        localStorage.removeItem("user");
+
+        if (refreshStatusCode === 401 || refreshStatusCode === 403) {
+          if (refreshErrorCode === "REFRESH_TOKEN_EXPIRED" || refreshErrorCode === "INVALID_REFRESH_TOKEN" || refreshErrorCode === "REFRESH_TOKEN_USED_OR_INVALID" || refreshErrorCode === "TOKEN_VERSION_MISMATCH") {
+            ToastService.sessionExpired("Ваша сесія завершилась. Будь ласка, увійдіть знову."); // Специфічне повідомлення
+          } else {
+            ToastService.authFailed("Помилка авторизації. Будь ласка, увійдіть знову.");
           }
         } else {
-          toast.error("Не вдалося оновити сесію. Спробуйте ще раз");
+          ToastService.error("Не вдалося оновити сесію. Спробуйте ще раз");
+        }
+
+        if (window.location.pathname !== '/login') {
+          window.location.href = "/login?session_expired=1";
         }
         return Promise.reject(refreshError);
       }
     }
-    
-    const errorMessage = error.response?.data?.error || error.message || "Невідома помилка";
-    // Показуємо помилку, тільки якщо це не 401 (бо 401 обробляється рефрешем або редиректом)
-    // і якщо запит не був _noAuth (для публічних запитів, де помилки обробляються окремо)
-    if (!originalRequest._noAuth && error.response?.status !== 401) {
-      toast.error("Помилка API", errorMessage);
+
+    // Загальна обробка інших помилок, якщо не було ретраю або він не вдався
+    if (!originalRequest._noAuth && statusCode !== 401 && statusCode !== 403) {
+      ToastService.error("Помилка API", errorMessage);
     }
     return Promise.reject(error);
   }
 );
 
-// api.public для запитів, що не потребують автентифікації
 api.public = axios.create({
-  baseURL: `${API_BASE_URL}/api/v1`, // /api/v1 додається тут
+  baseURL: API_BASE_URL, // Використовуємо повний URL зі змінної середовища
   timeout: 10000,
 });
 

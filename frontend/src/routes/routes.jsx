@@ -10,27 +10,30 @@ import NewPasswordPage from "../pages/Auth/NewPasswordPage";
 import CompleteProfilePage from "../pages/Auth/CompleteProfilePage";
 import VerifyEmailPage from "../pages/Auth/VerifyEmailPage";
 import TwoFactorAuthPage from "../pages/Auth/TwoFactorAuthPage";
+
+// Публічні сторінки
 import PassVerificationPage from "../pages/Public/PassVerificationPage";
+import PublicUserProfilePage from "../pages/Public/PublicUserProfilePage"; // NEW IMPORT
 
 import DashboardPage from "../pages/Dashboard/DashboardPage";
 import ServicesPage from "../pages/Services/ServicesPage";
-import ApplicationsPage from "../pages/Applications/ApplicationsPage";
+import ApplicationsPage from "../pages/Applications/ApplicationsPage"; // Ця сторінка не використовується наразі, але залишається для потенційного використання
 import PublicDormitoriesPage from "../pages/Dormitories/DormitoriesPage";
 import SettlementPage from "../pages/Settlement/SettlementPage";
 import UserProfilePage from "../pages/Profile/ProfilePage";
 import SettingsPage from "../pages/Settings/SettingsPage";
 import MyActivitiesPage from "../pages/MyActivities/MyActivitiesPage";
 
-import ContractApplicationPage from "../pages/Services/ContractApplicationPage/ContractApplicationPage";
+import ContractApplicationPage from "../pages/Services/ContractApplicationPage/ContractApplicationPage"; // Ця сторінка не використовується наразі, але залишається для потенційного використання
 import SettlementAgreementPage from "../pages/Services/Settlement agreement/SettlementAgreementPage";
 import AccommodationApplicationPage from "../pages/Services/AccommodationApplicationPage/AccommodationApplicationPage";
 import SearchRoomsPage from "../pages/Services/RoomReservation/SearchRoomsPage";
 import RoomDetailPage from "../pages/Services/RoomReservation/RoomDetailPage";
 import MyReservationsPage from "../pages/Services/RoomReservation/MyReservationsPage";
 
-import AdminApplicationsPage from "../pages/AdminApplications/AdminApplicationsPage";
+import AdminApplicationsPage from "../pages/AdminApplications/AdminApplicationsPage"; // Ця сторінка не використовується наразі, але залишається для потенційного використання
 import AdminAccommodationManagementPage from "../pages/AdminApplications/AdminAccommodationManagementPage";
-import AdminManagementPage from "../pages/AdminManagement/AdminManagementPage";
+import AdminManagementPage from "../pages/AdminManagement/AdminManagementPage"; // Ця сторінка не використовується наразі, замінена на окремі блоки в адмін панелі
 import GroupsManagementPage from "../pages/Dean/GroupsPage";
 import ManageApplicationPresetsPage from "../pages/AdminManagement/ManageApplicationPresetsPage";
 import AdminRoomReservationsPage from "../pages/AdminReservations/AdminRoomReservationsPage";
@@ -47,6 +50,7 @@ import NotFoundPage from "../pages/Error/NotFoundPage";
 import UnauthorizedPage from "../pages/Error/UnauthorizedPage";
 
 import AdminProtectedRoute from "../components/AdminProtectedRoute";
+
 
 const AuthRequiredRoute = ({ element }) => {
   const { user, isLoading } = useUser();
@@ -77,6 +81,7 @@ const AuthRequiredRoute = ({ element }) => {
         return;
       }
 
+      // Якщо користувач не заповнив профіль, але намагається перейти на будь-яку сторінку, крім "/complete-profile"
       if (user && !user.is_profile_complete && location.pathname !== "/complete-profile") {
         if (isMounted) {
           navigate("/complete-profile", { state: { from: location }, replace: true });
@@ -100,6 +105,7 @@ const AuthRequiredRoute = ({ element }) => {
     return <div>Перевірка автентифікації...</div>;
   }
 
+  // Якщо користувач не автентифікований після перевірки, перенаправити на логін
   if (!user && authCheckComplete) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
@@ -115,9 +121,13 @@ const routesConfig = [
   { path: "/register", element: <RegistrationPage /> },
   { path: "/verify-email", element: <VerifyEmailPage /> },
   { path: "/verify-2fa", element: <TwoFactorAuthPage /> },
-  { path: "/verify-pass-public/:passIdentifier", element: <PassVerificationPage /> },
-  { path: "/complete-profile", element: <AuthRequiredRoute element={<CompleteProfilePage />} /> },
 
+  // Публічні маршрути, доступні без авторизації
+  { path: "/verify-pass-public/:passIdentifier", element: <PassVerificationPage /> },
+  { path: "/public-profile/:userId", element: <PublicUserProfilePage /> }, // НОВИЙ ПУБЛІЧНИЙ МАРШРУТ ПРОФІЛЮ
+
+  // Маршрути, що вимагають авторизації
+  { path: "/complete-profile", element: <AuthRequiredRoute element={<CompleteProfilePage />} /> },
   { path: "/dashboard", element: <AuthRequiredRoute element={<DashboardPage />} /> },
   { path: "/services", element: <AuthRequiredRoute element={<ServicesPage />} /> },
   {
@@ -129,6 +139,7 @@ const routesConfig = [
     element: <AuthRequiredRoute element={<SettlementAgreementPage />} />,
   },
   {
+    // Цей маршрут, імовірно, застарів і може бути видалений або перероблений
     path: "/services/contract-creation",
     element: <AuthRequiredRoute element={<ContractApplicationPage />} />,
   },
@@ -147,10 +158,9 @@ const routesConfig = [
   },
   { path: "/settings", element: <AuthRequiredRoute element={<SettingsPage />} /> },
   { path: "/profile", element: <AuthRequiredRoute element={<UserProfilePage />} /> },
-  { path: "/dormitories", element: <AuthRequiredRoute element={<PublicDormitoriesPage />} /> },
-  // Updated settlement route to use /api/v1/secure/events for event calendar
+  { path: "/dormitories", element: <AuthRequiredRoute element={<PublicDormitoriesPage />} /> }, // Публічні гуртожитки, але доступні і для авторизованих
   {
-    path: "/settlement",
+    path: "/settlement", // Розклад поселення, доступний багатьом ролям
     element: (
       <AuthRequiredRoute
         element={
@@ -163,7 +173,9 @@ const routesConfig = [
     ),
   },
 
+  // Адмін-маршрути (захищені за ролями)
   {
+    // Цей маршрут, імовірно, застарів і може бути видалений або перероблений, оскільки є /admin/accommodation-applications
     path: "/adminApplications",
     element: (
       <AuthRequiredRoute
@@ -190,6 +202,7 @@ const routesConfig = [
     ),
   },
   {
+    // Цей маршрут, імовірно, застарів і може бути видалений або перероблений, оскільки дублює /admin/accommodation-applications
     path: "/admin/applications/accommodation",
     element: (
       <AuthRequiredRoute
@@ -203,6 +216,7 @@ const routesConfig = [
     ),
   },
   {
+    // Цей маршрут, імовірно, застарів і може бути видалений, оскільки його функціонал перенесено в Dashboards
     path: "/admin/management",
     element: (
       <AuthRequiredRoute
@@ -294,6 +308,21 @@ const routesConfig = [
     ),
   },
   {
+    path: "/admin/manage-settlement-schedule",
+    element: (
+      <AuthRequiredRoute
+        element={
+          <AdminProtectedRoute
+            element={<ManageSettlementSchedulePage />}
+            allowedRoles={["admin", "superadmin", "dorm_manager", "faculty_dean_office"]}
+          />
+        }
+      />
+    ),
+  },
+
+  // Спеціалізовані панелі дашбордів
+  {
     path: "/dorm-manager/dashboard",
     element: (
       <AuthRequiredRoute
@@ -332,19 +361,8 @@ const routesConfig = [
       />
     ),
   },
-  {
-    path: "/admin/manage-settlement-schedule",
-    element: (
-      <AuthRequiredRoute
-        element={
-          <AdminProtectedRoute
-            element={<ManageSettlementSchedulePage />}
-            allowedRoles={["admin", "superadmin", "dorm_manager", "faculty_dean_office"]}
-          />
-        }
-      />
-    ),
-  },
+
+  // Сторінки помилок
   { path: "/unauthorized", element: <UnauthorizedPage /> },
   { path: "*", element: <NotFoundPage /> },
 ];

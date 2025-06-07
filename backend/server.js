@@ -1,3 +1,4 @@
+// server.js
 import "dotenv/config";
 import express from "express";
 import { createServer } from "http";
@@ -26,7 +27,7 @@ import dormManagerRoutes from "./src/routes/v1/dormManagerRoutes.js";
 import adminSettlementContractRoutes from "./src/routes/v1/adminSettlementContractRoutes.js";
 import dormitoryPassRoutes from "./src/routes/v1/dormitoryPassRoutes.js";
 import settlementScheduleAdminRoutes from "./src/routes/v1/settlementScheduleAdminRoutes.js";
-
+import publicRoutes from "./src/routes/v1/publicRoutes.js"; // Import new public routes
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -49,23 +50,27 @@ app.use(
   cors({
     origin: [
       process.env.FRONTEND_URL || "http://localhost:3000",
-      "https://dorm-lifee.vercel.app",
-      "https://dorm-life-git-dev-sashas-projects-a9528a77.vercel.app"
+      "https://dorm-life-frontend-nawz.vercel.app", // Ваш Vercel Frontend URL
+      "https://dormlife-web.vercel.app", // Ваш Vercel Frontend URL
     ],
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "X-Session-Id"], // Додано X-Session-Id
     credentials: true,
   })
 );
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
 app.use(
   helmet({
     crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
   })
 );
+
 app.use(rateLimiter);
+
+// app.use(updateSessionActivity); // Цей рядок має бути закоментований або відсутній
 
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
@@ -92,7 +97,7 @@ app.use("/api/v1/admin/settlement-schedule", settlementScheduleAdminRoutes);
 
 app.use(errorHandler);
 
-import "./src/config/redis.js";
+import "./src/config/redis.js"; // Переконайтеся, що Redis підключений
 
 app.get("/", (req, res) => {
   res.send("Сервер працює!");
