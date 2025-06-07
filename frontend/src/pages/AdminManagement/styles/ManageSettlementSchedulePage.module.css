@@ -4,25 +4,39 @@
   display: flex;
   min-height: 100vh;
   background-color: var(--background-color);
+  font-family: var(--font-family-sans);
 }
 
 .mainContent {
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
+  flex: 1;
   transition: margin-left var(--transition-slow);
-  margin-left: var(--sidebar-width-expanded); /* Default for expanded sidebar */
+  margin-left: calc(var(--sidebar-width-expanded) + var(--main-content-padding));
+  padding: 0 var(--main-content-padding) var(--main-content-padding);
+  padding-top: calc(var(--navbar-height) + var(--main-content-padding));
+  box-sizing: border-box;
+  min-height: 100vh;
+  overflow: hidden;
+  display: flex; 
+  flex-direction: column;
 }
 
 .mainContent.sidebarCollapsed {
-  margin-left: var(--sidebar-width-collapsed);
+  margin-left: calc(var(--sidebar-width-collapsed) + var(--main-content-padding));
 }
 
 .pageContainer {
-  padding: var(--main-content-padding);
-  padding-top: calc(var(--navbar-height) + var(--main-content-padding));
-  flex-grow: 1;
-  overflow-y: auto;
+  background: var(--card-background-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-xl);
+  padding: 24px;
+  margin-top: 1rem; 
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1; 
+  overflow: hidden;
+  min-height: 0;
 }
 
 .header {
@@ -32,6 +46,7 @@
   margin-bottom: 24px;
   padding-bottom: 16px;
   border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
 }
 
 .pageTitle {
@@ -78,11 +93,15 @@
 }
 
 .contentWrapper {
-  background-color: var(--card-background-color);
-  padding: 20px;
-  border-radius: var(--border-radius-lg);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03);
+  flex-grow: 1;
+  overflow-y: auto;
+  min-height: 0;
+  padding-right: 5px;
+  margin-right: -5px;
 }
+.contentWrapper::-webkit-scrollbar { width: 5px; }
+.contentWrapper::-webkit-scrollbar-thumb { background-color: var(--border-color); border-radius: var(--border-radius-full); }
+.contentWrapper::-webkit-scrollbar-track { background-color: transparent; }
 
 .loading, .emptyMessage, .errorMessage {
   text-align: center;
@@ -93,6 +112,8 @@
   flex-direction: column;
   align-items: center;
   gap: 0.5rem;
+  height: 100%;
+  justify-content: center;
 }
 .emptyMessage svg, .errorMessage svg {
     width: 32px;
@@ -107,10 +128,8 @@
     color: var(--error-color);
 }
 
-
 .tableContainer {
   overflow-x: auto;
-  margin-top: 20px;
 }
 
 .table {
@@ -126,12 +145,15 @@
 }
 
 .table th {
-  background-color: var(--background-light);
+  background-color: var(--card-background-color);
   font-weight: 600;
   color: var(--text-secondary);
   text-transform: uppercase;
   font-size: 0.8rem;
   letter-spacing: 0.05em;
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 .actionsHeader {
@@ -170,7 +192,6 @@
 .editButton:hover:not(:disabled) svg { color: var(--primary-color-dark); }
 .deleteButton:hover:not(:disabled) svg { color: var(--error-color-dark); }
 
-
 .titleCell {
     max-width: 200px;
     overflow: hidden;
@@ -178,7 +199,6 @@
     white-space: nowrap;
 }
 
-/* Modal Styles */
 .modalOverlayGlobal {
   position: fixed;
   top: 0;
@@ -195,22 +215,23 @@
 
 .modalContentGlobal {
   background-color: var(--card-background-color);
-  padding: 25px 30px;
   border-radius: var(--border-radius-lg);
   box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-  max-width: 650px; /* Default max width */
+  max-width: 650px;
   width: 100%;
   position: relative;
   display: flex;
   flex-direction: column;
-  max-height: 90vh; /* Ensure modal fits in viewport */
+  max-height: 90vh;
 }
 
 .modalInnerContent {
-  /* flex-grow: 1; Allow content to grow */
-  overflow-y: auto; /* Add scroll for long content */
+  overflow-y: auto;
+  padding: 25px 30px;
 }
-
+.modalInnerContent::-webkit-scrollbar { width: 5px; }
+.modalInnerContent::-webkit-scrollbar-thumb { background-color: var(--border-color); border-radius: var(--border-radius-full); }
+.modalInnerContent::-webkit-scrollbar-track { background-color: transparent; }
 
 .closeButtonIconGlobal {
   position: absolute;
@@ -220,6 +241,7 @@
   border: none;
   cursor: pointer;
   padding: 5px;
+  z-index: 10;
 }
 .closeButtonIconGlobal svg {
   width: 24px;
@@ -253,17 +275,14 @@
   color: var(--primary-color);
 }
 
-
 .modalBody {
   margin-bottom: 20px;
-  /* overflow-y: auto; */
-  /* max-height: calc(80vh - 160px); Consider adjusting if modal has fixed height */
 }
 
 .formGroup {
   margin-bottom: 18px;
 }
-.formGroup label, .inputLabel {
+.formGroup label {
   display: block;
   font-weight: 500;
   margin-bottom: 6px;
@@ -274,9 +293,7 @@
 .formGroup input[type="datetime-local"],
 .formGroup input[type="number"],
 .formGroup textarea,
-.formGroup select,
-.selectField,
-.inputField {
+.formGroup select {
   width: 100%;
   padding: 10px 12px;
   border: 1px solid var(--border-color-dark);
@@ -361,31 +378,10 @@
   opacity: 0.7;
 }
 
-.sortIcon {
-    width: 14px;
-    height: 14px;
-    margin-left: 4px;
-    color: var(--text-muted);
-    transition: color var(--transition-fast);
-}
-.sortableHeader:hover .sortIcon {
-    color: var(--text-primary);
-}
-
-.paginationWrapper {
-  margin-top: 20px;
-  padding-top: 15px;
-  border-top: 1px solid var(--border-color-light);
-  display: flex;
-  justify-content: center;
-}
-
 @media (max-width: 768px) {
-  .mainContent {
-    margin-left: 0; /* Sidebar is likely overlayed or hidden */
-  }
   .pageContainer {
-    padding-top: calc(var(--navbar-height) + var(--main-content-padding) / 2);
+    padding: 16px;
+    margin-top: 1rem;
   }
   .header {
     flex-direction: column;
@@ -398,48 +394,9 @@
   }
   .modalContentGlobal {
     max-width: 95%;
+    padding: 0;
+  }
+  .modalInnerContent {
     padding: 20px;
-  }
-  .table th, .table td {
-    font-size: 0.85rem;
-    padding: 8px 10px;
-  }
-  /* Responsive table if needed */
-  .table thead {
-    display: none;
-  }
-  .table tr {
-    display: block;
-    margin-bottom: 15px;
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius-md);
-    overflow: hidden;
-  }
-  .table td {
-    display: block;
-    text-align: right !important; /* Override default left align for cells */
-    padding-left: 50%; /* Make space for label */
-    position: relative;
-    border-bottom: 1px dashed var(--border-color-light);
-  }
-  .table td:last-child {
-    border-bottom: none;
-  }
-  .table td::before {
-    content: attr(data-label);
-    position: absolute;
-    left: 10px;
-    width: calc(50% - 20px); /* Label width */
-    padding-right: 10px;
-    white-space: nowrap;
-    text-align: left;
-    font-weight: bold;
-    color: var(--text-secondary);
-  }
-  .actionsCell, .actionsHeader {
-    text-align: right !important; /* Ensure actions stay right */
-  }
-  .actionsCell button {
-    margin-left: 5px;
   }
 }

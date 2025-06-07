@@ -1,3 +1,6 @@
+// src/pages/Dashboard/DashboardPage.jsx
+// УВАГА: Структура JSX була змінена для відповідності новому CSS Grid макету.
+
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import Navbar from "../../components/UI/Navbar/Navbar";
@@ -244,64 +247,18 @@ const DashboardPage = () => {
     </div>
   );
 
-  const renderNotificationItem = (notif) => (
-    <div key={notif.id} className={`${styles.activityItem} ${notif.read ? styles.readNotification : ''}`}
-      onClick={() => navigate("/settings?category=notifications")} role="button" tabIndex="0"
-      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') navigate("/settings?category=notifications") }}>
-      <BellIcon className={styles.itemIcon} />
-      <div className={styles.itemContent}>
-        <span className={styles.itemTitle}>{notif.title}</span>
-        <span className={styles.itemDetails}>{notif.description}</span>
-        <span className={styles.itemDate}>Отримано: {formatDate(notif.created_at)}</span>
-      </div>
-    </div>
-  );
-
   const isLoadingOverall = isLoadingData || isUserContextLoading;
 
   if (contextUser && contextUser.role === 'student') {
     const stageDetails = {
-      initial_application: { 
-        title: "1. Подача Заяви", status: "Подайте заяву на поселення, щоб розпочати", 
-        actionText: "Подати заяву", actionLink: "/services/accommodation-application", icon: ClipboardDocumentCheckIcon, 
-        isActive: true, isCompleted: false 
-      },
-      application_review: { 
-        title: "1. Заява на Розгляді", status: `Ваша заява зі статусом: ${getStatusDetails(settlementStatus?.applicationStatus, 'application')}`, 
-        actionText: "Переглянути заяви", actionLink: "/my-accommodation-applications", icon: ClockIcon,
-        isActive: false, isCompleted: false 
-      },
-      application_rejected: {
-        title: "1. Заяву Відхилено", status: `Статус: ${getStatusDetails(settlementStatus?.applicationStatus, 'application')}`,
-        actionText: "Подати нову заяву", actionLink: "/services/accommodation-application", icon: XCircleIcon,
-        isActive: true, isCompleted: true,
-      },
-      reservation: { 
-        title: "2. Бронювання Кімнати", status: "Заява затверджена. Оберіть кімнату для проживання.", 
-        actionText: "Знайти та забронювати", actionLink: "/services/rooms/search", icon: BookmarkSquareIcon,
-        isActive: true, isCompleted: false 
-      },
-      reservation_pending: {
-        title: "2. Бронювання Очікує", status: `Бронювання кімнати №${settlementStatus?.reservationDetails?.room_number || '...'} ${getStatusDetails(settlementStatus?.reservationDetails?.status, 'reservation')}`,
-        actionText: "Мої бронювання", actionLink: "/my-reservations", icon: ClockIcon,
-        isActive: false, isCompleted: false
-      },
-      agreement: { 
-        title: "3. Оформлення Договору", 
-        status: `Кімната №${settlementStatus?.reservationDetails?.room_number || (settlementStatus?.applicationStatus === 'approved_by_dorm' && dashboardData?.applications?.[0]?.preferred_room) || '...'} заброньована/визначена. Заповніть договір.`,
-        actionText: "Заповнити договір", actionLink: "/services/settlement-agreement", icon: DocumentTextIcon,
-        isActive: true, isCompleted: false
-      },
-      agreement_review: {
-        title: "3. Договір на Розгляді", status: `Ваш договір (${getStatusDetails(settlementStatus?.agreementDetails?.status, 'agreement')}) перевіряється.`,
-        actionText: "Мої активності", actionLink: "/my-accommodation-applications", icon: ClockIcon,
-        isActive: false, isCompleted: false
-      },
-      completed: { 
-        title: "4. Поселення Завершено!", status: "Вітаємо! Усі етапи пройдено. Ваша перепустка активна.", 
-        icon: HomeSolidIcon,
-        isActive: false, isCompleted: true 
-      }
+      initial_application: { title: "1. Подача Заяви", status: "Подайте заяву на поселення, щоб розпочати", actionText: "Подати заяву", actionLink: "/services/accommodation-application", icon: ClipboardDocumentCheckIcon, isActive: true, isCompleted: false },
+      application_review: { title: "1. Заява на Розгляді", status: `Ваша заява зі статусом: ${getStatusDetails(settlementStatus?.applicationStatus, 'application')}`, actionText: "Переглянути заяви", actionLink: "/my-accommodation-applications", icon: ClockIcon, isActive: false, isCompleted: false },
+      application_rejected: { title: "1. Заяву Відхилено", status: `Статус: ${getStatusDetails(settlementStatus?.applicationStatus, 'application')}`, actionText: "Подати нову заяву", actionLink: "/services/accommodation-application", icon: XCircleIcon, isActive: true, isCompleted: true, },
+      reservation: { title: "2. Бронювання Кімнати", status: "Заява затверджена. Оберіть кімнату для проживання.", actionText: "Знайти та забронювати", actionLink: "/services/rooms/search", icon: BookmarkSquareIcon, isActive: true, isCompleted: false },
+      reservation_pending: { title: "2. Бронювання Очікує", status: `Бронювання кімнати №${settlementStatus?.reservationDetails?.room_number || '...'} ${getStatusDetails(settlementStatus?.reservationDetails?.status, 'reservation')}`, actionText: "Мої бронювання", actionLink: "/my-reservations", icon: ClockIcon, isActive: false, isCompleted: false },
+      agreement: { title: "3. Оформлення Договору", status: `Кімната №${settlementStatus?.reservationDetails?.room_number || (settlementStatus?.applicationStatus === 'approved_by_dorm' && dashboardData?.applications?.[0]?.preferred_room) || '...'} заброньована/визначена. Заповніть договір.`, actionText: "Заповнити договір", actionLink: "/services/settlement-agreement", icon: DocumentTextIcon, isActive: true, isCompleted: false },
+      agreement_review: { title: "3. Договір на Розгляді", status: `Ваш договір (${getStatusDetails(settlementStatus?.agreementDetails?.status, 'agreement')}) перевіряється.`, actionText: "Мої активності", actionLink: "/my-accommodation-applications", icon: ClockIcon, isActive: false, isCompleted: false },
+      completed: { title: "4. Поселення Завершено!", status: "Вітаємо! Усі етапи пройдено. Ваша перепустка активна.", icon: HomeSolidIcon, isActive: false, isCompleted: true }
     };
 
     const currentStageKey = settlementStatus?.currentStage || 'initial_application';
@@ -309,6 +266,11 @@ const DashboardPage = () => {
     const stepsOrder = ['initial_application', 'reservation', 'agreement', 'completed'];
     const baseStageOfCurrent = currentStageKey.split('_')[0];
     const activeStageOrderIndex = stepsOrder.indexOf(baseStageOfCurrent);
+    
+    // Визначення активного етапу для "Швидких дій" на основі скріншоту
+    const quickActionStageKey = settlementStatus?.currentStage === 'reservation' ? 'reservation' : currentStageDefinition.actionLink === '/services/rooms/search' ? 'reservation' : currentStageKey;
+    const quickActionStage = stageDetails[quickActionStageKey] || currentStageDefinition;
+
 
     return (
       <div className={styles.dashboardLayout}>
@@ -316,7 +278,6 @@ const DashboardPage = () => {
         <div className={`${styles.mainContent} ${!isSidebarExpanded ? styles.sidebarCollapsed : ""}`}>
           <Navbar isSidebarExpanded={isSidebarExpanded} onMenuToggle={() => handleSidebarToggle(!isSidebarExpanded)} />
           <div className={styles.pageContainer}>
-            <div className={styles.contentWrapper}>
               {isLoadingOverall ? (
                 <div className={styles.loadingStateFullPage}>Завантаження даних...</div>
               ) : error ? (
@@ -327,148 +288,102 @@ const DashboardPage = () => {
                   <button onClick={fetchStudentDashboardData} className={styles.retryButton}>Спробувати ще раз</button>
                 </div>
               ) : dashboardData && settlementStatus ? (
-                <>
-                  {!contextUser.is_profile_complete && (
-                    <Link to="/complete-profile" className={styles.completeProfilePrompt}>
-                      <InformationCircleIcon />
-                      Ваш профіль не заповнений. Будь ласка, завершіть реєстрацію для повного доступу до функцій.
-                    </Link>
-                  )}
+                <div className={styles.dashboardGrid}>
                   
-                  <div className={styles.dashboardOuterContainer}>
-                    <div className={styles.topRowGrid}>
-                      <div className={styles.gridAreaPass}>
-                        <section className={`${styles.section} ${styles.passCardSection}`}>
-                          <h2 className={styles.sectionTitlePassCard}>Моя Перепустка</h2>
-                          <DormPassCard />
-                        </section>
-                      </div>
+                  {/* --- Grid Area: Pass --- */}
+                  <section className={`${styles.section} ${styles.gridAreaPass}`}>
+                    <h2 className={styles.sectionTitle}>Моя Перепустка</h2>
+                    <DormPassCard />
+                  </section>
+                  
+                  {/* --- Grid Area: Progress --- */}
+                  <section className={`${styles.section} ${styles.gridAreaProgress}`}>
+                    <h2 className={styles.sectionTitle}>Мій Прогрес Поселення</h2>
+                    <div className={styles.settlementStepsContainer}>
+                      {stepsOrder.map((key, index) => {
+                        let stageToRender = stageDetails[key];
+                        let isStepActive = false;
+                        let isStepCompleted = index < activeStageOrderIndex;
 
-                      <div className={styles.gridAreaProgress}>
-                        <section className={`${styles.section} ${styles.settlementProgressSection}`}>
-                          <h2 className={styles.mainSectionTitle}>Мій Прогрес Поселення</h2>
-                          <div className={styles.settlementStepsContainer}>
-                            {stepsOrder.map((key, index) => {
-                              let stageToRender = stageDetails[key];
-                              let isStepActive = false;
-                              let isStepCompleted = index < activeStageOrderIndex;
-
-                              if (key === baseStageOfCurrent) {
-                                stageToRender = currentStageDefinition;
-                                isStepActive = currentStageDefinition.isActive;
-                                isStepCompleted = currentStageDefinition.isCompleted;
-                              } else if (key === 'initial_application' && currentStageKey === 'application_rejected') {
-                                  stageToRender = stageDetails.application_rejected;
-                                  isStepCompleted = true; 
-                              }
-                              
-                              return <SettlementStep 
-                                        key={key} 
-                                        {...stageToRender} 
-                                        isActive={isStepActive} 
-                                        isCompleted={isStepCompleted} 
-                                        onClick={stageToRender.isActive && stageToRender.actionLink ? () => navigate(stageToRender.actionLink) : undefined} 
-                                     />;
-                            })}
-                          </div>
-                        </section>
-                      </div>
-                      
-                      <div className={styles.gridAreaQuickActions}>
-                        <section className={`${styles.section} ${styles.quickActionsSection}`}>
-                          <h2 className={styles.sectionTitle}>Швидкі Дії</h2>
-                          <div className={styles.quickActions}>
-                            {currentStageDefinition?.isActive && !currentStageDefinition.isCompleted && currentStageDefinition.actionLink && (
-                                <QuickActionLink 
-                                    to={currentStageDefinition.actionLink} 
-                                    label={currentStageDefinition.actionText || "Перейти до етапу"} 
-                                    icon={currentStageDefinition.icon ? React.createElement(currentStageDefinition.icon) : undefined}
-                                    isPrimary={true}
-                                />
-                            )}
-                            <QuickActionLink to="/services/accommodation-application" label="Заяви на Поселення" icon={<ClipboardDocumentCheckIcon />} />
-                            <QuickActionLink to="/services/rooms/search" label="Знайти/Змінити Кімнату" icon={<MagnifyingGlassCircleIcon />} />
-                            <QuickActionLink to="/my-accommodation-applications" label="Мої Активності" icon={<DocumentTextIcon />} />
-                            <QuickActionLink to="/my-reservations" label="Мої Бронювання" icon={<BookmarkSquareIcon />} />
-                            <QuickActionLink to="/profile" label="Мій Профіль" icon={<ProfileIconHero />} />
-                          </div>
-                        </section>
-                      </div>
-                    </div>
-
-                    <div className={styles.bottomContentGrid}>
-                        <div className={styles.bottomLeftColumn}>
-                             <div className={styles.gridAreaNeighbors}>
-                                {activePass ? (
-                                  <section className={`${styles.section} ${styles.roommatesSection}`}>
-                                    <h2 className={styles.sectionTitle}><UsersIcon className={styles.sectionTitleIconInternal} />Мої Сусіди</h2>
-                                    {roommates.length > 0 ? (
-                                      <div className={styles.roommatesList}>
-                                        {roommates.map(mate => (
-                                          <div key={mate.id} className={styles.roommateItem}>
-                                            <Avatar user={{ avatar: mate.avatar, email: mate.name }} size={32} />
-                                            <div className={styles.roommateInfo}><span className={styles.roommateName}>{mate.name}</span></div>
-                                          </div>
-                                        ))}
-                                      </div>
-                                    ) : ( !isLoadingData && <p className={styles.noRoommatesMessage}>Інформація про сусідів відсутня.</p> )}
-                                    {isLoadingData && !roommates.length && <p className={styles.noRoommatesMessage}>Завантаження...</p>}
-                                  </section>
-                                ) : (
-                                  <section className={`${styles.section} ${styles.roommatesSection}`}>
-                                    <h2 className={styles.sectionTitle}><UsersIcon className={styles.sectionTitleIconInternal} />Мої Сусіди</h2>
-                                    <div className={`${styles.noItemsMessage} ${styles.compactNoItems}`}>
-                                      <UsersIcon className={styles.noItemsIconSmall} />
-                                      <p>Дані про сусідів доступні після поселення.</p>
-                                    </div>
-                                  </section>
-                                )}
-                            </div>
-                            <div className={styles.gridAreaNotifications}>
-                               <section className={`${styles.section} ${styles.notificationsSection}`}>
-                                <div className={styles.listHeader}>
-                                  <h2 className={styles.sectionTitle}>Останні Сповіщення</h2>
-                                  {dashboardData.notifications?.length > 0 && (
-                                    <Link to="/settings?category=notifications" className={styles.viewAllLink}>Всі ({dashboardData.notifications.length})</Link>
-                                  )}
-                                </div>
-                                {dashboardData.notifications?.length > 0 ? (
-                                  <div className={styles.activityList}>
-                                    {dashboardData.notifications.slice(0, 5).map(renderNotificationItem)}
-                                  </div>
-                                ) : (
-                                  <div className={`${styles.noItemsMessage} ${styles.compactNoItems}`}>
-                                    <BellIcon className={styles.noItemsIconSmall} />
-                                    <p>Нових сповіщень немає.</p>
-                                  </div>
-                                )}
-                              </section>
-                            </div>
-                        </div>
+                        if (key === baseStageOfCurrent) {
+                          stageToRender = currentStageDefinition;
+                          isStepActive = currentStageDefinition.isActive;
+                          isStepCompleted = currentStageDefinition.isCompleted;
+                        } else if (key === 'initial_application' && currentStageKey === 'application_rejected') {
+                            stageToRender = stageDetails.application_rejected;
+                            isStepCompleted = true; 
+                        }
                         
-                        <div className={styles.gridAreaApplicationsFullWidth}>
-                           <section className={`${styles.section} ${styles.applicationsSection}`}>
-                            <div className={styles.listHeader}>
-                              <h2 className={styles.sectionTitle}>Останні Заяви на Поселення</h2>
-                              {dashboardData.applications?.length > 0 && (
-                                <Link to="/my-accommodation-applications" className={styles.viewAllLink}>Всі заяви ({dashboardData.applications.length})</Link>
-                              )}
-                            </div>
-                            {dashboardData.applications?.length > 0 ? (
-                              <div className={styles.activityList}>
-                                {dashboardData.applications.slice(0, 10).map(renderApplicationItem)}
-                              </div>
-                            ) : (
-                              <div className={`${styles.noItemsMessage} ${styles.compactNoItems}`}>
-                                <DocumentTextIcon className={styles.noItemsIconSmall} />
-                                <p>Активних заяв на поселення немає.</p>
-                              </div>
-                            )}
-                          </section>
-                        </div>
+                        return <SettlementStep 
+                                  key={key} 
+                                  {...stageToRender} 
+                                  isActive={isStepActive} 
+                                  isCompleted={isStepCompleted} 
+                                  onClick={stageToRender.isActive && stageToRender.actionLink ? () => navigate(stageToRender.actionLink) : undefined} 
+                                />;
+                      })}
                     </div>
-                  </div>
-                </>
+                  </section>
+
+                  {/* --- Grid Area: Quick Actions --- */}
+                  <section className={`${styles.section} ${styles.gridAreaActions}`}>
+                    <h2 className={styles.sectionTitle}>Швидкі Дії</h2>
+                    <div className={styles.quickActions}>
+                      <QuickActionLink 
+                        to="/services/rooms/search"
+                        label="Знайти та забронювати" 
+                        icon={<BookmarkSquareIcon />}
+                        isPrimary={true}
+                      />
+                      <QuickActionLink to="/services/accommodation-application" label="Заяви на Поселення" icon={<ClipboardDocumentCheckIcon />} />
+                      <QuickActionLink to="/services/rooms/search" label="Знайти/Змінити Кімнату" icon={<MagnifyingGlassCircleIcon />} />
+                      <QuickActionLink to="/my-accommodation-applications" label="Мої Активності" icon={<DocumentTextIcon />} />
+                      <QuickActionLink to="/my-reservations" label="Мої Бронювання" icon={<BookmarkSquareIcon />} />
+                      <QuickActionLink to="/profile" label="Мій Профіль" icon={<ProfileIconHero />} />
+                    </div>
+                  </section>
+
+                  {/* --- Grid Area: Neighbors --- */}
+                  <section className={`${styles.section} ${styles.gridAreaNeighbors}`}>
+                    <h2 className={styles.sectionTitle}><UsersIcon className={styles.sectionTitleIconInternal} />Мої Сусіди</h2>
+                    {activePass && roommates.length > 0 ? (
+                      <div className={styles.roommatesList}>
+                        {roommates.map(mate => (
+                          <div key={mate.id} className={styles.roommateItem}>
+                            <Avatar user={{ avatar: mate.avatar, email: mate.name }} size={32} />
+                            <div className={styles.roommateInfo}><span className={styles.roommateName}>{mate.name}</span></div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className={`${styles.noItemsMessage} ${styles.compactNoItems}`}>
+                        <UsersIcon className={styles.noItemsIconSmall} />
+                        <p>Дані про сусідів доступні після поселення.</p>
+                      </div>
+                    )}
+                  </section>
+                  
+                  {/* --- Grid Area: Applications --- */}
+                  <section className={`${styles.section} ${styles.gridAreaApplications}`}>
+                    <div className={styles.listHeader}>
+                      <h2 className={styles.sectionTitle}>Останні Заяви на Поселення</h2>
+                      {dashboardData.applications?.length > 0 && (
+                        <Link to="/my-accommodation-applications" className={styles.viewAllLink}>Всі заяви ({dashboardData.applications.length})</Link>
+                      )}
+                    </div>
+                    {dashboardData.applications?.length > 0 ? (
+                      <div className={styles.activityList}>
+                        {dashboardData.applications.slice(0, 10).map(renderApplicationItem)}
+                      </div>
+                    ) : (
+                      <div className={`${styles.noItemsMessage} ${styles.compactNoItems}`}>
+                        <DocumentTextIcon className={styles.noItemsIconSmall} />
+                        <p>Активних заяв на поселення немає.</p>
+                      </div>
+                    )}
+                  </section>
+
+                </div>
               ) : (
                 <div className={`${styles.errorMessageContainerFullPage} ${styles.centeredMessage}`}>
                   <InformationCircleIcon className={styles.errorIconLarge} />
@@ -477,24 +392,22 @@ const DashboardPage = () => {
                   <button onClick={fetchStudentDashboardData} className={styles.retryButton}>Спробувати ще раз</button>
                 </div>
               )}
-            </div>
           </div>
         </div>
       </div>
     );
   }
 
+  // Fallback/Loading for other roles or while user context is loading
   return (
     <div className={styles.dashboardLayout}>
       <Sidebar onToggle={handleSidebarToggle} isExpanded={isSidebarExpanded} />
       <div className={`${styles.mainContent} ${!isSidebarExpanded ? styles.sidebarCollapsed : ""}`}>
         <Navbar isSidebarExpanded={isSidebarExpanded} onMenuToggle={() => handleSidebarToggle(!isSidebarExpanded)} />
         <div className={styles.pageContainer}>
-          <div className={styles.contentWrapper}>
             <div className={styles.loadingStateFullPage}>
               {isLoadingOverall ? "Завантаження..." : `Панель для ролі "${contextUser?.role}" в розробці або перенаправлення...`}
             </div>
-          </div>
         </div>
       </div>
     </div>

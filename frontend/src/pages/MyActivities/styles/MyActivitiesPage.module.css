@@ -6,49 +6,59 @@
   background-color: var(--background-color);
   font-family: var(--font-family-sans);
 }
+
 .mainContent {
-  flex-grow: 1;
+  flex: 1;
+  transition: margin-left var(--transition-slow);
+  margin-left: calc(var(--sidebar-width-expanded) + var(--main-content-padding));
+  padding: 0 var(--main-content-padding) var(--main-content-padding);
+  padding-top: calc(var(--navbar-height) + var(--main-content-padding));
+  box-sizing: border-box;
+  min-height: 100vh;
+  overflow: hidden;
+  /* Додаємо flex, щоб pageContainer міг розтягуватися */
   display: flex;
   flex-direction: column;
-  transition: margin-left var(--transition-slow);
-  margin-left: var(--sidebar-width-expanded);
-  padding-top: var(--navbar-height);
-  box-sizing: border-box;
-  overflow-x: hidden;
 }
+
 .mainContent.sidebarCollapsed {
-  margin-left: var(--sidebar-width-collapsed);
+  margin-left: calc(var(--sidebar-width-collapsed) + var(--main-content-padding));
 }
 
 .pageContainer {
-  padding: var(--main-content-padding, 1.5rem);
-  background-color: var(--card-background-color);
-  flex-grow: 1;
-  border-radius: var(--border-radius-xl);
-  margin: var(--page-container-margin-top, 1rem) var(--main-content-padding, 1.5rem) var(--main-content-padding, 1.5rem);
+  background: var(--card-background-color);
   border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-xl);
+  padding: 24px;
+  width: 100%;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+  
+  /* === ВИПРАВЛЕННЯ ТУТ === */
+  margin-top: 1.5rem; /* Повернули відступ зверху, як на макеті */
+  flex-grow: 1; /* Дозволяє блоку зайняти весь доступний простір по висоті */
+  min-height: 0; /* Необхідно для правильної роботи flex-grow і overflow */
 }
 
 .pageTitle {
-  font-size: 1.8rem;
-  font-weight: 700;
+  font-size: 1.75rem;
+  font-weight: 600;
   color: var(--text-primary);
-  margin-top: 0;
-  margin-bottom: 1.5rem;
+  margin: 0 0 1rem 0;
   display: flex;
   align-items: center;
-  padding-bottom: 1rem;
+  padding-bottom: 1.25rem;
   border-bottom: 1px solid var(--border-color-light);
 }
-.titleIcon { /* General for page title icon */
-  width: 26px;
-  height: 26px;
-  margin-right: 0.75rem;
+.titleIcon {
+  width: 24px;
+  height: 24px;
+  margin-right: 0.8rem;
   color: var(--primary-color);
 }
+
 .loadingSpinner, .noResultsMessage {
   display: flex;
   flex-direction: column;
@@ -69,32 +79,31 @@
 
 .filterBar {
   display: flex;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  align-items: flex-end;
   flex-wrap: wrap;
-  padding: 0.75rem;
-  background-color: var(--background-light);
-  border-radius: var(--border-radius-lg);
-  border: 1px solid var(--border-color-light);
+  padding: 0;
+  background-color: transparent;
+  border: none;
 }
 .filterGroup {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  min-width: 180px;
+  gap: 0.5rem;
+  min-width: 220px;
 }
 .filterGroup label {
-  font-size: 0.8rem;
-  color: var(--text-muted);
+  font-size: 0.875rem;
+  color: var(--text-secondary);
   font-weight: 500;
-  margin-bottom: 0.25rem;
+  padding-left: 0.25rem;
 }
 .filterSelect {
-  padding: 0.6rem 0.8rem;
+  padding: 0.7rem 1rem;
   border: 1px solid var(--border-color-dark);
   border-radius: var(--border-radius-md);
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   background-color: var(--card-background-color);
   color: var(--text-primary);
   width: 100%;
@@ -107,180 +116,134 @@
 }
 .filterButtonMobile {
   display: none;
-  padding: 0.6rem 1rem;
-  background-color: var(--primary-color);
-  color: var(--text-on-primary);
-  border: none;
-  border-radius: var(--border-radius-md);
-  cursor: pointer;
-  font-size: 0.9rem;
-  align-items: center;
-  gap: 0.5rem;
-  font-weight: 500;
-}
-.filterButtonMobile svg {
-  width: 16px;
-  height: 16px;
 }
 
 .activitiesGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
   gap: 1.5rem;
-  flex-grow: 1;
   align-content: start;
 }
 
 .activityCard {
   background-color: var(--card-background-color);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border-color-light);
   border-radius: var(--border-radius-lg);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
+  box-shadow: none;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   cursor: pointer;
-  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
+  transition: border-color 0.2s ease-in-out;
 }
 .activityCard:hover, .activityCard:focus-visible {
-  transform: translateY(-4px);
-  box-shadow: 0 6px 12px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05);
-  border-color: var(--primary-color-light);
+  border-color: var(--primary-color);
   outline: none;
-}
-.activityCard:focus-visible {
-  outline: 2px solid var(--primary-color);
-  outline-offset: 2px;
 }
 
 .cardHeader {
   display: flex;
   align-items: center;
-  padding: 0.85rem 1.25rem;
+  padding: 1rem 1.25rem;
   border-bottom: 1px solid var(--border-color-light);
-  background-color: var(--background-ultralight);
 }
-
-.cardIcon { /* Icon for ActivityCard */
-  width: 20px; /* Smaller than page title icon */
+.cardIcon {
+  width: 20px;
   height: 20px;
   color: var(--primary-color);
-  margin-right: 0.85rem;
+  margin-right: 0.75rem;
   flex-shrink: 0;
 }
-
 .cardTitle {
-  font-size: 1.1rem; /* Consistent with modal section title */
+  font-size: 1.05rem;
   font-weight: 600;
   color: var(--text-primary);
   margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .cardBody {
   padding: 1.25rem;
   font-size: 0.9rem;
-  line-height: 1.6;
   color: var(--text-secondary);
   flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem; /* Рівномірний відступ між рядками */
 }
 .cardBody p {
-  margin: 0 0 0.6rem 0;
-}
-.cardBody p:last-child {
-  margin-bottom: 0;
+  margin: 0;
 }
 .cardBody strong {
   font-weight: 500;
-  color: var(--text-primary);
+  color: var(--text-secondary);
 }
-
-.cardDetailItem {
+.cardDetailItem, .cardStatusItem {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.6rem;
+  color: var(--text-primary);
 }
 .detailIcon {
   width: 16px;
   height: 16px;
-  color: var(--primary-color-light);
+  color: var(--text-muted);
   flex-shrink: 0;
 }
-.cardStatusItem {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-}
 
-.statusBadge { /* Base badge style */
+.statusBadge {
   padding: 0.25rem 0.75rem;
-  border-radius: var(--border-radius-full);
-  font-size: 0.78rem;
+  border-radius: var(--border-radius-md);
+  font-size: 0.8rem;
   font-weight: 500;
-  text-transform: capitalize;
-  display: inline-block;
-  border: 1px solid;
-  line-height: 1.4;
+  border: none;
+  line-height: 1.5;
 }
-/* Specific status styles for cards, can be reused by modals if modalStyles.statusBadgeOnModal is not defined or points here */
 .statusPending, .statusPendingRoomRes, .statusPendingAgreement,
 .statusPendingConfirmation {
   background-color: var(--warning-bg-light);
   color: var(--warning-color-dark);
-  border-color: var(--warning-color);
 }
 .statusApproved, .statusConfirmedRoomRes, .statusApprovedAgreement,
 .statusApprovedByFaculty, .statusApprovedByDorm, .statusCheckedInRoomRes {
   background-color: var(--success-bg-light);
   color: var(--success-color-dark);
-  border-color: var(--success-color);
 }
 .statusRejected, .statusCancelledRoomRes, .statusRejectedAgreement, .statusArchivedAgreement,
 .statusRejectedByFaculty, .statusRejectedByDorm, .statusCancelledByUser, .statusRejectedByAdmin, .statusExpiredRoomRes {
   background-color: var(--error-bg-light);
   color: var(--error-color-dark);
-  border-color: var(--error-color);
 }
 .statusSettled, .statusCheckedOut, .statusSettledRoomRes, .statusCheckedOutRoomRes {
   background-color: var(--primary-bg-light);
   color: var(--primary-color-dark);
-  border-color: var(--primary-color);
 }
 .statusDefault {
   background-color: var(--neutral-bg-light);
   color: var(--neutral-color-dark);
-  border-color: var(--neutral-color);
 }
 
 .cardFooter {
   padding: 0.85rem 1.25rem;
   border-top: 1px solid var(--border-color-light);
-  background-color: var(--background-ultralight);
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
-
 .cardDate {
   font-size: 0.8rem;
   color: var(--text-muted);
 }
-
 .detailsLink {
   font-size: 0.875rem;
   color: var(--primary-color);
   font-weight: 500;
   cursor: pointer;
-  padding: 0.25rem 0;
 }
 .detailsLink:hover {
   text-decoration: underline;
-  color: var(--primary-color-dark);
 }
 
+/* === СТИЛІ МОДАЛЬНИХ ВІКОН ТА ІНШЕ (без змін) === */
 .modalOverlayGlobal {
   position: fixed;
   top: 0;
@@ -309,10 +272,9 @@
   position: relative;
   overflow: hidden;
 }
-.agreementModalContentSizing { /* Specific sizing for agreement modal if needed */
+.agreementModalContentSizing {
   max-width: 900px;
 }
-
 
 .closeButtonIconGlobal {
   position: absolute;
@@ -339,7 +301,7 @@
 .modalInnerContentScrollable {
   overflow-y: auto;
   flex-grow: 1;
-  padding: 0; /* Modal sections handle their own padding */
+  padding: 0;
 }
 
 .modalHeader {
@@ -360,17 +322,15 @@
   gap: 0.625rem;
   margin: 0;
 }
-.modalTitleIcon { /* General for modal title icons (like section icons) */
-  width: 1.375rem; /* Matches font size for balance */
+.modalTitleIcon {
+  width: 1.375rem;
   height: 1.375rem;
   color: var(--primary-color);
 }
-.headerIcon { /* Specific for the main icon in the modal's h2 title */
-  width: 1.625rem; /* Slightly larger for the main title */
+.headerIcon {
+  width: 1.625rem;
   height: 1.625rem;
-  /* color and margin-right are inherited or set by .modalTitleIcon if this class is added alongside */
 }
-
 
 .modalBody {
   padding: 1.5rem;
@@ -406,10 +366,9 @@
   align-items: center;
   gap: 0.5rem;
 }
-.detailSectionTitle svg { /* Icons within section titles */
+.detailSectionTitle svg {
   width: 1.2rem;
   height: 1.2rem;
-  /* color can be inherited or set explicitly */
 }
 .modalInfoGrid, .modalDetailGrid {
   display: grid;
@@ -431,7 +390,7 @@
 .modalInfoItemWide {
   grid-column: 1 / -1;
 }
-.statusBadgeOnModal { /* Used in modals */
+.statusBadgeOnModal {
   padding: 0.25rem 0.75rem;
   border-radius: var(--border-radius-full);
   font-size: 0.8rem;
@@ -440,7 +399,6 @@
   text-align: center;
   min-width: 110px;
   line-height: 1.4;
-  /* Color styles are inherited from .statusPending, .statusApproved etc. */
 }
 
 .infoTextModal {
@@ -464,7 +422,7 @@
 .closeModalButtonWide:hover {
   background-color: var(--text-secondary);
 }
-.commonButton { /* Base for buttons in modal footer */
+.commonButton {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -510,7 +468,7 @@
   .filterSelect {
     width: 100%;
   }
-   .filterButtonMobile {
+  .filterButtonMobile {
     display: inline-flex;
     width: 100%;
     justify-content: center;

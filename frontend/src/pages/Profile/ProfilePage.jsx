@@ -1,5 +1,3 @@
-// src/pages/Profile/ProfilePage.jsx
-
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import api from "../../utils/api";
@@ -66,7 +64,6 @@ const ProfilePage = () => {
     try {
       const formPayload = new FormData();
       
-      // Append form fields
       Object.keys(formData).forEach(key => {
         const value = formData[key];
         if (value !== null && value !== undefined) {
@@ -74,7 +71,6 @@ const ProfilePage = () => {
         }
       });
       
-      // Append files if they exist
       if (newAvatarFile) {
         formPayload.append('avatar', newAvatarFile, 'avatar.png');
       }
@@ -82,7 +78,6 @@ const ProfilePage = () => {
         formPayload.append('banner', newBannerFile, 'banner.png');
       }
       
-      // Using PATCH for profile updates, as we're not replacing the entire resource
       await api.patch('/secure/profile', formPayload, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
