@@ -1,4 +1,3 @@
-// src/contexts/UserContext.jsx
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import api from "../utils/api";
 import { ToastService } from "../utils/toastConfig";
@@ -19,12 +18,10 @@ export const UserProvider = ({ children }) => {
     setRefreshing(true);
     setIsLoading(true);
     try {
-      // validate-token повертає sessionId в user об'єкті
       const validateResponse = await api.get("/auth/validate-token");
       const userDataFromToken = validateResponse.data.user;
       console.log("[UserContext] Token validated successfully. User data from token:", userDataFromToken);
       
-      // Профіль може бути потрібен для оновлення полів, які не в JWT
       const profileResponse = await api.get("/secure/profile");
       const profileData = profileResponse.data;
       console.log("[UserContext] Profile data fetched successfully:", profileData);
@@ -36,28 +33,28 @@ export const UserProvider = ({ children }) => {
         name: profileData.name || userDataFromToken.name || "",
         avatar: profileData.avatar || userDataFromToken.avatar || null,
         gender: profileData.gender || userDataFromToken.gender || "not_specified",
-        faculty_id: profileData.faculty_id || userDataFromToken.faculty_id || null,
+        faculty_id: String(profileData.faculty_id || userDataFromToken.faculty_id || null),
         faculty_name: profileData.faculty_name || userDataFromToken.faculty_name || null,
-        dormitory_id: profileData.dormitory_id || userDataFromToken.dormitory_id || null,
+        dormitory_id: String(profileData.dormitory_id || userDataFromToken.dormitory_id || null),
         dormitory_name: profileData.dormitory_name || userDataFromToken.dormitory_name || null,
-        phone: profileData.phone || null,
+        phone: profileData.phone || userDataFromToken.phone || "",
         course: profileData.course || null,
         group_name: profileData.group_name || null,
         is_profile_complete: profileData.is_profile_complete || false,
-        sessionId: userDataFromToken.sessionId, // Зберігаємо sessionId
+        sessionId: userDataFromToken.sessionId,
       };
       setUser(updatedUser);
-      localStorage.setItem("user", JSON.stringify(updatedUser)); // Оновлюємо localStorage
+      localStorage.setItem("user", JSON.stringify(updatedUser));
       console.log("[UserContext] User data refreshed and set in context and localStorage:", updatedUser);
     } catch (error) {
       console.error("[UserContext] Error refreshing user data:", error.response?.data?.error || error.message, error.response?.status);
       if (error.response?.status === 401 || error.response?.status === 403) {
         console.log("[UserContext] Auth error (401/403) during refresh, clearing user session.");
-        ToastService.sessionExpired(); // Нове повідомлення
+        ToastService.sessionExpired();
         setUser(null);
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
-        localStorage.removeItem("sessionId"); // Очищаємо sessionId
+        localStorage.removeItem("sessionId");
         localStorage.removeItem("user");
       }
     } finally {
@@ -75,43 +72,40 @@ export const UserProvider = ({ children }) => {
     if (token && storedUser && sessionId) {
       try {
         const parsedUser = JSON.parse(storedUser);
-        // Якщо збережений користувач і sessionId збігаються, можна тимчасово встановити його,
-        // а потім оновити через refreshUser. Це зменшує "блимання" інтерфейсу.
         if (parsedUser.sessionId === sessionId) {
-            setUser(parsedUser);
-            setIsLoading(true); // Все ще завантажуємо для перевірки актуальності
-            refreshUser();
+          setUser(parsedUser);
+          setIsLoading(true);
+          refreshUser();
         } else {
-            console.log("[UserContext] SessionId mismatch in localStorage, forcing full refresh and clearing data.");
-            localStorage.removeItem("accessToken");
-            localStorage.removeItem("refreshToken");
-            localStorage.removeItem("sessionId");
-            localStorage.removeItem("user");
-            setUser(null);
-            setIsLoading(false);
+          console.log("[UserContext] SessionId mismatch in localStorage, updating sessionId.");
+          parsedUser.sessionId = sessionId;
+          localStorage.setItem("user", JSON.stringify(parsedUser));
+          setUser(parsedUser);
+          refreshUser();
         }
       } catch (e) {
-          console.error("[UserContext] Failed to parse stored user or sessionId, clearing data.", e);
-          localStorage.removeItem("accessToken");
-          localStorage.removeItem("refreshToken");
-          localStorage.removeItem("sessionId");
-          localStorage.removeItem("user");
-          setUser(null);
-          setIsLoading(false);
+        console.error("[UserContext] Failed to parse stored user or sessionId, clearing data.", e);
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        localStorage.removeItem("sessionId");
+        localStorage.removeItem("user");
+        setUser(null);
+        setIsLoading(false);
+        refreshUser(); // Спроба повторного завантаження
       }
     } else {
       console.log("[UserContext] useEffect (initial mount): No token or stored user/session, setting user to null and isLoading to false.");
       setUser(null);
       setIsLoading(false);
     }
-  }, []); // Залежності прибрані для одноразового запуску на маунті
+  }, []);
 
   const logout = useCallback(() => {
     console.log("[UserContext] Logging out user.");
     setUser(null);
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
-    localStorage.removeItem("sessionId"); // Очищаємо sessionId
+    localStorage.removeItem("sessionId");
     localStorage.removeItem("user");
     ToastService.success("Ви вийшли з системи");
   }, []);

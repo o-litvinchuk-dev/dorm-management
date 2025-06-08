@@ -1,4 +1,4 @@
-/* src/pages/Services/Settlement agreement/styles/SettlementAgreementPage.module.css */
+/* --- START OF FILE SettlementAgreementPage.module.css --- */
 .layout {
   display: flex;
   height: 100vh;
@@ -99,6 +99,7 @@
   justify-content: flex-end;
 }
 
+/* --- НОВІ СТИЛІ ПАНЕЛІ ПОМИЛОК --- */
 .errorPanel {
   background: #fef2f2;
   padding: 12px;
@@ -116,6 +117,7 @@
   font-size: 14px;
   color: #b91c1c;
   font-weight: 600;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; /* Кращий шрифт для UI */
 }
 
 .errorContainer {
@@ -132,9 +134,10 @@
   color: #b91c1c;
   font-size: 12px;
   border-radius: 3px;
-  margin-bottom: 4px;
+  margin: 0 0 4px 0;
   transition: background-color 0.2s ease, color 0.2s ease;
   word-break: break-word;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; /* Кращий шрифт для UI */
 }
 
 .errorItem:last-child {
@@ -162,11 +165,14 @@
   font-size: 12px;
   transition: background-color 0.2s ease;
   align-self: flex-start;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; /* Кращий шрифт для UI */
 }
 
 .nextErrorButton:hover {
   background-color: #b91c1c;
 }
+/* --- КІНЕЦЬ СТИЛІВ ПАНЕЛІ ПОМИЛОК --- */
+
 
 /* Base input styles */
 input,
@@ -178,7 +184,7 @@ select {
   font-family: "Times New Roman", Times, serif;
   font-size: 14px;
   color: #333;
-  transition: border-color 0.2s ease-in-out, border-width 0.2s ease-in-out;
+  transition: border-color 0.2s ease-in-out, border-width 0.2s ease-in-out, background-color 0.2s ease;
   box-sizing: border-box;
   line-height: normal;
 }
@@ -189,14 +195,18 @@ select:focus {
   border-bottom: 2px solid #006aff;
 }
 
+/* --- ОНОВЛЕНІ СТИЛІ ДЛЯ ПОМИЛОК ВВОДУ --- */
 .errorInput {
   border-bottom: 2px solid #ef4444 !important;
+  background-color: #fff7f7 !important; /* Легке рожеве тло для помітності */
 }
 
 .errorInput:focus {
   border-bottom: 2px solid #ef4444 !important;
-  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+  box-shadow: 0 1px 0 0 #ef4444 !important; /* Більш виражений фокус при помилці */
 }
+/* --- КІНЕЦЬ ОНОВЛЕНИХ СТИЛІВ --- */
+
 
 .readOnlyField,
 .readOnlyCourse {
@@ -209,6 +219,8 @@ select:focus {
 .readOnlyField:focus,
 .readOnlyCourse:focus {
   border-bottom: 1px dotted #333 !important;
+  outline: none;
+  box-shadow: none !important;
 }
 
 select {
@@ -221,6 +233,8 @@ select {
   background-position: right 5px center;
   background-size: 8px 8px;
 }
+
+/* ----- РЕШТА СТИЛІВ ЗАЛИШАЄТЬСЯ БЕЗ ЗМІН ----- */
 
 .inlineSelectFaculty { width: 250px; margin: 0 4px; }
 .inlineSelectGroup { width: 180px; margin: 0 4px; }

@@ -1,37 +1,46 @@
-import React, { useEffect } from "react";
+// src/components/Services/Settlement agreement/Pages/Page10Content.jsx
+import React, { useEffect, useState } from "react";
 import styles from "../../../../pages/Services/Settlement agreement/styles/SettlementAgreementPage.module.css";
+import { getNestedError } from "../../../../pages/Services/Settlement agreement/helpers";
+import api from "../../../../utils/api";
 
 const Page10Content = ({
   formData,
   errors,
+  touched,
   handleChange,
-  handleFocus,
   handleBlur,
   inputRefs,
   handleInputKeyDown,
 }) => {
+  const [phoneFromDB, setPhoneFromDB] = useState(null);
+
   useEffect(() => {
-    // Auto-fill residentFullName from fullName if not set
-    if (!formData.residentFullName && formData.fullName) {
-      handleChange({ target: { name: "residentFullName", value: formData.fullName } });
-    }
-    // Auto-fill residentPhone from userProfilePhone if not set
-    if (!formData.residentPhone && formData.userProfilePhone) {
-      const phoneDigits = formData.userProfilePhone.startsWith("+380")
-        ? formData.userProfilePhone.substring(4)
-        : formData.userProfilePhone;
-      // Validate that phoneDigits is a 9-digit number
-      if (/^\d{9}$/.test(phoneDigits)) {
-        handleChange({ target: { name: "residentPhone", value: phoneDigits } });
+    const fetchUserPhone = async () => {
+      try {
+        const response = await api.get("/secure/profile");
+        const data = response.data;
+        if (data && data.phone) {
+          setPhoneFromDB(data.phone);
+        }
+      } catch (error) {
+        console.error("Помилка при отриманні номера телефону:", error);
       }
+    };
+    fetchUserPhone();
+  }, []);
+
+  const isResidentFullNameReadOnly = true;
+  const isResidentPhoneReadOnly = !!phoneFromDB;
+
+  useEffect(() => {
+    if (phoneFromDB && (!formData.residentPhone || formData.residentPhone.trim() === "")) {
+      const phoneDigits = phoneFromDB.replace(/^\+380/, '');
+      handleChange({
+        target: { name: "residentPhone", value: phoneDigits },
+      });
     }
-  }, [
-    formData.fullName,
-    formData.userProfilePhone,
-    formData.residentFullName,
-    formData.residentPhone,
-    handleChange,
-  ]);
+  }, [phoneFromDB, formData.residentPhone, handleChange]);
 
   return (
     <div className={styles.contractText}>
@@ -39,25 +48,12 @@ const Page10Content = ({
       <div className={styles.twoColumnLayout}>
         <div className={styles.leftColumn}>
           <h4>Університет</h4>
-          <p className={styles.justifiedText}>
-            Національний університет біоресурсів і природокористування України
-          </p>
-          <p className={styles.justifiedText}>
-            вул. Героїв Оборони, 15, м. Київ, 03041
-          </p>
-          <p className={styles.justifiedText}>
-            IBAN: UA338201720313281002202016289
-          </p>
-          <p className={styles.justifiedText}>
-            Державна казначейська служба України м. Київ
-          </p>
-          <p className={styles.justifiedText}>код банку 820172</p>
-          <p className={styles.justifiedText}>код ЄДРПОУ 00493706</p>
-          <div
-            className={styles.signatureBlock}
-            style={{ marginTop: "20px", textAlign: "center" }}
-          >
-          </div>
+          <p>Національний університет біоресурсів і природокористування України</p>
+          <p>вул. Героїв Оборони, 15, м. Київ, 03041</p>
+          <p>IBAN: UA338201720313281002202016289</p>
+          <p>Державна казначейська служба України м. Київ</p>
+          <p>код банку 820172</p>
+          <p>код ЄДРПОУ 00493706</p>
         </div>
         <div className={styles.rightColumn}>
           <h4>Мешканець</h4>
@@ -66,377 +62,158 @@ const Page10Content = ({
               type="text"
               name="residentFullName"
               value={formData.residentFullName || ""}
-              onChange={handleChange}
-              onFocus={() => handleFocus("residentFullName")}
-              onBlur={() => handleBlur("residentFullName")}
-              onKeyDown={(e) =>
-                handleInputKeyDown(e, "residentFullName", "residentRegion", null)
-              }
-              className={`${styles.fullWidthInput} ${
-                errors.residentFullName ? styles.errorInput : ""
-              }`}
-              required
-              ref={(el) => {
-                inputRefs.current["residentFullName"] = el;
-              }}
-              placeholder="П.І.Б."
-              aria-label="П.І.Б. мешканця"
-              aria-invalid={!!errors.residentFullName}
-              aria-describedby={
-                errors.residentFullName ? "residentFullName-error" : undefined
-              }
-              autoComplete="name"
-              data-error-field="residentFullName"
+              readOnly={isResidentFullNameReadOnly}
+              className={`${styles.fullWidthInput} ${styles.readOnlyField}`}
+              ref={(el) => { inputRefs.current["residentFullName"] = el; }}
             />
             <span className={styles.inputLabel}>(П.І.Б.)</span>
+            {touched.residentFullName && getNestedError(errors, 'residentFullName') && <p className={styles.error}>{getNestedError(errors, 'residentFullName')}</p>}
           </div>
-          {errors.residentFullName && (
-            <p id="residentFullName-error" className={styles.error}>
-              {errors.residentFullName}
-            </p>
-          )}
           <p className={styles.justifiedText}>Поштова адреса:</p>
           <div className={styles.inputRow}>
-            <label htmlFor="residentRegion" className={styles.label}>
-              Область:
-            </label>
+            <label htmlFor="residentRegion" className={styles.label}>Область:</label>
             <input
               id="residentRegion"
               type="text"
               name="residentRegion"
               value={formData.residentRegion || ""}
               onChange={handleChange}
-              onFocus={() => handleFocus("residentRegion")}
-              onBlur={() => handleBlur("residentRegion")}
-              onKeyDown={(e) =>
-                handleInputKeyDown(
-                  e,
-                  "residentRegion",
-                  "residentDistrict",
-                  "residentFullName"
-                )
-              }
-              className={`${styles.stretchedInput} ${
-                errors.residentRegion ? styles.errorInput : ""
-              }`}
-              required
-              ref={(el) => {
-                inputRefs.current["residentRegion"] = el;
-              }}
-              placeholder="Область"
-              aria-label="Область"
-              aria-invalid={!!errors.residentRegion}
-              aria-describedby={
-                errors.residentRegion ? "residentRegion-error" : undefined
-              }
+              onBlur={handleBlur}
+              onKeyDown={(e) => handleInputKeyDown(e, "residentDistrict", "residentFullName")}
+              className={`${styles.stretchedInput} ${touched.residentRegion && getNestedError(errors, 'residentRegion') ? styles.errorInput : ""}`}
+              ref={(el) => { inputRefs.current["residentRegion"] = el; }}
+              placeholder="Наприклад: Київська"
               autoComplete="address-level1"
-              data-error-field="residentRegion"
             />
           </div>
-          {errors.residentRegion && (
-            <p id="residentRegion-error" className={styles.error}>
-              {errors.residentRegion}
-            </p>
-          )}
+          {touched.residentRegion && getNestedError(errors, 'residentRegion') && <p className={styles.error}>{getNestedError(errors, 'residentRegion')}</p>}
           <div className={styles.inputRow}>
-            <label htmlFor="residentDistrict" className={styles.label}>
-              Район:
-            </label>
+            <label htmlFor="residentDistrict" className={styles.label}>Район:</label>
             <input
               id="residentDistrict"
               type="text"
               name="residentDistrict"
               value={formData.residentDistrict || ""}
               onChange={handleChange}
-              onFocus={() => handleFocus("residentDistrict")}
-              onBlur={() => handleBlur("residentDistrict")}
-              onKeyDown={(e) =>
-                handleInputKeyDown(
-                  e,
-                  "residentDistrict",
-                  "residentCity",
-                  "residentRegion"
-                )
-              }
-              className={`${styles.stretchedInput} ${
-                errors.residentDistrict ? styles.errorInput : ""
-              }`}
-              required
-              ref={(el) => {
-                inputRefs.current["residentDistrict"] = el;
-              }}
-              placeholder="Район"
-              aria-label="Район"
-              aria-invalid={!!errors.residentDistrict}
-              aria-describedby={
-                errors.residentDistrict ? "residentDistrict-error" : undefined
-              }
+              onBlur={handleBlur}
+              onKeyDown={(e) => handleInputKeyDown(e, "residentCity", "residentRegion")}
+              className={`${styles.stretchedInput} ${touched.residentDistrict && getNestedError(errors, 'residentDistrict') ? styles.errorInput : ""}`}
+              ref={(el) => { inputRefs.current["residentDistrict"] = el; }}
+              placeholder="Наприклад: Бучанський"
               autoComplete="address-level2"
-              data-error-field="residentDistrict"
             />
           </div>
-          {errors.residentDistrict && (
-            <p id="residentDistrict-error" className={styles.error}>
-              {errors.residentDistrict}
-            </p>
-          )}
+          {touched.residentDistrict && getNestedError(errors, 'residentDistrict') && <p className={styles.error}>{getNestedError(errors, 'residentDistrict')}</p>}
           <div className={styles.inputRow}>
-            <label htmlFor="residentCity" className={styles.label}>
-              Населений пункт:
-            </label>
+            <label htmlFor="residentCity" className={styles.label}>Населений пункт:</label>
             <input
               id="residentCity"
               type="text"
               name="residentCity"
               value={formData.residentCity || ""}
               onChange={handleChange}
-              onFocus={() => handleFocus("residentCity")}
-              onBlur={() => handleBlur("residentCity")}
-              onKeyDown={(e) =>
-                handleInputKeyDown(
-                  e,
-                  "residentCity",
-                  "residentPostalCode",
-                  "residentDistrict"
-                )
-              }
-              className={`${styles.stretchedInput} ${
-                errors.residentCity ? styles.errorInput : ""
-              }`}
-              required
-              ref={(el) => {
-                inputRefs.current["residentCity"] = el;
-              }}
-              placeholder="Населений пункт"
-              aria-label="Населений пункт"
-              aria-invalid={!!errors.residentCity}
-              aria-describedby={
-                errors.residentCity ? "residentCity-error" : undefined
-              }
+              onBlur={handleBlur}
+              onKeyDown={(e) => handleInputKeyDown(e, "residentPostalCode", "residentDistrict")}
+              className={`${styles.stretchedInput} ${touched.residentCity && getNestedError(errors, 'residentCity') ? styles.errorInput : ""}`}
+              ref={(el) => { inputRefs.current["residentCity"] = el; }}
+              placeholder="Наприклад: м. Ірпінь"
               autoComplete="address-level3"
-              data-error-field="residentCity"
             />
           </div>
-          {errors.residentCity && (
-            <p id="residentCity-error" className={styles.error}>
-              {errors.residentCity}
-            </p>
-          )}
+          {touched.residentCity && getNestedError(errors, 'residentCity') && <p className={styles.error}>{getNestedError(errors, 'residentCity')}</p>}
           <div className={styles.inputRow}>
-            <label htmlFor="residentPostalCode" className={styles.label}>
-              Поштовий індекс:
-            </label>
+            <label htmlFor="residentPostalCode" className={styles.label}>Поштовий індекс:</label>
             <input
               id="residentPostalCode"
               type="text"
               name="residentPostalCode"
               value={formData.residentPostalCode || ""}
               onChange={handleChange}
-              onFocus={() => handleFocus("residentPostalCode")}
-              onBlur={() => handleBlur("residentPostalCode")}
-              onKeyDown={(e) =>
-                handleInputKeyDown(
-                  e,
-                  "residentPostalCode",
-                  "residentPhone",
-                  "residentCity"
-                )
-              }
-              className={`${styles.stretchedInput} ${
-                errors.residentPostalCode ? styles.errorInput : ""
-              }`}
-              required
-              ref={(el) => {
-                inputRefs.current["residentPostalCode"] = el;
-              }}
-              placeholder="Поштовий індекс"
+              onBlur={handleBlur}
+              onKeyDown={(e) => handleInputKeyDown(e, "residentPhone", "residentCity")}
+              className={`${styles.stretchedInput} ${touched.residentPostalCode && getNestedError(errors, 'residentPostalCode') ? styles.errorInput : ""}`}
+              ref={(el) => { inputRefs.current["residentPostalCode"] = el; }}
+              placeholder="12345"
               maxLength="5"
-              aria-label="Поштовий індекс"
-              aria-invalid={!!errors.residentPostalCode}
-              aria-describedby={
-                errors.residentPostalCode ? "residentPostalCode-error" : undefined
-              }
               autoComplete="postal-code"
-              data-error-field="residentPostalCode"
             />
           </div>
-          {errors.residentPostalCode && (
-            <p id="residentPostalCode-error" className={styles.error}>
-              {errors.residentPostalCode}
-            </p>
-          )}
+          {touched.residentPostalCode && getNestedError(errors, 'residentPostalCode') && <p className={styles.error}>{getNestedError(errors, 'residentPostalCode')}</p>}
           <div className={styles.inputRow}>
-            <label htmlFor="residentPhone" className={styles.label}>
-              Контактний тел.:
-            </label>
+            <label htmlFor="residentPhone" className={styles.label}>Контактний тел.:</label>
+            <span className={styles.phonePrefix}>+380</span>
             <input
               id="residentPhone"
               type="tel"
               name="residentPhone"
               value={formData.residentPhone || ""}
+              readOnly={isResidentPhoneReadOnly}
+              className={`${styles.stretchedInput} ${styles.phoneInput} ${isResidentPhoneReadOnly ? styles.readOnlyField : ""} ${touched.residentPhone && getNestedError(errors, 'residentPhone') ? styles.errorInput : ""}`}
               onChange={handleChange}
-              onFocus={() => handleFocus("residentPhone")}
-              onBlur={() => handleBlur("residentPhone")}
-              onKeyDown={(e) =>
-                handleInputKeyDown(
-                  e,
-                  "residentPhone",
-                  "motherPhone",
-                  "residentPostalCode"
-                )
-              }
-              className={`${styles.stretchedInput} ${
-                errors.residentPhone ? styles.errorInput : ""
-              }`}
-              required
-              ref={(el) => {
-                inputRefs.current["residentPhone"] = el;
-              }}
-              placeholder="XXXXXXXXX (9 цифр без +380)"
+              onBlur={handleBlur}
+              onKeyDown={(e) => handleInputKeyDown(e, "motherPhone", "residentPostalCode")}
+              ref={(el) => { inputRefs.current["residentPhone"] = el; }}
+              placeholder="XXXXXXXXX"
               maxLength="9"
-              pattern="\d{9}"
-              aria-label="Контактний телефон мешканця"
-              aria-invalid={!!errors.residentPhone}
-              aria-describedby={
-                errors.residentPhone ? "residentPhone-error" : undefined
-              }
-              autoComplete="tel-national"
-              data-error-field="residentPhone"
             />
           </div>
-          {errors.residentPhone && (
-            <p id="residentPhone-error" className={styles.error}>
-              {errors.residentPhone}
-            </p>
-          )}
-          <p className={styles.justifiedText}>
-            Телефон батьків (вкажіть хоча б один):
-          </p>
-          {errors.atLeastOneParentPhone && (
-            <p id="parentPhone-general-error" className={styles.error}>
-              {errors.atLeastOneParentPhone}
-            </p>
-          )}
+          {touched.residentPhone && getNestedError(errors, 'residentPhone') && <p className={styles.error}>{getNestedError(errors, 'residentPhone')}</p>}
+          <p className={styles.justifiedText}>Телефон батьків (вкажіть хоча б один):</p>
+          {getNestedError(errors, 'atLeastOneParentPhone') && <p className={styles.error}>{getNestedError(errors, 'atLeastOneParentPhone')}</p>}
           <div className={styles.inputRow}>
-            <label htmlFor="motherPhone" className={styles.label}>
-              Мама:
-            </label>
+            <label htmlFor="motherPhone" className={styles.label}>Мама:</label>
+            <span className={styles.phonePrefix}>+380</span>
             <input
               id="motherPhone"
               type="tel"
               name="motherPhone"
               value={formData.motherPhone || ""}
               onChange={handleChange}
-              onFocus={() => handleFocus("motherPhone")}
-              onBlur={() => handleBlur("motherPhone")}
-              onKeyDown={(e) =>
-                handleInputKeyDown(
-                  e,
-                  "motherPhone",
-                  "fatherPhone",
-                  "residentPhone"
-                )
-              }
-              className={`${styles.stretchedInput} ${
-                errors.motherPhone ? styles.errorInput : ""
-              }`}
-              ref={(el) => {
-                inputRefs.current["motherPhone"] = el;
-              }}
-              placeholder="Номер телефону мами (9 цифр)"
+              onBlur={handleBlur}
+              onKeyDown={(e) => handleInputKeyDown(e, "fatherPhone", "residentPhone")}
+              className={`${styles.stretchedInput} ${styles.phoneInput} ${touched.motherPhone && getNestedError(errors, 'motherPhone') ? styles.errorInput : ""}`}
+              ref={(el) => { inputRefs.current["motherPhone"] = el; }}
+              placeholder="991234567"
               maxLength="9"
-              pattern="\d{9}"
-              aria-label="Телефон мами"
-              aria-invalid={!!errors.motherPhone}
-              aria-describedby={
-                errors.motherPhone ? "motherPhone-error" : undefined
-              }
               autoComplete="tel-national"
-              data-error-field="motherPhone"
             />
           </div>
-          {errors.motherPhone && (
-            <p id="motherPhone-error" className={styles.error}>
-              {errors.motherPhone}
-            </p>
-          )}
+          {touched.motherPhone && getNestedError(errors, 'motherPhone') && <p className={styles.error}>{getNestedError(errors, 'motherPhone')}</p>}
           <div className={styles.inputRow}>
-            <label htmlFor="fatherPhone" className={styles.label}>
-              Тато:
-            </label>
+            <label htmlFor="fatherPhone" className={styles.label}>Тато:</label>
+            <span className={styles.phonePrefix}>+380</span>
             <input
               id="fatherPhone"
               type="tel"
               name="fatherPhone"
               value={formData.fatherPhone || ""}
               onChange={handleChange}
-              onFocus={() => handleFocus("fatherPhone")}
-              onBlur={() => handleBlur("fatherPhone")}
-              onKeyDown={(e) =>
-                handleInputKeyDown(
-                  e,
-                  "fatherPhone",
-                  "parentFullName",
-                  "motherPhone"
-                )
-              }
-              className={`${styles.stretchedInput} ${
-                errors.fatherPhone ? styles.errorInput : ""
-              }`}
-              ref={(el) => {
-                inputRefs.current["fatherPhone"] = el;
-              }}
-              placeholder="Номер телефону тата (9 цифр)"
+              onBlur={handleBlur}
+              onKeyDown={(e) => handleInputKeyDown(e, "parentFullName", "motherPhone")}
+              className={`${styles.stretchedInput} ${styles.phoneInput} ${touched.fatherPhone && getNestedError(errors, 'fatherPhone') ? styles.errorInput : ""}`}
+              ref={(el) => { inputRefs.current["fatherPhone"] = el; }}
+              placeholder="991234567"
               maxLength="9"
-              pattern="\d{9}"
-              aria-label="Телефон тата"
-              aria-invalid={!!errors.fatherPhone}
-              aria-describedby={
-                errors.fatherPhone ? "fatherPhone-error" : undefined
-              }
               autoComplete="tel-national"
-              data-error-field="fatherPhone"
             />
           </div>
-          {errors.fatherPhone && (
-            <p id="fatherPhone-error" className={styles.error}>
-              {errors.fatherPhone}
-            </p>
-          )}
+          {touched.fatherPhone && getNestedError(errors, 'fatherPhone') && <p className={styles.error}>{getNestedError(errors, 'fatherPhone')}</p>}
           <div className={styles.fullNameWrapper}>
             <input
               type="text"
               name="parentFullName"
               value={formData.parentFullName || ""}
               onChange={handleChange}
-              onFocus={() => handleFocus("parentFullName")}
-              onBlur={() => handleBlur("parentFullName")}
-              onKeyDown={(e) =>
-                handleInputKeyDown(e, "parentFullName", null, "fatherPhone")
-              }
-              className={`${styles.fullWidthInput} ${
-                errors.parentFullName ? styles.errorInput : ""
-              }`}
-              required
-              ref={(el) => {
-                inputRefs.current["parentFullName"] = el;
-              }}
+              onBlur={handleBlur}
+              onKeyDown={(e) => handleInputKeyDown(e, null, "fatherPhone")}
+              className={`${styles.fullWidthInput} ${touched.parentFullName && getNestedError(errors, 'parentFullName') ? styles.errorInput : ""}`}
+              ref={(el) => { inputRefs.current["parentFullName"] = el; }}
               placeholder="П.І.Б. одного з батьків"
-              aria-label="П.І.Б. одного з батьків"
-              aria-invalid={!!errors.parentFullName}
-              aria-describedby={
-                errors.parentFullName ? "parentFullName-error" : undefined
-              }
               autoComplete="name"
-              data-error-field="parentFullName"
             />
             <span className={styles.inputLabel}>(П.І.Б. одного з батьків)</span>
+            {touched.parentFullName && getNestedError(errors, 'parentFullName') && <p className={styles.error}>{getNestedError(errors, 'parentFullName')}</p>}
           </div>
-          {errors.parentFullName && (
-            <p id="parentFullName-error" className={styles.error}>
-              {errors.parentFullName}
-            </p>
-          )}
         </div>
       </div>
     </div>

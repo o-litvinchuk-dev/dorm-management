@@ -1,20 +1,20 @@
 import React from "react";
 import styles from "../../../../pages/Services/Settlement agreement/styles/SettlementAgreementPage.module.css";
+import { getNestedError } from "../../../../pages/Services/Settlement agreement/helpers";
 
 const Page8Content = ({
   formData,
   errors,
+  touched,
   handleChange,
-  handleFocus,
   handleBlur,
   inputRefs,
-  handleDateKeyDown, // Ensure this specific handler is passed if needed
-  isPresetActive, // Added
-  selectedPreset, // Added
-  dataLoading, // Added
+  handleDateKeyDown,
+  isPresetActive,
+  selectedPreset,
+  dataLoading,
 }) => {
-  // Using the more generic handleDateKeyDown from props
-  // specific handleDateKeyDown from this component removed to avoid conflict
+  const isDateReadOnly = isPresetActive && !!selectedPreset?.end_date;
 
   return (
     <div className={styles.contractText} role="region" aria-labelledby="section-title-p8">
@@ -33,76 +33,52 @@ const Page8Content = ({
         7.1. Цей Договір вважається укладеним і набирає чинності з моменту його підписання Сторонами, а закінчується «
         <input
           type="text"
-          name="endDay" // This is already on Page1Content and should be the source of truth
+          name="endDay"
           value={formData.endDay || ""}
-          onChange={(e) => handleChange(e, "endDay")}
-          onFocus={() => handleFocus("endDay")}
-          onBlur={() => handleBlur("endDay")}
-          onKeyDown={(e) => handleDateKeyDown(e, "endDay", "page8_endMonth_display", null)}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          onKeyDown={(e) => handleDateKeyDown(e, "endDay", "endMonth", null)}
           maxLength="2"
           placeholder="__"
-          className={`${styles.inlineInputDate} ${errors.endDay ? styles.errorInput : ''} ${
-            (isPresetActive && selectedPreset?.end_date) ? styles.readOnlyField : ""
-          }`}
-          ref={(el) => {
-            if (el) inputRefs.current["page8_endDay_display"] = el; // Unique ref
-            else delete inputRefs.current["page8_endDay_display"];
-          }}
-          data-error-field="endDay"
-          aria-label="День закінчення (строк дії)"
-          readOnly={isPresetActive && !!selectedPreset?.end_date} // ReadOnly if from preset
-          disabled={dataLoading.preset} // Disabled during preset loading
-        />{" "}
+          className={`${styles.inlineInputDate} ${touched.endDay && getNestedError(errors, 'endDay') ? styles.errorInput : ''} ${isDateReadOnly ? styles.readOnlyField : ""}`}
+          ref={(el) => { inputRefs.current["endDay"] = el; }}
+          readOnly={isDateReadOnly}
+          disabled={dataLoading.preset}
+        />
         »{" "}
         <input
           type="text"
           name="endMonth"
           value={formData.endMonth || ""}
-          onChange={(e) => handleChange(e, "endMonth")}
-          onFocus={() => handleFocus("endMonth")}
-          onBlur={() => handleBlur("endMonth")}
-          onKeyDown={(e) => handleDateKeyDown(e, "endMonth", "page8_endYear_display", "page8_endDay_display")}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          onKeyDown={(e) => handleDateKeyDown(e, "endMonth", "endYear", "endDay")}
           maxLength="2"
           placeholder="__"
-          className={`${styles.inlineInputDate} ${errors.endMonth ? styles.errorInput : ''} ${
-            (isPresetActive && selectedPreset?.end_date) ? styles.readOnlyField : ""
-          }`}
-          ref={(el) => {
-            if (el) inputRefs.current["page8_endMonth_display"] = el;
-            else delete inputRefs.current["page8_endMonth_display"];
-          }}
-          data-error-field="endMonth"
-          aria-label="Місяць закінчення (строк дії)"
-          readOnly={isPresetActive && !!selectedPreset?.end_date}
+          className={`${styles.inlineInputDate} ${touched.endMonth && getNestedError(errors, 'endMonth') ? styles.errorInput : ''} ${isDateReadOnly ? styles.readOnlyField : ""}`}
+          ref={(el) => { inputRefs.current["endMonth"] = el; }}
+          readOnly={isDateReadOnly}
           disabled={dataLoading.preset}
-        />{" "}
-        <span>20</span>
+        />
+        {" "}<span>20</span>
         <input
           type="text"
           name="endYear"
           value={formData.endYear || ""}
-          onChange={(e) => handleChange(e, "endYear")}
-          onFocus={() => handleFocus("endYear")}
-          onBlur={() => handleBlur("endYear")}
-          onKeyDown={(e) => handleDateKeyDown(e, "endYear", null, "page8_endMonth_display")} // No next field in this date sequence
+          onChange={handleChange}
+          onBlur={handleBlur}
+          onKeyDown={(e) => handleDateKeyDown(e, "endYear", null, "endMonth")}
           maxLength="2"
           placeholder="__"
-          className={`${styles.inlineInputDate} ${errors.endYear ? styles.errorInput : ''} ${
-            (isPresetActive && selectedPreset?.end_date) ? styles.readOnlyField : ""
-          }`}
-          ref={(el) => {
-            if (el) inputRefs.current["page8_endYear_display"] = el;
-            else delete inputRefs.current["page8_endYear_display"];
-          }}
-          data-error-field="endYear"
-          aria-label="Рік закінчення (строк дії, останні дві цифри)"
-          readOnly={isPresetActive && !!selectedPreset?.end_date}
+          className={`${styles.inlineInputDate} ${touched.endYear && getNestedError(errors, 'endYear') ? styles.errorInput : ''} ${isDateReadOnly ? styles.readOnlyField : ""}`}
+          ref={(el) => { inputRefs.current["endYear"] = el; }}
+          readOnly={isDateReadOnly}
           disabled={dataLoading.preset}
-        />{" "}
-        р.
+        />
+        {" "}р.
       </p>
-      {/* Errors for endDay, endMonth, endYear are shown on Page1Content, no need to repeat here
-          unless you want specific messages for this context */}
+      {touched.endDay && getNestedError(errors, 'endDay') && <p className={styles.error}>{getNestedError(errors, 'endDay')}</p>}
+      
       <p className={styles.justifiedText}>
         7.2. Закінчення строку цього Договору не звільняє Сторони від відповідальності за його порушення, яке мало місце під час дії цього Договору.
       </p>

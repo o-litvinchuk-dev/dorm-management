@@ -1,9 +1,11 @@
 import React from "react";
 import styles from "./styles/Page14Content.module.css";
+import { getNestedError } from "../../../../pages/Services/Settlement agreement/helpers";
 
 const Page14Content = ({
   formData,
   errors,
+  touched,
   handleChange,
   handleFocus,
   handleBlur,
@@ -11,7 +13,7 @@ const Page14Content = ({
   displayFacultyName,
   displayGroupName,
   displayDormName,
-  handleInputKeyDown, // For checkbox navigation
+  handleInputKeyDown,
 }) => {
 
   const formatDateForDisplay = (day, month, yearShort) => {
@@ -54,7 +56,7 @@ const Page14Content = ({
           </div>
            <div className={styles.summaryItem}>
             <strong>Телефон:</strong>
-            <span>{formData.residentPhone ? `${formData.residentPhone.startsWith('+380') ? '' : '+380'}${formData.residentPhone.replace('+380','')}` : "Не вказано"}</span>
+            <span>{formData.residentPhone ? `+380${formData.residentPhone}` : "Не вказано"}</span>
           </div>
           <div className={styles.summaryItem}>
             <strong>Гуртожиток:</strong>
@@ -92,69 +94,45 @@ const Page14Content = ({
               type="checkbox"
               name="dataProcessingConsent"
               checked={formData.dataProcessingConsent || false}
-              onChange={(e) => handleChange(e, "dataProcessingConsent")}
+              onChange={handleChange}
               onFocus={() => handleFocus("dataProcessingConsent")}
-              onBlur={() => handleBlur("dataProcessingConsent")}
-              onKeyDown={(e) => handleInputKeyDown(e, "dataProcessingConsent", "contractTermsConsent", "residentSignature_appendix3")} // prev from Page 13 sig
-              className={`${styles.page14CheckboxInput} ${errors.dataProcessingConsent ? styles.page14ErrorInput : ""}`}
-              required
+              onBlur={handleBlur}
+              className={`${styles.page14CheckboxInput} ${getNestedError(errors, 'dataProcessingConsent') ? styles.page14ErrorInput : ""}`}
               ref={(el) => { inputRefs.current["dataProcessingConsent"] = el;}}
-              data-error-field="dataProcessingConsent"
-              aria-label="Згода на обробку персональних даних"
             />
             Я надаю згоду на обробку моїх персональних даних відповідно до Закону України «Про захист персональних даних».
           </label>
-          {errors.dataProcessingConsent && (
-            <p id="dataProcessingConsent-error-p14" className={styles.page14Error}>
-              {errors.dataProcessingConsent}
-            </p>
-          )}
+          {getNestedError(errors, 'dataProcessingConsent') && <p className={styles.page14Error}>{getNestedError(errors, 'dataProcessingConsent')}</p>}
 
           <label className={styles.page14CheckboxLabel}>
             <input
               type="checkbox"
               name="contractTermsConsent"
               checked={formData.contractTermsConsent || false}
-              onChange={(e) => handleChange(e, "contractTermsConsent")}
+              onChange={handleChange}
               onFocus={() => handleFocus("contractTermsConsent")}
-              onBlur={() => handleBlur("contractTermsConsent")}
-              onKeyDown={(e) => handleInputKeyDown(e, "contractTermsConsent", "dataAccuracyConsent", "dataProcessingConsent")}
-              className={`${styles.page14CheckboxInput} ${errors.contractTermsConsent ? styles.page14ErrorInput : ""}`}
-              required
+              onBlur={handleBlur}
+              className={`${styles.page14CheckboxInput} ${getNestedError(errors, 'contractTermsConsent') ? styles.page14ErrorInput : ""}`}
               ref={(el) => { inputRefs.current["contractTermsConsent"] = el; }}
-              data-error-field="contractTermsConsent"
-              aria-label="Згода з умовами договору"
             />
             Я ознайомлений(а) та згоден(на) з умовами цього Договору та Правилами внутрішнього розпорядку гуртожитку.
           </label>
-          {errors.contractTermsConsent && (
-            <p id="contractTermsConsent-error-p14" className={styles.page14Error}>
-              {errors.contractTermsConsent}
-            </p>
-          )}
+          {getNestedError(errors, 'contractTermsConsent') && <p className={styles.page14Error}>{getNestedError(errors, 'contractTermsConsent')}</p>}
 
           <label className={styles.page14CheckboxLabel}>
             <input
               type="checkbox"
               name="dataAccuracyConsent"
               checked={formData.dataAccuracyConsent || false}
-              onChange={(e) => handleChange(e, "dataAccuracyConsent")}
+              onChange={handleChange}
               onFocus={() => handleFocus("dataAccuracyConsent")}
-              onBlur={() => handleBlur("dataAccuracyConsent")}
-              onKeyDown={(e) => handleInputKeyDown(e, "dataAccuracyConsent", null, "contractTermsConsent")} // Last interactive element before submit
-              className={`${styles.page14CheckboxInput} ${errors.dataAccuracyConsent ? styles.page14ErrorInput : ""}`}
-              required
+              onBlur={handleBlur}
+              className={`${styles.page14CheckboxInput} ${getNestedError(errors, 'dataAccuracyConsent') ? styles.page14ErrorInput : ""}`}
               ref={(el) => { inputRefs.current["dataAccuracyConsent"] = el; }}
-              data-error-field="dataAccuracyConsent"
-              aria-label="Підтвердження правильності даних"
             />
             Я підтверджую, що всі введені дані є правильними, і беру на себе відповідальність за їх достовірність.
           </label>
-          {errors.dataAccuracyConsent && (
-            <p id="dataAccuracyConsent-error-p14" className={styles.page14Error}>
-              {errors.dataAccuracyConsent}
-            </p>
-          )}
+          {getNestedError(errors, 'dataAccuracyConsent') && <p className={styles.page14Error}>{getNestedError(errors, 'dataAccuracyConsent')}</p>}
         </div>
       </div>
 

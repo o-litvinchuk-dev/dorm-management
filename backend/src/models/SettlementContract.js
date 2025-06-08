@@ -1,6 +1,4 @@
-// src/models/SettlementContract.js
 import pool from "../config/db.js";
-import { decrypt } from "../utils/crypto.js"; // Added decrypt import for sensitive fields
 
 // Helper function to determine if an inventory item is effectively empty
 const isInventoryItemEffectivelyEmpty = (item) => {
@@ -31,58 +29,6 @@ const isPremisesConditionItemEffectivelyEmpty = (item) => {
         return conditionStatusEmpty;
     }
     return descriptionEmpty && conditionStatusEmpty;
-};
-
-// Decryption configuration
-const SENSITIVE_FIELDS_FOR_DECRYPT_IN_MODEL = [
-    "full_name_encrypted", "passport_series_encrypted", "passport_number_encrypted",
-    "passport_issued_encrypted", "tax_id_encrypted", "resident_full_name_encrypted",
-    "resident_phone_encrypted", "mother_phone_encrypted", "father_phone_encrypted",
-    "parent_full_name_encrypted",
-];
-
-const decryptContractDataInternal = (contract) => {
-    if (!contract) return null;
-    const decryptedContract = { ...contract };
-    SENSITIVE_FIELDS_FOR_DECRYPT_IN_MODEL.forEach((encryptedFieldKey) => {
-        const decryptedFieldKey = encryptedFieldKey.replace("_encrypted", "");
-        const encryptedValue = decryptedContract[encryptedFieldKey];
-
-        if (encryptedValue && typeof encryptedValue === "string") {
-            try {
-                if (encryptedFieldKey === "tax_id_encrypted") {
-                    const encryptedTaxIdArray = JSON.parse(encryptedValue);
-                    if (Array.isArray(encryptedTaxIdArray)) {
-                        decryptedContract[decryptedFieldKey] = encryptedTaxIdArray.map(val => decrypt(val)).join('');
-                    } else {
-                        console.warn(`[DecryptInternal] tax_id_encrypted for contract ${contract.id} was not a valid array string:`, encryptedValue);
-                        decryptedContract[decryptedFieldKey] = "[Помилка формату ІПН]";
-                    }
-                } else {
-                    decryptedContract[decryptedFieldKey] = decrypt(encryptedValue);
-                }
-            } catch (e) {
-                console.warn(
-                    `[DecryptInternal] Failed to decrypt field ${encryptedFieldKey} for contract ${contract.id}:`,
-                    e.message,
-                    `Input: ${String(encryptedValue).substring(0, 20)}...`
-                );
-                decryptedContract[decryptedFieldKey] = "[Помилка дешифрування]";
-            }
-        } else {
-            decryptedContract[decryptedFieldKey] = null;
-            if (encryptedValue !== null && encryptedValue !== undefined) {
-                console.warn(
-                    `[DecryptInternal] Field ${encryptedFieldKey} for contract ${contract.id} is not a string or is empty, but exists. Value:`,
-                    encryptedValue
-                );
-            }
-        }
-        if (decryptedContract.hasOwnProperty(decryptedFieldKey) && encryptedFieldKey !== decryptedFieldKey) {
-            delete decryptedContract[encryptedFieldKey];
-        }
-    });
-    return decryptedContract;
 };
 
 export class SettlementContract {
@@ -216,21 +162,20 @@ export class SettlementContract {
     static async findAllForUser(userId, { page = 1, limit = 10, status = "", sortBy = "created_at", sortOrder = "desc" }, connection = pool) {
         const offset = (Number(page) - 1) * Number(limit);
         let query = `
-            SELECT sc.id, sc.user_id, DATE_FORMAT(sc.contract_date, '%Y-%m-%d') as contract_date,
-                   sc.dorm_number, d.name as dormitory_name_from_dormitories_table, sc.room_number,
-                   sc.status, sc.created_at, sc.updated_at, sc.faculty_name, sc.group_name, sc.course,
-                   DATE_FORMAT(sc.settlement_start_date, '%Y-%m-%d') as settlement_start_date,
-                   DATE_FORMAT(sc.settlement_end_date, '%Y-%m-%d') as settlement_end_date
-            FROM settlement_contracts sc
-            LEFT JOIN dormitories d ON sc.dorm_number = d.id
-            WHERE sc.user_id = ?
+        SELECT sc.id, sc.user_id, DATE_FORMAT(sc.contract_date, '%Y-%m-%d') as contract_date,
+        sc.dorm_number, d.name as dormitory_name_from_dormitories_table, sc.room_number,
+        sc.status, sc.created_at, sc.updated_at, sc.faculty_name, sc.group_name, sc.course,
+        DATE_FORMAT(sc.settlement_start_date, '%Y-%m-%d') as settlement_start_date,
+        DATE_FORMAT(sc.settlement_end_date, '%Y-%m-%d') as settlement_end_date
+        FROM settlement_contracts sc
+        LEFT JOIN dormitories d ON sc.dorm_number = d.id
+        WHERE sc.user_id = ?
         `;
         let countQuery = `
-            SELECT COUNT(sc.id) as total
-            FROM settlement_contracts sc
-            WHERE sc.user_id = ?
+        SELECT COUNT(sc.id) as total
+        FROM settlement_contracts sc
+        WHERE sc.user_id = ?
         `;
-
         const params = [userId];
         const countParams = [userId];
 
@@ -242,13 +187,11 @@ export class SettlementContract {
         }
 
         const validSortFields = {
-            id: "sc.id",
-            contract_date: "sc.contract_date",
-            status: "sc.status",
-            created_at: "sc.created_at"
+            id: "sc.id", contract_date: "sc.contract_date", status: "sc.status", created_at: "sc.created_at"
         };
         let sortField = validSortFields[sortBy] || "sc.created_at";
         const sortDirection = sortOrder.toUpperCase() === "ASC" ? "ASC" : "DESC";
+
         query += ` ORDER BY ${sortField} ${sortDirection} LIMIT ? OFFSET ?`;
         params.push(Number(limit), Number(offset));
 
@@ -262,53 +205,36 @@ export class SettlementContract {
                 limit: Number(limit),
             };
         } catch (dbError) {
-            console.error("[SettlementContractModel] Error in findAllForUser SQL execution:", {
-                message: dbError.message,
-                code: dbError.code,
-            });
+            console.error("[SettlementContractModel] Error in findAllForUser SQL execution:", dbError);
             throw new Error(`Failed to fetch user's settlement agreements: ${dbError.message}`);
         }
     }
 
     static async findByIdForUser(id, userId, connection = pool) {
         const query = `
-            SELECT sc.*,
-                   DATE_FORMAT(sc.contract_date, '%Y-%m-%d') as contract_date_formatted,
-                   DATE_FORMAT(sc.proxy_date, '%Y-%m-%d') as proxy_date_formatted,
-                   DATE_FORMAT(sc.settlement_start_date, '%Y-%m-%d') as settlement_start_date_formatted,
-                   DATE_FORMAT(sc.settlement_end_date, '%Y-%m-%d') as settlement_end_date_formatted,
-                   DATE_FORMAT(sc.appendix_date, '%Y-%m-%d') as appendix_date_formatted,
-                   u.email as user_email,
-                   u.name as user_name_from_users_table,
-                   d.name as dormitory_name_from_dormitories_table
-            FROM settlement_contracts sc
-            LEFT JOIN users u ON sc.user_id = u.id
-            LEFT JOIN dormitories d ON sc.dorm_number = d.id
-            WHERE sc.id = ? AND sc.user_id = ?
+        SELECT sc.*,
+        DATE_FORMAT(sc.contract_date, '%Y-%m-%d') as contract_date,
+        DATE_FORMAT(sc.proxy_date, '%Y-%m-%d') as proxy_date,
+        DATE_FORMAT(sc.settlement_start_date, '%Y-%m-%d') as settlement_start_date,
+        DATE_FORMAT(sc.settlement_end_date, '%Y-%m-%d') as settlement_end_date,
+        DATE_FORMAT(sc.appendix_date, '%Y-%m-%d') as appendix_date,
+        u.email as user_email,
+        u.name as user_name_from_users_table,
+        d.name as dormitory_name_from_dormitories_table
+        FROM settlement_contracts sc
+        LEFT JOIN users u ON sc.user_id = u.id
+        LEFT JOIN dormitories d ON sc.dorm_number = d.id
+        WHERE sc.id = ? AND sc.user_id = ?
         `;
         const [rows] = await connection.execute(query, [id, userId]);
         if (rows.length === 0) return null;
-
-        let contract = {
-            ...rows[0],
-            contract_date: rows[0].contract_date_formatted,
-            proxy_date: rows[0].proxy_date_formatted,
-            settlement_start_date: rows[0].settlement_start_date_formatted,
-            settlement_end_date: rows[0].settlement_end_date_formatted,
-            appendix_date: rows[0].appendix_date_formatted,
-        };
-        delete contract.contract_date_formatted;
-        delete contract.proxy_date_formatted;
-        delete contract.settlement_start_date_formatted;
-        delete contract.settlement_end_date_formatted;
-        delete contract.appendix_date_formatted;
-
-        contract = decryptContractDataInternal(contract);
+        
+        const contract = rows[0];
 
         const [inventory] = await connection.execute("SELECT *, item_name as name FROM settlement_contract_inventory WHERE contract_id = ? ORDER BY item_order ASC", [id]);
         const [premisesConditions] = await connection.execute("SELECT *, condition_status as `condition` FROM settlement_contract_premises_conditions WHERE contract_id = ? ORDER BY item_order ASC", [id]);
         const [electricalAppliances] = await connection.execute("SELECT *, appliance_name as name, manufacture_year as year FROM settlement_contract_electrical_appliances WHERE contract_id = ? ORDER BY item_order ASC", [id]);
-
+        
         contract.inventory = inventory.map(item => ({ ...item, item_order: Number(item.item_order) }));
         contract.premisesConditions = premisesConditions.map(item => ({ ...item, item_order: Number(item.item_order) }));
         contract.electricalAppliances = electricalAppliances.map(item => ({ ...item, item_order: Number(item.item_order) }));
@@ -319,26 +245,24 @@ export class SettlementContract {
     static async findAllAdmin({ page = 1, limit = 10, search = "", status = "", dormitory_id = null, sortBy = "created_at", sortOrder = "desc" }, connection = pool) {
         const offset = (page - 1) * limit;
         let query = `
-            SELECT sc.id, sc.user_id, DATE_FORMAT(sc.contract_date, '%Y-%m-%d') as contract_date,
-                   sc.dorm_number, d.name as dormitory_name, sc.room_number,
-                   sc.status, sc.created_at, sc.updated_at,
-                   u.email as user_email, u.name as user_name_from_users_table
-            FROM settlement_contracts sc
-            LEFT JOIN users u ON sc.user_id = u.id
-            LEFT JOIN dormitories d ON sc.dorm_number = d.id
-            WHERE 1=1
+        SELECT sc.id, sc.user_id, DATE_FORMAT(sc.contract_date, '%Y-%m-%d') as contract_date,
+        sc.dorm_number, d.name as dormitory_name, sc.room_number,
+        sc.status, sc.created_at, sc.updated_at,
+        u.email as user_email, u.name as user_name_from_users_table
+        FROM settlement_contracts sc
+        LEFT JOIN users u ON sc.user_id = u.id
+        LEFT JOIN dormitories d ON sc.dorm_number = d.id
+        WHERE 1=1
         `;
         let countQuery = `
-            SELECT COUNT(sc.id) as total
-            FROM settlement_contracts sc
-            LEFT JOIN users u ON sc.user_id = u.id
-            LEFT JOIN dormitories d ON sc.dorm_number = d.id
-            WHERE 1=1
+        SELECT COUNT(sc.id) as total
+        FROM settlement_contracts sc
+        LEFT JOIN users u ON sc.user_id = u.id
+        LEFT JOIN dormitories d ON sc.dorm_number = d.id
+        WHERE 1=1
         `;
-
         const params = [];
         const countParams = [];
-
         if (search) {
             query += ` AND (u.name LIKE ? OR u.email LIKE ? OR CAST(sc.id AS CHAR) LIKE ? OR d.name LIKE ? OR sc.room_number LIKE ?)`;
             countQuery += ` AND (u.name LIKE ? OR u.email LIKE ? OR CAST(sc.id AS CHAR) LIKE ? OR d.name LIKE ? OR sc.room_number LIKE ?)`;
@@ -358,7 +282,6 @@ export class SettlementContract {
             params.push(String(dormitory_id));
             countParams.push(String(dormitory_id));
         }
-
         const validSortFields = ["id", "contract_date", "dormitory_name", "room_number", "status", "user_name_from_users_table", "created_at"];
         let sortField = validSortFields.includes(sortBy) ? sortBy : "sc.created_at";
         if (sortBy === "dormitory_name") sortField = "d.name";
@@ -367,7 +290,6 @@ export class SettlementContract {
         const sortDirection = sortOrder.toUpperCase() === "ASC" ? "ASC" : "DESC";
         query += ` ORDER BY ${sortField} ${sortDirection} LIMIT ? OFFSET ?`;
         params.push(Number(limit), Number(offset));
-
         const [rows] = await connection.query(query, params);
         const [[{ total }]] = await connection.query(countQuery, countParams);
 
@@ -381,41 +303,29 @@ export class SettlementContract {
 
     static async findByIdAdmin(id, connection = pool) {
         const query = `
-            SELECT sc.*,
-                   DATE_FORMAT(sc.contract_date, '%Y-%m-%d') as contract_date_formatted,
-                   DATE_FORMAT(sc.proxy_date, '%Y-%m-%d') as proxy_date_formatted,
-                   DATE_FORMAT(sc.settlement_start_date, '%Y-%m-%d') as settlement_start_date_formatted,
-                   DATE_FORMAT(sc.settlement_end_date, '%Y-%m-%d') as settlement_end_date_formatted,
-                   DATE_FORMAT(sc.appendix_date, '%Y-%m-%d') as appendix_date_formatted,
-                   u.email as user_email,
-                   u.name as user_name_from_users_table,
-                   d.name as dormitory_name_from_dormitories_table
-            FROM settlement_contracts sc
-            LEFT JOIN users u ON sc.user_id = u.id
-            LEFT JOIN dormitories d ON sc.dorm_number = d.id
-            WHERE sc.id = ?
+        SELECT sc.*,
+        DATE_FORMAT(sc.contract_date, '%Y-%m-%d') as contract_date,
+        DATE_FORMAT(sc.proxy_date, '%Y-%m-%d') as proxy_date,
+        DATE_FORMAT(sc.settlement_start_date, '%Y-%m-%d') as settlement_start_date,
+        DATE_FORMAT(sc.settlement_end_date, '%Y-%m-%d') as settlement_end_date,
+        DATE_FORMAT(sc.appendix_date, '%Y-%m-%d') as appendix_date,
+        u.email as user_email,
+        u.name as user_name_from_users_table,
+        d.name as dormitory_name_from_dormitories_table
+        FROM settlement_contracts sc
+        LEFT JOIN users u ON sc.user_id = u.id
+        LEFT JOIN dormitories d ON sc.dorm_number = d.id
+        WHERE sc.id = ?
         `;
         const [rows] = await connection.execute(query, [id]);
         if (rows.length === 0) return null;
-
-        const contract = {
-            ...rows[0],
-            contract_date: rows[0].contract_date_formatted,
-            proxy_date: rows[0].proxy_date_formatted,
-            settlement_start_date: rows[0].settlement_start_date_formatted,
-            settlement_end_date: rows[0].settlement_end_date_formatted,
-            appendix_date: rows[0].appendix_date_formatted,
-        };
-        delete contract.contract_date_formatted;
-        delete contract.proxy_date_formatted;
-        delete contract.settlement_start_date_formatted;
-        delete contract.settlement_end_date_formatted;
-        delete contract.appendix_date_formatted;
+        
+        const contract = rows[0];
 
         const [inventory] = await connection.execute("SELECT *, item_name as name FROM settlement_contract_inventory WHERE contract_id = ? ORDER BY item_order ASC", [id]);
         const [premisesConditions] = await connection.execute("SELECT *, condition_status as `condition` FROM settlement_contract_premises_conditions WHERE contract_id = ? ORDER BY item_order ASC", [id]);
         const [electricalAppliances] = await connection.execute("SELECT *, appliance_name as name, manufacture_year as year FROM settlement_contract_electrical_appliances WHERE contract_id = ? ORDER BY item_order ASC", [id]);
-
+        
         contract.inventory = inventory.map(item => ({ ...item, item_order: Number(item.item_order) }));
         contract.premisesConditions = premisesConditions.map(item => ({ ...item, item_order: Number(item.item_order) }));
         contract.electricalAppliances = electricalAppliances.map(item => ({ ...item, item_order: Number(item.item_order) }));

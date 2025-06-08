@@ -1,4 +1,3 @@
-// src/utils/crypto.js
 import crypto from "crypto";
 
 const algorithm = "aes-256-cbc";
@@ -55,10 +54,9 @@ if (key.length !== 32) {
     console.log("[Crypto Init] Encryption key initialized successfully (32 bytes).");
 }
 
-
 export const encrypt = (text) => {
   if (text === null || typeof text === 'undefined') {
-    // console.warn('[Encrypt] Attempted to encrypt null or undefined value.');
+    console.warn('[Encrypt] Attempted to encrypt null or undefined value.');
     return null;
   }
   if (key.length !== 32) {
@@ -79,7 +77,7 @@ export const encrypt = (text) => {
 
 export const decrypt = (encryptedText) => {
   if (!encryptedText || typeof encryptedText !== 'string' || !encryptedText.includes(':')) {
-    // console.warn('[Decrypt] Invalid encrypted text format or null/empty value provided. Input:', encryptedText);
+    console.warn('[Decrypt] Invalid encrypted text format or null/empty value provided. Input:', encryptedText);
     return null;
   }
   if (key.length !== 32) {

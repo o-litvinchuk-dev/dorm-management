@@ -3,19 +3,66 @@ import Dormitory from "../models/Dormitory.js";
 import Settlement from "../models/Settlement.js";
 import AccommodationApplication from "../models/AccommodationApplication.js";
 import Joi from "joi";
-import User from "../models/User.js"; // Потрібно для перевірки faculty_id
+import User from "../models/User.js";
 import { SettlementContract } from "../models/SettlementContract.js";
 import DormitoryPass from "../models/DormitoryPass.js";
 import Event from "../models/Event.js";
+import { decrypt } from "../utils/crypto.js";
+
+// Helper function to decrypt sensitive contract fields
+const decryptContractFields = (contract) => {
+  if (!contract) return null;
+
+  const toCamelCase = (s) => {
+    return s.replace(/([-_][a-z])/ig, ($1) => {
+      return $1.toUpperCase()
+        .replace('-', '')
+        .replace('_', '');
+    });
+  };
+  
+  const SENSITIVE_FIELDS_FOR_DECRYPT = [
+    "full_name_encrypted", "passport_series_encrypted", "passport_number_encrypted",
+    "passport_issued_encrypted", "tax_id_encrypted", "resident_full_name_encrypted",
+    "resident_phone_encrypted", "mother_phone_encrypted", "father_phone_encrypted",
+    "parent_full_name_encrypted",
+  ];
+  const decryptedContract = { ...contract };
+  SENSITIVE_FIELDS_FOR_DECRYPT.forEach(key => {
+    const encryptedValue = contract[key];
+    const decryptedKey = toCamelCase(key.replace('_encrypted', ''));
+
+    if (encryptedValue) {
+      try {
+        if (key === "tax_id_encrypted") {
+          const encryptedTaxIdArray = JSON.parse(encryptedValue);
+          if (Array.isArray(encryptedTaxIdArray)) {
+            decryptedContract[decryptedKey] = encryptedTaxIdArray.map(val => decrypt(val)).join('');
+          } else {
+            decryptedContract[decryptedKey] = "[Помилка формату ІПН]";
+          }
+        } else {
+          decryptedContract[decryptedKey] = decrypt(encryptedValue);
+        }
+      } catch (e) {
+        console.warn(`[SecureCtrl] Error decrypting field ${key} for contract ${contract.id}: ${e.message}`);
+        decryptedContract[decryptedKey] = "[Помилка дешифрування]";
+      }
+    } else {
+      decryptedContract[decryptedKey] = null;
+    }
+    if (key !== decryptedKey) delete decryptedContract[key];
+  });
+  return decryptedContract;
+};
 
 export const getDashboardData = async (req, res) => {
   try {
     const userId = req.user.userId;
     const role = req.user.role;
-    let facultyId = req.user.faculty_id; // Змінено на let для можливості оновлення
+    let facultyId = req.user.faculty_id;
     const dormitoryIdFromUser = req.user.dormitory_id;
 
-    // ЗАПИТ ВИПРАВЛЕНО: використовуємо accommodation_applications та аліас aa
     let applicationsQuery = `
       SELECT aa.id, aa.status, aa.created_at,
              d.name as dormitory_name,
@@ -38,8 +85,8 @@ export const getDashboardData = async (req, res) => {
         if (!userFromDB?.faculty_id) {
           return res.status(403).json({ error: "Факультет не визначено для вашої ролі. Оновіть профіль.", code: "PROFILE_INCOMPLETE_FACULTY" });
         }
-        facultyId = userFromDB.faculty_id; // Оновлюємо локальну змінну facultyId
-        req.user.faculty_id = facultyId; 
+        facultyId = userFromDB.faculty_id;
+        req.user.faculty_id = facultyId;
         whereClauses.push(`aa.faculty_id = ?`);
         queryParams.push(facultyId);
       } else {
@@ -53,7 +100,6 @@ export const getDashboardData = async (req, res) => {
       whereClauses.push(`aa.dormitory_id = ?`);
       queryParams.push(dormitoryIdFromUser);
     }
-    // admin та superadmin бачать всі заявки, якщо немає інших фільтрів у цьому конкретному запиті
 
     if (whereClauses.length > 0) {
       applicationsQuery += ` WHERE ${whereClauses.join(" AND ")}`;
@@ -91,10 +137,9 @@ export const getApplications = async (req, res) => {
   try {
     const userId = req.user.userId;
     const role = req.user.role;
-    let facultyId = req.user.faculty_id; // Змінено на let
+    let facultyId = req.user.faculty_id;
     const dormitoryIdFromUser = req.user.dormitory_id;
 
-    // Використовуємо accommodation_applications та аліас aa
     let query = `SELECT aa.*, u.email, d.name as dormitory_name, f.name as faculty_name_display
                  FROM accommodation_applications aa
                  JOIN users u ON aa.user_id = u.id
@@ -113,29 +158,24 @@ export const getApplications = async (req, res) => {
             if (!userFromDB?.faculty_id) {
               return res.status(403).json({ error: "Профіль не завершено. Будь ласка, оберіть факультет.", code: "PROFILE_INCOMPLETE_FACULTY" });
             }
-            facultyId = userFromDB.faculty_id; // Оновлюємо локальну змінну
-            req.user.faculty_id = facultyId; 
+            facultyId = userFromDB.faculty_id;
+            req.user.faculty_id = facultyId;
         }
         whereClauses.push(`aa.faculty_id = ?`);
         queryParams.push(facultyId);
     } else if (role === "admin") {
-        // Адміністратор може бачити заявки свого факультету, якщо він призначений, або всі
         if (facultyId) {
             whereClauses.push(`aa.faculty_id = ?`);
             queryParams.push(facultyId);
         }
-        // Якщо у admin немає facultyId, він бачить всі (фільтр не додається)
     } else if (role === "dorm_manager") {
-      // Для dorm_manager, якщо потрібно фільтрувати по гуртожитку саме в цьому запиті,
-      // а не через AdminAccommodationController
       if (dormitoryIdFromUser) {
         whereClauses.push(`aa.dormitory_id = ?`);
         queryParams.push(dormitoryIdFromUser);
       } else {
-        // Можливо, варто повернути помилку, якщо коменданту не призначено гуртожиток
         return res.status(403).json({ error: "Гуртожиток не визначено для коменданта." });
       }
-    } else if (role !== "superadmin") { // superadmin бачить все
+    } else if (role !== "superadmin") {
       return res.status(403).json({ error: "Немає доступу до заявок" });
     }
 
@@ -170,7 +210,7 @@ export const getDormitories = async (req, res) => {
       [facultyId]
       );
       dormitories = linkedDorms;
-    } else { // student, superadmin, admin без faculty_id та інші ролі, що мають загальний доступ
+    } else {
       dormitories = await Dormitory.findAll();
     }
     res.json(dormitories);
@@ -188,7 +228,6 @@ export const getSettlements = async (req, res) => {
     let settlements;
 
     if (role === "dorm_manager" && dormitoryId) {
-      // Припускаємо, що Settlement.findAll може приймати фільтри або потрібен інший метод
       const [settlementRows] = await pool.query(
         `SELECT s.* FROM settlements s WHERE s.dormitory_id = ?`,
         [dormitoryId]
@@ -196,15 +235,13 @@ export const getSettlements = async (req, res) => {
       settlements = settlementRows;
     } else if ((role === "admin" || role === "faculty_dean_office") && facultyId) {
       const [linkedSettlements] = await pool.query(
-      // Запит для faculty_dean_office може бути складнішим,
-      // якщо settlement не прив'язаний напряму до faculty, а через user або application
       `SELECT s.* FROM settlements s 
        JOIN accommodation_applications aa ON s.application_id = aa.id 
-       WHERE aa.faculty_id = ?`, // Приклад, якщо зв'язок через заявки
+       WHERE aa.faculty_id = ?`,
       [facultyId]
       );
       settlements = linkedSettlements;
-    } else { // student, superadmin, admin без faculty_id та інші
+    } else {
       settlements = await Settlement.findAll();
     }
     res.json(settlements);
@@ -216,10 +253,6 @@ export const getSettlements = async (req, res) => {
 
 export const getAccommodationApplications = async (req, res) => {
   try {
-    // Цей ендпоінт дублює функціонал /admin/accommodation-applications
-    // Якщо він потрібен саме тут, переконайтеся, що права доступу коректні
-    // і він не конфліктує з adminAccommodationController.
-    // Поточна реалізація буде такою ж, як в adminAccommodationController, але викликана звідси
     const { page = 1, limit = 10, search = "", status = "" } = req.query;
     let filter = {
       page: parseInt(page),
@@ -369,9 +402,9 @@ export const createAccommodationApplication = async (req, res) => {
       user_id: userId,
       course: userProfile.course,
       group_id: userProfile.group_id,
-      full_name: userProfile.full_name, // ПІБ з профілю користувача
-      surname: userProfile.full_name.split(' ')[0], // Прізвище з ПІБ
-      phone_number: userProfile.phone_number, // Телефон з профілю
+      full_name: userProfile.full_name,
+      surname: userProfile.full_name.split(' ')[0],
+      phone_number: userProfile.phone_number,
       dormitory_id: value.dormitory_id,
       faculty_id: userProfile.faculty_id,
       application_date: value.application_date,
@@ -483,7 +516,6 @@ export const getMySettlementAgreements = async (req, res) => {
   try {
     const userId = req.user.userId;
     const { page = 1, limit = 10, status = "", sortBy = "created_at", sortOrder = "desc" } = req.query;
-
     const schema = Joi.object({
         page: Joi.number().integer().min(1).default(1),
         limit: Joi.number().integer().min(1).max(100).default(10),
@@ -493,14 +525,18 @@ export const getMySettlementAgreements = async (req, res) => {
     });
 
     const { error, value: validatedQueryFilters } = schema.validate({ page, limit, status, sortBy, sortOrder });
-
     if (error) {
         console.error("[SecureController] Joi validation error for getMySettlementAgreements:", error.details);
         return res.status(400).json({ error: "Невірні параметри запиту", details: error.details });
     }
 
     const result = await SettlementContract.findAllForUser(userId, validatedQueryFilters);
-    res.json(result);
+    const decryptedAgreements = result.agreements.map(decryptContractFields);
+
+    res.json({
+        ...result,
+        agreements: decryptedAgreements
+    });
   } catch (error) {
       console.error("[SecureController] Помилка отримання власних договорів на поселення:", error);
       res.status(500).json({ error: "Помилка сервера", details: error.message });
@@ -511,60 +547,56 @@ export const getSettlementAgreementByIdForUser = async (req, res) => {
   try {
       const userId = req.user.userId;
       const { id } = req.params;
-
       const schema = Joi.number().integer().positive().required();
       const { error: idError } = schema.validate(id);
-
       if (idError) {
           return res.status(400).json({ error: "Невірний ID договору", details: idError.details });
       }
-
       const contract = await SettlementContract.findByIdForUser(id, userId);
       if (!contract) {
           return res.status(404).json({ error: "Договір не знайдено або у вас немає доступу до нього" });
       }
-      res.json(contract);
+      
+      const decryptedContract = decryptContractFields(contract);
+
+      res.json(decryptedContract);
   } catch (error) {
       console.error("[SecureController] Помилка отримання договору за ID для користувача:", error);
       res.status(500).json({ error: "Помилка сервера", details: error.message });
   }
 };
+
 export const getMyRoommates = async (req, res) => {
   try {
     const userId = req.user.userId;
 
-    // 1. Знайти активне поселення (перепустку) поточного користувача
     const activePass = await DormitoryPass.findActiveByUserId(userId);
 
     if (!activePass || (!activePass.room_id && !activePass.room_number_text)) {
-      return res.json([]); // Немає активного поселення або інформації про кімнату
+      return res.json([]);
     }
 
     const { dormitory_id, room_id, room_number_text } = activePass;
 
-    // 2. Знайти інших користувачів в тій самій кімнаті
-    // Пріоритет room_id, якщо є, інакше room_number_text
     let roomCondition = "";
     const queryParams = [dormitory_id, userId];
 
     if (room_id) {
       roomCondition = "AND dp.room_id = ?";
-      queryParams.splice(1, 0, room_id); // Вставляємо room_id перед userId
+      queryParams.splice(1, 0, room_id);
     } else if (room_number_text) {
       roomCondition = "AND dp.room_number_text = ?";
       queryParams.splice(1, 0, room_number_text);
     } else {
-      // Якщо немає ні room_id, ні room_number_text у перепустці, то не можемо знайти сусідів
       return res.json([]);
     }
     
-    // Запит для отримання сусідів
     const roommatesQuery = `
       SELECT
           u.id,
           u.name,
           u.avatar,
-          u.email, -- Тимчасово для тестування, потім можна прибрати або зробити опціональним
+          u.email,
           f.name AS faculty_name,
           up.course
       FROM
@@ -581,9 +613,8 @@ export const getMyRoommates = async (req, res) => {
           AND dp.status = 'active'
           AND dp.valid_until >= CURDATE()
           AND u.id != ? 
-      GROUP BY u.id; 
+      GROUP BY u.id;
     `;
-    // Group By u.id щоб уникнути дублікатів, якщо студент має кілька перепусток (хоча логіка findActiveByUserId має це обробляти)
 
     const [roommates] = await pool.query(roommatesQuery, queryParams);
     
@@ -594,10 +625,11 @@ export const getMyRoommates = async (req, res) => {
     res.status(500).json({ error: "Помилка сервера при отриманні списку сусідів", details: error.message });
   }
 };
+
 export const getSecureEvents = async (req, res) => {
   try {
     const { userId, role, dormitory_id, faculty_id, group_id, course } = req.user;
-    const { category, dateFrom, dateTo } = req.query; // Example filters
+    const { category, dateFrom, dateTo } = req.query;
 
     const filters = {};
     if (category) filters.category = category;
@@ -627,15 +659,13 @@ export const getSecureEventById = async (req, res) => {
     if (!event) {
       return res.status(404).json({ error: "Подію не знайдено" });
     }
-    // Further authorization to check if user can see this specific event might be needed here
-    // or can rely on Event.targets structure if Event.findById was enhanced.
-    // For now, RBAC at route level is the primary guard.
     res.json(event);
   } catch (error) {
     console.error(`[SecureController] Помилка отримання події ${req.params.eventId}:`, error);
     res.status(500).json({ error: "Помилка сервера при отриманні події" });
   }
 };
+
 export default {
   getDashboardData,
   getApplications, 

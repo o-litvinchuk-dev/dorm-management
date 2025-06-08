@@ -654,195 +654,206 @@ export const resetPassword = async (req, res) => {
 };
 
 async function getProfileInternal(userId) {
-    const [userRows] = await pool.query(
-        `
-        SELECT
-            u.id, u.email, u.name, u.avatar, u.role, u.gender,
-            u.faculty_id AS user_table_faculty_id,
-            u.dormitory_id AS user_table_dormitory_id,
-            u.is_profile_complete,
-            up.birthday, up.phone, up.about_me, up.interests, up.room,
-            up.dormitory, up.instagram, up.telegram, up.banner,
-            up.faculty_id AS profile_faculty_id, up.group_id, up.course,
-            f_user.name AS user_faculty_name,
-            f_profile.name AS profile_faculty_name,
-            d.name AS dormitory_name,
-            g.name AS group_name
-        FROM users u
-        LEFT JOIN user_profiles up ON u.id = up.user_id
-        LEFT JOIN faculties f_user ON u.faculty_id = f_user.id
-        LEFT JOIN faculties f_profile ON up.faculty_id = f_profile.id
-        LEFT JOIN dormitories d ON u.dormitory_id = d.id
-        LEFT JOIN \`groups\` g ON up.group_id = g.id
-        WHERE u.id = ?
-        `,
-        [userId]
-    );
-    if (!userRows[0]) {
-        throw new Error("Користувача не знайдено при отриманні профілю");
-    }
+  const [userRows] = await pool.query(
+    `
+SELECT
+u.id, u.email, u.name, u.avatar, u.role, u.gender,
+u.faculty_id AS user_table_faculty_id,
+u.dormitory_id AS user_table_dormitory_id,
+u.is_profile_complete,
+up.birthday, up.phone, up.about_me, up.interests, up.room,
+up.dormitory, up.instagram, up.telegram, up.banner,
+up.faculty_id AS profile_faculty_id, up.group_id, up.course,
+f_user.name AS user_faculty_name,
+f_profile.name AS profile_faculty_name,
+d.name AS dormitory_name,
+g.name AS group_name
+FROM users u
+LEFT JOIN user_profiles up ON u.id = up.user_id
+LEFT JOIN faculties f_user ON u.faculty_id = f_user.id
+LEFT JOIN faculties f_profile ON up.faculty_id = f_profile.id
+LEFT JOIN dormitories d ON u.dormitory_id = d.id
+LEFT JOIN \`groups\` g ON up.group_id = g.id
+WHERE u.id = ?
+`,
+    [userId]
+  );
 
-    const user = userRows[0];
-    const isComplete = await isProfileComplete(userId, user.role);
+  if (!userRows[0]) {
+    throw new Error("Користувача не знайдено при отриманні профілю");
+  }
 
-    const profile = {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        avatar: user.avatar,
-        banner: user.banner,
-        role: user.role,
-        gender: user.gender,
-        is_profile_complete: isComplete,
-        birthday: user.birthday ? decrypt(user.birthday) : null,
-        phone: user.phone ? decrypt(user.phone) : null,
-        about_me: user.about_me ? decrypt(user.about_me) : null,
-        interests: user.interests ? decrypt(user.interests) : null,
-        room: user.room ? decrypt(user.room) : null,
-        dormitory: user.dormitory ? decrypt(user.dormitory) : null,
-        instagram: user.instagram ? decrypt(user.instagram) : null,
-        telegram: user.telegram ? decrypt(user.telegram) : null,
-        dormitory_id: user.user_table_dormitory_id || null,
-        dormitory_name: user.dormitory_name || null,
-    };
-    
-    if (user.role === "student") {
-        profile.faculty_id = user.profile_faculty_id || null;
-        profile.faculty_name = user.profile_faculty_name || null;
-        profile.group_id = user.group_id || null;
-        profile.group_name = user.group_name || null;
-        profile.course = user.course || null;
-    } else if (["faculty_dean_office", "student_council_head", "student_council_member"].includes(user.role)) {
-        profile.faculty_id = user.user_table_faculty_id || null;
-        profile.faculty_name = user.user_faculty_name || null;
-    }
-    return profile;
+  const user = userRows[0];
+  const isComplete = await isProfileComplete(userId, user.role);
+
+  const profile = {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    avatar: user.avatar,
+    banner: user.banner,
+    role: user.role,
+    gender: user.gender,
+    is_profile_complete: isComplete,
+    birthday: user.birthday ? decrypt(user.birthday) : null,
+    // FIX: Перевіряємо, чи є поле зашифрованим перед дешифруванням
+    phone: user.phone ? (String(user.phone).includes(':') ? decrypt(user.phone) : user.phone) : null,
+    about_me: user.about_me ? decrypt(user.about_me) : null,
+    interests: user.interests ? decrypt(user.interests) : null,
+    room: user.room ? decrypt(user.room) : null,
+    dormitory: user.dormitory ? decrypt(user.dormitory) : null,
+    instagram: user.instagram ? decrypt(user.instagram) : null,
+    telegram: user.telegram ? decrypt(user.telegram) : null,
+    dormitory_id: user.user_table_dormitory_id || null,
+    dormitory_name: user.dormitory_name || null,
+  };
+
+  if (user.role === "student") {
+    profile.faculty_id = user.profile_faculty_id || null;
+    profile.faculty_name = user.profile_faculty_name || null;
+    profile.group_id = user.group_id || null;
+    profile.group_name = user.group_name || null;
+    profile.course = user.course || null;
+  } else if (["faculty_dean_office", "student_council_head", "student_council_member"].includes(user.role)) {
+    profile.faculty_id = user.user_table_faculty_id || null;
+    profile.faculty_name = user.user_faculty_name || null;
+  }
+  
+  return profile;
 }
 
 export const getProfile = async (req, res) => {
-    try {
-        const userId = req.user.userId;
-        const profileData = await getProfileInternal(userId);
-        const userFromDb = await User.findById(userId);
-        if (userFromDb && (userFromDb.is_profile_complete === 1) !== profileData.is_profile_complete) {
-            await pool.execute(
-                `UPDATE users SET is_profile_complete = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
-                [profileData.is_profile_complete ? 1 : 0, userId]
-            );
-        }
-        res.json(profileData);
-    } catch (error) {
-        console.error("[GetProfile] Помилка:", error);
-        res.status(error.message.includes("Користувача не знайдено") ? 404 : 500).json({ error: error.message || "Помилка сервера" });
+  try {
+    const userId = req.user.userId;
+    const profileData = await getProfileInternal(userId);
+    const userFromDb = await User.findById(userId);
+    if (userFromDb && (userFromDb.is_profile_complete === 1) !== profileData.is_profile_complete) {
+      await pool.execute(
+        `UPDATE users SET is_profile_complete = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+        [profileData.is_profile_complete ? 1 : 0, userId]
+      );
     }
+    res.json(profileData);
+  } catch (error) {
+    console.error("[GetProfile] Помилка:", error);
+    res.status(error.message.includes("Користувача не знайдено") ? 404 : 500).json({ error: error.message || "Помилка сервера" });
+  }
 };
-
 
 export const updateProfile = async (req, res) => {
-    const connection = await pool.getConnection();
-    try {
-        await connection.beginTransaction();
-        const userId = req.user.userId;
-        const role = req.user.role;
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+    const userId = req.user.userId;
+    const role = req.user.role;
 
-        // Визначення ролей користувача
-        const isStudent = role === "student";
-        const isFacultyRole = ["faculty_dean_office", "student_council_head", "student_council_member"].includes(role);
-        const isDormManager = role === "dorm_manager";
+    const isStudent = role === "student";
+    const isFacultyRole = ["faculty_dean_office", "student_council_head", "student_council_member"].includes(role);
+    const isDormManager = role === "dorm_manager";
 
-        const profileData = req.body;
-        const validationSchema = Joi.object({
-            name: Joi.string().trim().max(255).optional().allow(null, ''),
-            phone: Joi.string().trim().pattern(/^\+380\d{9}$/).optional().allow(null, ''),
-            birthday: Joi.date().max('now').optional().allow(null, ''),
-            about_me: Joi.string().trim().max(1000).optional().allow(null, ''),
-            interests: Joi.string().trim().max(255).optional().allow(null, ''),
-            faculty_id: Joi.number().integer().positive().optional().allow(null),
-            group_id: Joi.number().integer().positive().optional().allow(null),
-            dormitory_id: Joi.number().integer().positive().optional().allow(null),
-        }).unknown(true);
-
-        const { error, value: validatedData } = validationSchema.validate(profileData);
-        if (error) {
-            await connection.rollback();
-            return res.status(400).json({ error: "Невалідні дані", details: error.details });
-        }
-        
-        const currentUserProfile = await UserProfile.findByUserId(userId, connection);
-        const userUpdates = {};
-        const profileUpdates = {};
-        
-        if (req.files?.avatar?.[0]) {
-            const oldAvatarPath = currentUserProfile?.avatar ? path.join(__dirname, '..', '..', currentUserProfile.avatar) : null;
-            userUpdates.avatar = `/uploads/avatars/${req.files.avatar[0].filename}`; // Оновлюємо в таблиці users
-            if(oldAvatarPath && await fs.access(oldAvatarPath).then(() => true).catch(() => false)) {
-                await fs.unlink(oldAvatarPath);
-            }
-        }
-
-        if (req.files?.banner?.[0]) {
-            const oldBannerPath = currentUserProfile?.banner ? path.join(__dirname, '..', '..', currentUserProfile.banner) : null;
-            profileUpdates.banner = `/uploads/banners/${req.files.banner[0].filename}`;
-            if(oldBannerPath && await fs.access(oldBannerPath).then(() => true).catch(() => false)) {
-                await fs.unlink(oldBannerPath);
-            }
-        }
-        
-        if (validatedData.name !== undefined) userUpdates.name = validatedData.name;
-        
-        // Шифрування полів перед збереженням
-        if (validatedData.phone !== undefined) profileUpdates.phone = validatedData.phone ? encrypt(validatedData.phone) : null;
-        if (validatedData.birthday !== undefined) profileUpdates.birthday = validatedData.birthday ? encrypt(validatedData.birthday) : null;
-        if (validatedData.about_me !== undefined) profileUpdates.about_me = validatedData.about_me ? encrypt(validatedData.about_me) : null;
-        if (validatedData.interests !== undefined) profileUpdates.interests = validatedData.interests ? encrypt(validatedData.interests) : null;
-
-        // Оновлення полів в залежності від ролі
-        if (isFacultyRole && validatedData.faculty_id !== undefined) userUpdates.faculty_id = validatedData.faculty_id || null;
-        if (isDormManager && validatedData.dormitory_id !== undefined) userUpdates.dormitory_id = validatedData.dormitory_id || null;
-        
-        if (isStudent) {
-            if(validatedData.faculty_id !== undefined) profileUpdates.faculty_id = validatedData.faculty_id || null;
-            if(validatedData.group_id !== undefined) profileUpdates.group_id = validatedData.group_id || null;
-        }
-
-        if (Object.keys(userUpdates).length > 0) {
-            const userFields = Object.keys(userUpdates).map(field => `\`${field}\` = ?`).join(', ');
-            await connection.execute(`UPDATE users SET ${userFields}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`, [...Object.values(userUpdates), userId]);
-        }
-        
-        if (Object.keys(profileUpdates).length > 0) {
-            if (currentUserProfile) {
-                const profileFields = Object.keys(profileUpdates).map(field => `\`${field}\` = ?`).join(', ');
-                await connection.execute(`UPDATE user_profiles SET ${profileFields} WHERE user_id = ?`, [...Object.values(profileUpdates), userId]);
-            } else {
-                await connection.execute(`INSERT INTO user_profiles (user_id, ${Object.keys(profileUpdates).join(', ')}) VALUES (?, ${Object.values(profileUpdates).map(() => '?').join(', ')})`, [userId, ...Object.values(profileUpdates)]);
-            }
-        }
-
-        const isComplete = await isProfileComplete(userId, role, connection);
-        await connection.execute(`UPDATE users SET is_profile_complete = ? WHERE id = ?`, [isComplete ? 1 : 0, userId]);
-        
-        await connection.commit();
-        res.json({ message: "Профіль успішно оновлено" });
-    } catch (error) {
-        await connection.rollback();
-        console.error("[UpdateProfile] Помилка:", error);
-        res.status(500).json({ error: "Помилка сервера", details: error.message });
-    } finally {
-        connection.release();
+    const profileData = req.body;
+    const validationSchema = Joi.object({
+      name: Joi.string().trim().max(255).optional().allow(null, ''),
+      gender: Joi.string().valid('male', 'female', 'other', 'not_specified').optional(),
+      phone: Joi.string().trim().pattern(/^\+380\d{9}$/).optional().allow(null, ''),
+      birthday: Joi.date().iso().max('now').optional().allow(null, ''),
+      about_me: Joi.string().trim().max(1000).optional().allow(null, ''),
+      interests: Joi.string().trim().max(255).optional().allow(null, ''),
+      room: Joi.string().trim().max(10).optional().allow(null, ''),
+      dormitory: Joi.string().trim().max(50).optional().allow(null, ''),
+      instagram: Joi.string().trim().max(255).optional().allow(null, ''),
+      telegram: Joi.string().trim().max(255).optional().allow(null, ''),
+      faculty_id: Joi.number().integer().positive().optional().allow(null),
+      group_id: Joi.number().integer().positive().optional().allow(null),
+      course: Joi.number().integer().min(1).max(6).optional().allow(null),
+      dormitory_id: Joi.number().integer().positive().optional().allow(null),
+    }).unknown(true);
+    
+    const { error, value: validatedData } = validationSchema.validate(profileData);
+    if (error) {
+      await connection.rollback();
+      return res.status(400).json({ error: "Невалідні дані", details: error.details });
     }
+    
+    const currentUserProfile = await UserProfile.findByUserId(userId, connection);
+    const userUpdates = {};
+    const profileUpdates = {};
+
+    if (req.files?.avatar?.[0]) {
+      const oldAvatarPath = currentUserProfile?.avatar ? path.join(__dirname, '..', '..', currentUserProfile.avatar) : null;
+      userUpdates.avatar = `/uploads/avatars/${req.files.avatar[0].filename}`;
+      if(oldAvatarPath && await fs.access(oldAvatarPath).then(() => true).catch(() => false)) {
+        await fs.unlink(oldAvatarPath);
+      }
+    }
+    if (req.files?.banner?.[0]) {
+      const oldBannerPath = currentUserProfile?.banner ? path.join(__dirname, '..', '..', currentUserProfile.banner) : null;
+      profileUpdates.banner = `/uploads/banners/${req.files.banner[0].filename}`;
+      if(oldBannerPath && await fs.access(oldBannerPath).then(() => true).catch(() => false)) {
+        await fs.unlink(oldBannerPath);
+      }
+    }
+    
+    if (validatedData.name !== undefined) userUpdates.name = validatedData.name;
+    if (validatedData.gender !== undefined) userUpdates.gender = validatedData.gender;
+    if (isFacultyRole && validatedData.faculty_id !== undefined) userUpdates.faculty_id = validatedData.faculty_id || null;
+    if (isDormManager && validatedData.dormitory_id !== undefined) userUpdates.dormitory_id = validatedData.dormitory_id || null;
+
+    // FIX: Завжди шифруємо чутливі дані при збереженні
+    if (validatedData.phone !== undefined) profileUpdates.phone = validatedData.phone ? encrypt(validatedData.phone) : null;
+    if (validatedData.birthday !== undefined) profileUpdates.birthday = validatedData.birthday ? encrypt(new Date(validatedData.birthday).toISOString().split('T')[0]) : null;
+    if (validatedData.room !== undefined) profileUpdates.room = validatedData.room ? encrypt(validatedData.room) : null;
+    if (validatedData.dormitory !== undefined) profileUpdates.dormitory = validatedData.dormitory ? encrypt(validatedData.dormitory) : null;
+    if (validatedData.about_me !== undefined) profileUpdates.about_me = validatedData.about_me ? encrypt(validatedData.about_me) : null;
+    if (validatedData.interests !== undefined) profileUpdates.interests = validatedData.interests ? encrypt(validatedData.interests) : null;
+    if (validatedData.instagram !== undefined) profileUpdates.instagram = validatedData.instagram ? encrypt(validatedData.instagram) : null;
+    if (validatedData.telegram !== undefined) profileUpdates.telegram = validatedData.telegram ? encrypt(validatedData.telegram) : null;
+
+    if (isStudent) {
+      if(validatedData.faculty_id !== undefined) profileUpdates.faculty_id = validatedData.faculty_id || null;
+      if(validatedData.group_id !== undefined) profileUpdates.group_id = validatedData.group_id || null;
+      if(validatedData.course !== undefined) profileUpdates.course = validatedData.course || null;
+    }
+    
+    if (Object.keys(userUpdates).length > 0) {
+      const userFields = Object.keys(userUpdates).map(field => `\`${field}\` = ?`).join(', ');
+      await connection.execute(`UPDATE users SET ${userFields}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`, [...Object.values(userUpdates), userId]);
+    }
+    
+    if (Object.keys(profileUpdates).length > 0) {
+      if (currentUserProfile) {
+        const profileFields = Object.keys(profileUpdates).map(field => `\`${field}\` = ?`).join(', ');
+        await connection.execute(`UPDATE user_profiles SET ${profileFields} WHERE user_id = ?`, [...Object.values(profileUpdates), userId]);
+      } else {
+        await connection.execute(`INSERT INTO user_profiles (user_id, ${Object.keys(profileUpdates).join(', ')}) VALUES (?, ${Object.values(profileUpdates).map(() => '?').join(', ')})`, [userId, ...Object.values(profileUpdates)]);
+      }
+    }
+
+    const isComplete = await isProfileComplete(userId, role, connection);
+    await connection.execute(`UPDATE users SET is_profile_complete = ? WHERE id = ?`, [isComplete ? 1 : 0, userId]);
+
+    await connection.commit();
+    res.json({ message: "Профіль успішно оновлено" });
+  } catch (error) {
+    await connection.rollback();
+    console.error("[UpdateProfile] Помилка:", error);
+    res.status(500).json({ error: "Помилка сервера", details: error.message });
+  } finally {
+    connection.release();
+  }
 };
+
 
 export default {
   register,
   verifyEmail,
   login,
+  logout,
   refreshToken,
   forgotPassword,
   resetPassword,
   googleSignIn,
   getProfile,
   updateProfile,
-  logout,
   validateToken,
 };

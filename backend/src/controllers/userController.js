@@ -367,6 +367,22 @@ export const updateUserRole = async (req, res) => {
   }
 };
 
+export const getProfile = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const [userRows] = await pool.query(
+      `SELECT u.*, up.phone FROM users u LEFT JOIN user_profiles up ON u.id = up.user_id WHERE u.id = ?`,
+      [userId]
+    );
+    if (!userRows[0]) {
+      return res.status(404).json({ error: "Користувача не знайдено" });
+    }
+    res.json({ phone: userRows[0].phone || null });
+  } catch (error) {
+    console.error("[UserController] Помилка:", error);
+    res.status(500).json({ error: "Помилка сервера" });
+  }
+};
 export default {
   assignFacultyDeanOfficeRole,
   assignFacultyDeanOffice,
@@ -374,4 +390,5 @@ export default {
   assignStudentCouncilRole,
   getAllUsers,
   updateUserRole,
+  getProfile,
 };

@@ -1,3 +1,5 @@
+// src/pages/AdminManagement/ManageSettlementAgreementsPage.jsx
+
 import React, { useState, useEffect, useCallback } from 'react';
 import api from '../../utils/api';
 import { ToastService } from '../../utils/toastConfig';
@@ -71,22 +73,9 @@ const SettlementAgreementDetailModal = ({ agreement, onClose, onUpdateStatus, is
         }
     };
     
-    const displayValueOrNA = (value, fieldName = "") => {
-        // Перевіряємо чи поле є в agreement і чи воно не є зашифрованим полем, яке вже має розшифрований аналог
-        if (agreement && agreement.hasOwnProperty(fieldName) && agreement[fieldName] !== undefined && agreement[fieldName] !== null && String(agreement[fieldName]).trim() !== '' && !String(agreement[fieldName]).startsWith('[Помилка')) {
-            value = agreement[fieldName];
-        } else if (agreement && agreement.hasOwnProperty(`${fieldName}_encrypted`) && (agreement[fieldName] === undefined || agreement[fieldName] === null || String(agreement[fieldName]).trim() === '' || String(agreement[fieldName]).startsWith('[Помилка'))) {
-            // Якщо є зашифроване поле, але розшифроване відсутнє або некоректне, показуємо N/A
-             return <span className={modalStyles.naText}>N/A (зашифровано/недоступно)</span>;
-        }
-
-
+    const displayValueOrNA = (value) => {
         if (value === null || value === undefined || String(value).trim() === '' || String(value).startsWith('[Помилка')) {
             return <span className={modalStyles.naText}>N/A</span>;
-        }
-        // Для taxId, якщо він приходить як рядок цифр після розшифровки
-        if (fieldName === "taxId" && typeof value === 'string') {
-           return value;
         }
         return String(value);
     };
@@ -95,9 +84,8 @@ const SettlementAgreementDetailModal = ({ agreement, onClose, onUpdateStatus, is
     const renderListSection = (title, items, renderItem, icon, keyPrefix = "") => {
         const validItems = items?.filter(item => {
             if (!item) return false;
-            // Перевіряємо, чи хоча б одне поле, крім системних, має значуще значення
             return Object.entries(item).some(([itemPropertyKey, val]) => {
-                if (['id', 'item_order', 'contract_id'].includes(itemPropertyKey)) return false; // Ігноруємо системні поля
+                if (['id', 'item_order', 'contract_id'].includes(itemPropertyKey)) return false;
                 return val !== null && val !== undefined && String(val).trim() !== '' && !String(val).startsWith('[Помилка');
             });
         }) || [];
@@ -169,29 +157,29 @@ const SettlementAgreementDetailModal = ({ agreement, onClose, onUpdateStatus, is
                         <div className={modalStyles.modalSection}>
                             <h3 className={modalStyles.modalSectionTitle}><UserCircleIcon /> Дані студента (з договору)</h3>
                              <div className={modalStyles.modalDetailGrid}>
-                                <div className={modalStyles.modalInfoItemWide}><strong>ПІБ:</strong> {displayValueOrNA(agreement.fullName, "fullName")}</div>
-                                <div className={modalStyles.modalInfoItem}><strong>Серія паспорта:</strong> {displayValueOrNA(agreement.passportSeries, "passportSeries")}</div>
-                                <div className={modalStyles.modalInfoItem}><strong>Номер паспорта:</strong> {displayValueOrNA(agreement.passportNumber, "passportNumber")}</div>
-                                <div className={modalStyles.modalInfoItem}><strong>Ким виданий (код):</strong> {displayValueOrNA(agreement.passportIssued, "passportIssued")}</div>
-                                <div className={modalStyles.modalInfoItem}><strong>ІПН:</strong> {displayValueOrNA(agreement.taxId, "taxId")}</div>
-                                <div className={modalStyles.modalInfoItem}><strong>Телефон (з договору):</strong> {displayValueOrNA(agreement.residentPhone, "residentPhone")}</div>
-                                <div className={modalStyles.modalInfoItem}><strong>Факультет:</strong> {displayValueOrNA(agreement.faculty_name, "faculty_name")}</div>
-                                <div className={modalStyles.modalInfoItem}><strong>Група:</strong> {displayValueOrNA(agreement.group_name, "group_name")}</div>
-                                <div className={modalStyles.modalInfoItem}><strong>Курс:</strong> {displayValueOrNA(agreement.course, "course")}</div>
+                                <div className={modalStyles.modalInfoItemWide}><strong>ПІБ:</strong> {displayValueOrNA(agreement.fullName)}</div>
+                                <div className={modalStyles.modalInfoItem}><strong>Серія паспорта:</strong> {displayValueOrNA(agreement.passportSeries)}</div>
+                                <div className={modalStyles.modalInfoItem}><strong>Номер паспорта:</strong> {displayValueOrNA(agreement.passportNumber)}</div>
+                                <div className={modalStyles.modalInfoItem}><strong>Ким виданий (код):</strong> {displayValueOrNA(agreement.passportIssued)}</div>
+                                <div className={modalStyles.modalInfoItem}><strong>ІПН:</strong> {displayValueOrNA(agreement.taxId)}</div>
+                                <div className={modalStyles.modalInfoItem}><strong>Телефон (з договору):</strong> {displayValueOrNA(agreement.residentPhone)}</div>
+                                <div className={modalStyles.modalInfoItem}><strong>Факультет:</strong> {displayValueOrNA(agreement.faculty_name)}</div>
+                                <div className={modalStyles.modalInfoItem}><strong>Група:</strong> {displayValueOrNA(agreement.group_name)}</div>
+                                <div className={modalStyles.modalInfoItem}><strong>Курс:</strong> {displayValueOrNA(agreement.course)}</div>
                             </div>
                         </div>
 
                         <div className={modalStyles.modalSection}>
                             <h3 className={modalStyles.modalSectionTitle}><PhoneIcon /> Контактна інформація</h3>
                             <div className={modalStyles.modalDetailGrid}>
-                                <div className={modalStyles.modalInfoItemWide}><strong>ПІБ мешканця (зареєстр.):</strong> {displayValueOrNA(agreement.residentFullName, "residentFullName")}</div>
+                                <div className={modalStyles.modalInfoItemWide}><strong>ПІБ мешканця (зареєстр.):</strong> {displayValueOrNA(agreement.residentFullName)}</div>
                                 <div className={modalStyles.modalInfoItem}><strong>Регіон:</strong> {displayValueOrNA(agreement.resident_region)}</div>
                                 <div className={modalStyles.modalInfoItem}><strong>Район:</strong> {displayValueOrNA(agreement.resident_district)}</div>
                                 <div className={modalStyles.modalInfoItem}><strong>Місто/Село:</strong> {displayValueOrNA(agreement.resident_city)}</div>
                                 <div className={modalStyles.modalInfoItem}><strong>Індекс:</strong> {displayValueOrNA(agreement.resident_postal_code)}</div>
-                                <div className={modalStyles.modalInfoItemWide}><strong>ПІБ одного з батьків:</strong> {displayValueOrNA(agreement.parentFullName, "parentFullName")}</div>
-                                <div className={modalStyles.modalInfoItem}><strong>Телефон матері:</strong> {displayValueOrNA(agreement.motherPhone, "motherPhone")}</div>
-                                <div className={modalStyles.modalInfoItem}><strong>Телефон батька:</strong> {displayValueOrNA(agreement.fatherPhone, "fatherPhone")}</div>
+                                <div className={modalStyles.modalInfoItemWide}><strong>ПІБ одного з батьків:</strong> {displayValueOrNA(agreement.parentFullName)}</div>
+                                <div className={modalStyles.modalInfoItem}><strong>Телефон матері:</strong> {displayValueOrNA(agreement.motherPhone)}</div>
+                                <div className={modalStyles.modalInfoItem}><strong>Телефон батька:</strong> {displayValueOrNA(agreement.fatherPhone)}</div>
                             </div>
                         </div>
 
@@ -251,7 +239,6 @@ const SettlementAgreementDetailModal = ({ agreement, onClose, onUpdateStatus, is
                                 <td data-label="Примітка" className={modalStyles.noteCellModal}>{item.note ? displayValueOrNA(item.note) : <span className={modalStyles.naText}>–</span>}</td>
                             </>
                         ), PowerIcon, "elec")}
-
 
                         <div className={modalStyles.modalSection}>
                             <h3 className={modalStyles.modalSectionTitle}><CogIcon /> Адміністрування</h3>
@@ -522,7 +509,7 @@ const ManageSettlementAgreementsPage = () => {
                                                 <td data-label="ID">{agreement.id}</td>
                                                 <td data-label="ПІБ Студента">{agreement.user_name_from_users_table || 'N/A'}</td>
                                                 <td data-label="Email">{agreement.user_email || 'N/A'}</td>
-                                                <td data-label="Гуртожиток">{agreement.dormitory_name_from_dormitories_table || `ID: ${agreement.dorm_number}` || 'N/A'}</td>
+                                                <td data-label="Гуртожиток">{agreement.dormitory_name || `ID: ${agreement.dorm_number}` || 'N/A'}</td>
                                                 <td data-label="Кімната">{agreement.room_number || 'N/A'}</td>
                                                 <td data-label="Дата договору">{agreement.contract_date ? new Date(agreement.contract_date).toLocaleDateString('uk-UA') : 'N/A'}</td>
                                                 <td data-label="Статус">

@@ -1,277 +1,178 @@
-p, superadmin, /*, *
-p, superadmin, /api/v1/faculties, *
-p, superadmin, /api/v1/faculties/:id, *
-p, superadmin, /api/v1/faculties/:facultyId/groups, *
-p, superadmin, /api/v1/groups/:id, *
-p, superadmin, /api/v1/admin/dormitories, *
-p, superadmin, /api/v1/admin/dormitories/:id, *
-p, superadmin, /api/v1/dormitories/:dormitoryId/rooms, *
-p, superadmin, /api/v1/rooms/:id, *
-p, superadmin, /api/v1/faculty-dormitories, *
-p, superadmin, /api/v1/faculty-dormitories/:faculty_id/:dormitory_id, *
-p, superadmin, /api/v1/users/all, GET
-p, superadmin, /api/v1/users/:id/role, PUT
-p, superadmin, /api/v1/users/assign-faculty-dean-office, POST
-p, superadmin, /api/v1/auth/validate-token, GET
-p, superadmin, /api/v1/application-presets, *
-p, superadmin, /api/v1/application-presets/:id, *
-p, superadmin, /api/v1/admin/settlement-schedule, *
+# ==================================
+# Casbin RBAC Policy for Dorm Life
+# Format: p, subject, object, action
+# ==================================
 
-p, admin, /api/v1/faculties, GET
-p, admin, /api/v1/faculties, POST
-p, admin, /api/v1/faculties/:id, GET
-p, admin, /api/v1/faculties/:id, PUT
-p, admin, /api/v1/faculties/:id, DELETE
-p, admin, /api/v1/dormitories, GET
-p, admin, /api/v1/dorm holidays, POST
-p, admin, /api/v1/dormitories/:id, GET
-p, admin, /api/v1/dormitories/:id, PUT
-p, admin, /api/v1/dormitories/:id, DELETE
-p, admin, /api/v1/faculty-dormitories, GET
-p, admin, /api/v1/faculty-dormitories, POST
-p, admin, /api/v1/faculty-dormitories/:faculty_id/:dormitory_id, GET
-p, admin, /api/v1/faculty-dormitories/:faculty_id/:dormitory_id, PUT
-p, admin, /api/v1/faculty-dormitories/:faculty_id/:dormitory_id, DELETE
-p, admin, /api/v1/users, GET
-p, admin, /api/v1/users, POST
-p, admin, /api/v1/users/:id, GET
-p, admin, /api/v1/users/:id, PUT
-p, admin, /api/v1/users/:id, DELETE
-p, admin, /api/v1/users/all, GET
-p, admin, /api/v1/users/:id/role, PUT
-p, admin, /api/v1/users/assign-faculty-dean-office, POST
-p, admin, /api/v1/users/assign-dorm-manager, POST
-p, admin, /api/v1/users/assign-student-council, POST
-p, admin, /api/v1/admin/accommodation-applications, GET
-p, admin, /api/v1/admin/accommodation-applications/:id, GET
-p, admin, /api/v1/admin/accommodation-applications/:id/status, PUT
-p, admin, /api/v1/admin/accommodation-applications/:id/comments, POST
-p, admin, /api/v1/admin/accommodation-applications/:id/comments, GET
-p, admin, /api/v1/admin/settlement, GET
-p, admin, /api/v1/admin/applications, GET
-p, admin, /api/v1/admin/applications-overview, GET
-p, admin, /api/v1/admin/room-reservations, GET
-p, admin, /api/v1/admin/room-reservations/:reservationId/status, PUT
-p, admin, /api/v1/admin/settlement-agreements, GET
-p, admin, /api/v1/admin/settlement-agreements/:id, GET
-p, admin, /api/v1/admin/settlement-agreements/:id, PUT
-p, admin, /api/v1/secure/profile, GET
-p, admin, /api/v1/secure/profile, PATCH
-p, admin, /api/v1/secure/dashboard, GET
-p, admin, /api/v1/secure/notifications, GET
-p, admin, /api/v1/secure/notifications, POST
-p, admin, /api/v1/secure/notifications/:id/read, PUT
-p, admin, /api/v1/secure/notifications/:id, DELETE
-p, admin, /api/v1/applications, GET
-p, admin, /api/v1/settlement, GET
-p, admin, /api/v1/faculties/:facultyId/groups, *
-p, admin, /api/v1/groups/:id, *
-p, admin, /api/v1/admin/dormitories, GET
-p, admin, /api/v1/admin/dormitories, POST
-p, admin, /api/v1/admin/dormitories/:id, GET
-p, admin, /api/v1/admin/dormitories/:id, PUT
-p, admin, /api/v1/admin/dormitories/:id, DELETE
-p, admin, /api/v1/dormitories/:dormitoryId/rooms, *
-p, admin, /api/v1/rooms/:id, *
-p, admin, /api/v1/admin/settlement-schedule, *
+# ----------------
+#  Superadmin
+#  Має повний доступ до всього.
+# ----------------
+p, superadmin, /*, *
+
+
+# ----------------
+#  Admin
+#  Має доступ до більшості операцій, окрім керування ключовими сутностями.
+# ----------------
+# Заявки на поселення (Accommodation Applications)
+p, admin, /api/v1/admin/accommodation-applications, *
+p, admin, /api/v1/admin/accommodation-applications/:id, *
+p, admin, /api/v1/admin/accommodation-applications/:id/status, *
+p, admin, /api/v1/admin/accommodation-applications/:id/comments, *
+# Бронювання (Room Reservations)
+p, admin, /api/v1/admin/room-reservations, *
+p, admin, /api/v1/admin/room-reservations/:reservationId/status, *
+# Договори (Settlement Agreements)
+p, admin, /api/v1/admin/settlement-agreements, *
+p, admin, /api/v1/admin/settlement-agreements/:id, *
+# Налаштування періодів подачі заяв (Application Presets)
 p, admin, /api/v1/application-presets, *
 p, admin, /api/v1/application-presets/:id, *
-p, admin, /api/v1/services/settlement-agreement, POST
-p, admin, /api/v1/admin/passes/:passId/revoke, PUT
+# Розклад поселення та Події
+p, admin, /api/v1/admin/settlement-schedule, *
+p, admin, /api/v1/admin/settlement-schedule/:id, *
+p, admin, /api/v1/admin/events, *
+p, admin, /api/v1/admin/events/:eventId, *
+# Загальні ресурси для адміністрування
+p, admin, /api/v1/users/all, GET 
+p, admin, /api/v1/dormitories, GET
+p, admin, /api/v1/faculties, GET
+p, admin, /api/v1/faculties/:facultyId/groups, GET
+# Захищені роути (профіль, сповіщення)
+p, admin, /api/v1/secure/*, *
 
+
+# ----------------
+#  Faculty Dean Office (Деканат)
+#  Керує ресурсами в межах свого факультету.
+# ----------------
+# Заявки (в межах факультету, фільтрується в контролері)
 p, faculty_dean_office, /api/v1/admin/accommodation-applications, GET
 p, faculty_dean_office, /api/v1/admin/accommodation-applications/:id, GET
 p, faculty_dean_office, /api/v1/admin/accommodation-applications/:id/status, PUT
-p, faculty_dean_office, /api/v1/admin/accommodation-applications/:id/comments, POST
-p, faculty_dean_office, /api/v1/admin/accommodation-applications/:id/comments, GET
-p, faculty_dean_office, /api/v1/secure/profile, GET
-p, faculty_dean_office, /api/v1/secure/profile, PATCH
-p, faculty_dean_office, /api/v1/secure/dashboard, GET
-p, faculty_dean_office, /api/v1/secure/notifications, GET
-p, faculty_dean_office, /api/v1/secure/notifications, POST
-p, faculty_dean_office, /api/v1/secure/notifications/:id/read, PUT
-p, faculty_dean_office, /api/v1/secure/notifications/:id, DELETE
-p, faculty_dean_office, /api/v1/dormitories, GET
-p, faculty_dean_office, /api/v1/applications, GET
-p, faculty_dean_office, /api/v1/settlement, GET
-p, faculty_dean_office, /api/v1/faculties, GET
+p, faculty_dean_office, /api/v1/admin/accommodation-applications/:id/comments, *
+# Групи (повний CRUD в межах свого факультету, контролюється в логіці)
 p, faculty_dean_office, /api/v1/faculties/:facultyId/groups, *
 p, faculty_dean_office, /api/v1/groups/:id, *
-p, faculty_dean_office, /api/v1/faculty-dormitories, GET
-p, faculty_dean_office, /api/v1/auth/validate-token, GET
-p, faculty_dean_office, /api/v1/application-presets, GET
-p, faculty_dean_office, /api/v1/application-presets, POST
-p, faculty_dean_office, /api/v1/application-presets/:id, GET
-p, faculty_dean_office, /api/v1/application-presets/:id, PUT
-p, faculty_dean_office, /api/v1/application-presets/:id, DELETE
-p, faculty_dean_office, /api/v1/settlement-schedule, GET 
-p, faculty_dean_office, /api/v1/services/settlement-agreement, POST
+# Призначення ролей для студради
+p, faculty_dean_office, /api/v1/users/:id/role, PUT
+# Налаштування періодів подачі заяв
+p, faculty_dean_office, /api/v1/application-presets, *
+p, faculty_dean_office, /api/v1/application-presets/:id, *
+# Розклад поселення (може створювати/редагувати для свого факультету/курсу/групи або загальні)
+p, faculty_dean_office, /api/v1/admin/settlement-schedule, *
+p, faculty_dean_office, /api/v1/admin/settlement-schedule/:id, *
+# Події (може створювати для свого факультету)
+p, faculty_dean_office, /api/v1/admin/events, *
+p, faculty_dean_office, /api/v1/admin/events/:eventId, *
+# Ресурси для перегляду
 p, faculty_dean_office, /api/v1/users/all, GET
-p, faculty_dean_office, /api/v1/admin/passes/:passId/revoke, PUT
-p, faculty_dean_office, /api/v1/admin/settlement-schedule, GET
-p, faculty_dean_office, /api/v1/admin/settlement-schedule, POST
-p, faculty_dean_office, /api/v1/admin/settlement-schedule/:id, PUT
-p, faculty_dean_office, /api/v1/admin/settlement-schedule/:id, DELETE
-p, faculty_dean_office, /api/v1/admin/settlement-schedule/:id, GET 
+p, faculty_dean_office, /api/v1/dormitories, GET
+p, faculty_dean_office, /api/v1/faculties, GET
+p, faculty_dean_office, /api/v1/faculty-dormitories, GET
+# Захищені роути (профіль, сповіщення і т.д.)
+p, faculty_dean_office, /api/v1/secure/*, *
+p, faculty_dean_office, /api/v1/auth/validate-token, GET 
 
+
+# ----------------
+#  Dorm Manager (Комендант)
+#  Керує ресурсами в межах свого гуртожитку.
+# ----------------
+# Заявки (в межах гуртожитку, фільтрується в контролері)
 p, dorm_manager, /api/v1/admin/accommodation-applications, GET
 p, dorm_manager, /api/v1/admin/accommodation-applications/:id, GET
 p, dorm_manager, /api/v1/admin/accommodation-applications/:id/status, PUT
-p, dorm_manager, /api/v1/admin/accommodation-applications/:id/comments, POST
-p, dorm_manager, /api/v1/admin/accommodation-applications/:id/comments, GET
-p, dorm_manager, /api/v1/users, POST
-p, dorm_manager, /api/v1/users/:id, PUT
-p, dorm_manager, /api/v1/secure/profile, GET
-p, dorm_manager, /api/v1/secure/profile, PATCH
-p, dorm_manager, /api/v1/secure/dashboard, GET
-p, dorm_manager, /api/v1/secure/notifications, GET
-p, dorm_manager, /api/v1/secure/notifications, POST
-p, dorm_manager, /api/v1/secure/notifications/:id/read, PUT
-p, dorm_manager, /api/v1/secure/notifications/:id, DELETE
-p, dorm_manager, /api/v1/dormitories, GET
-p, dorm_manager, /api/v1/dormitories/:id, GET
-p, dorm_manager, /api/v1/applications, GET
-p, dorm_manager, /api/v1/settlement, GET
-p, dorm_manager, /api/v1/faculties, GET
-p, dorm_manager, /api/v1/faculty-dormitories, GET
-p, dorm_manager, /api/v1/auth/validate-token, GET
-p, dorm_manager, /api/v1/application-presets, GET
-p, dorm_manager, /api/v1/application-presets, POST
-p, dorm_manager, /api/v1/application-presets/:id, GET
-p, dorm_manager, /api/v1/application-presets/:id, PUT
-p, dorm_manager, /api/v1/application-presets/:id, DELETE
-p, dorm_manager, /api/v1/application-presets/dormitory/:dormitoryId, GET
+p, dorm_manager, /api/v1/admin/accommodation-applications/:id/comments, *
+# Бронювання (в межах гуртожитку, фільтрується в контролері)
 p, dorm_manager, /api/v1/admin/room-reservations, GET
 p, dorm_manager, /api/v1/admin/room-reservations/:reservationId/status, PUT
-p, dorm_manager, /api/v1/dorm-manager/stats, GET
-p, dorm_manager, /api/v1/admin/settlement-agreements, GET
-p, dorm_manager, /api/v1/admin/settlement-agreements/:id, GET
-p, dorm_manager, /api/v1/admin/settlement-agreements/:id, PUT
+# Договори (в межах гуртожитку, фільтрується в контролері)
+p, dorm_manager, /api/v1/admin/settlement-agreements, *
+p, dorm_manager, /api/v1/admin/settlement-agreements/:id, *
+# Кімнати (повний CRUD в межах свого гуртожитку)
 p, dorm_manager, /api/v1/dormitories/:dormitoryId/rooms, *
 p, dorm_manager, /api/v1/rooms/:id, *
-p, dorm_manager, /api/v1/settlement-schedule, GET 
-p, dorm_manager, /api/v1/services/settlement-agreement, POST
-p, dorm_manager, /api/v1/admin/passes/:passId/revoke, PUT
-p, dorm_manager, /api/v1/admin/settlement-schedule, GET
-p, dorm_manager, /api/v1/admin/settlement-schedule, POST
-p, dorm_manager, /api/v1/admin/settlement-schedule/:id, PUT
-p, dorm_manager, /api/v1/admin/settlement-schedule/:id, DELETE
-p, dorm_manager, /api/v1/admin/settlement-schedule/:id, GET
+# Налаштування періодів подачі заяв (лише для свого гуртожитку)
+p, dorm_manager, /api/v1/application-presets, *
+p, dorm_manager, /api/v1/application-presets/:id, *
+p, dorm_manager, /api/v1/application-presets/dormitory/:dormitoryId, GET
+# Розклад поселення (може створювати/редагувати для свого гуртожитку)
+p, dorm_manager, /api/v1/admin/settlement-schedule, *
+p, dorm_manager, /api/v1/admin/settlement-schedule/:id, *
+# Події (може створювати для свого гуртожитку)
+p, dorm_manager, /api/v1/admin/events, *
+p, dorm_manager, /api/v1/admin/events/:eventId, *
+# Ресурси для перегляду
+p, dorm_manager, /api/v1/users/all, GET
+p, dorm_manager, /api/v1/dorm-manager/stats, GET
+p, dorm_manager, /api/v1/faculties, GET
+p, dorm_manager, /api/v1/faculty-dormitories, GET
+# Захищені роути
+p, dorm_manager, /api/v1/secure/*, *
+p, dorm_manager, /api/v1/auth/validate-token, GET
 
+
+# ----------------
+#  Student Council Head & Member (Студентська рада)
+# ----------------
 p, student_council_head, /api/v1/admin/accommodation-applications, GET
 p, student_council_head, /api/v1/admin/accommodation-applications/:id, GET
 p, student_council_head, /api/v1/admin/accommodation-applications/:id/comments, POST
 p, student_council_head, /api/v1/admin/accommodation-applications/:id/comments, GET
-p, student_council_head, /api/v1/secure/profile, GET
-p, student_council_head, /api/v1/secure/profile, PATCH
-p, student_council_head, /api/v1/secure/dashboard, GET
-p, student_council_head, /api/v1/secure/notifications, GET
-p, student_council_head, /api/v1/secure/notifications/:id/read, PUT
-p, student_council_head, /api/v1/secure/notifications/:id, DELETE
+p, student_council_head, /api/v1/secure/*, *
+p, student_council_head, /api/v1/auth/validate-token, GET
 p, student_council_head, /api/v1/dormitories, GET
-p, student_council_head, /api/v1/applications, GET
-p, student_council_head, /api/v1/settlement, GET
+p, student_council_head, /api/v1/settlement-schedule, GET
 p, student_council_head, /api/v1/faculties, GET
 p, student_council_head, /api/v1/faculty-dormitories, GET
-p, student_council_head, /api/v1/auth/validate-token, GET
-p, student_council_head, /api/v1/settlement-schedule, GET
-p, student_council_head, /api/v1/services/settlement-agreement, POST
+p, student_council_head, /api/v1/application-presets, GET # FIX
 
+# ----
 p, student_council_member, /api/v1/admin/accommodation-applications, GET
 p, student_council_member, /api/v1/admin/accommodation-applications/:id, GET
-p, student_council_member, /api/v1/admin/accommodation-applications/:id/comments, POST
 p, student_council_member, /api/v1/admin/accommodation-applications/:id/comments, GET
-p, student_council_member, /api/v1/secure/profile, GET
-p, student_council_member, /api/v1/secure/profile, PATCH
-p, student_council_member, /api/v1/secure/dashboard, GET
-p, student_council_member, /api/v1/secure/notifications, GET
-p, student_council_member, /api/v1/secure/notifications/:id/read, PUT
-p, student_council_member, /api/v1/secure/notifications/:id, DELETE
+p, student_council_member, /api/v1/secure/*, *
+p, student_council_member, /api/v1/auth/validate-token, GET
 p, student_council_member, /api/v1/dormitories, GET
-p, student_council_member, /api/v1/applications, GET
-p, student_council_member, /api/v1/settlement, GET
+p, student_council_member, /api/v1/settlement-schedule, GET
 p, student_council_member, /api/v1/faculties, GET
 p, student_council_member, /api/v1/faculty-dormitories, GET
-p, student_council_member, /api/v1/auth/validate-token, GET
-p, student_council_member, /api/v1/settlement-schedule, GET
-p, student_council_member, /api/v1/services/settlement-agreement, POST
+p, student_council_member, /api/v1/application-presets, GET # FIX
 
-p, student, /api/v1/services/accommodation-application, POST
-p, student, /api/v1/accommodation-applications/my, GET
-p, student, /api/v1/accommodation-applications/my/:id, GET
-p, student, /api/v1/accommodation-applications/my/:id, PUT
-p, student, /api/v1/accommodation-applications/my/:id, DELETE
-p, student, /api/v1/services/settlement, POST
-p, student, /api/v1/services/contract-creation, POST
-p, student, /api/v1/secure/profile, GET
-p, student, /api/v1/secure/profile, PATCH
+
+# ----------------
+#  Student (Студент)
+# ----------------
+# Захищені маршрути студента
+p, student, /api/v1/secure/profile, *
 p, student, /api/v1/secure/dashboard, GET
-p, student, /api/v1/secure/notifications, GET
-p, student, /api/v1/secure/notifications/:id/read, PUT
-p, student, /api/v1/secure/notifications/:id, DELETE
-p, student, /api/v1/dormitories, GET
-p, student, /api/v1/settlement-schedule, GET
-p, student, /api/v1/settlement, GET
-p, student, /api/v1/faculties/:facultyId/groups, GET
-p, student, /api/v1/faculty-dormitories, GET
-p, student, /api/v1/auth/validate-token, GET
-p, student, /api/v1/application-presets/dormitory/:dormitoryId, GET
-p, student, /api/v1/services/settlement-agreement, POST
-p, student, /api/v1/services/rooms/search, GET
-p, student, /api/v1/services/rooms/:roomId, GET
-p, student, /api/v1/services/rooms/:roomId/reserve, POST
+p, student, /api/v1/secure/notifications, *
 p, student, /api/v1/secure/my-reservations, GET
 p, student, /api/v1/secure/my-reservations/:reservationId, DELETE
 p, student, /api/v1/secure/my-settlement-agreements, GET
 p, student, /api/v1/secure/my-settlement-agreements/:id, GET
 p, student, /api/v1/secure/my-pass, GET
 p, student, /api/v1/secure/my-roommates, GET
-p, student, /api/v1/dormitories/:id, GET
-
-p, superadmin, /api/v1/admin/passes/:passId/revoke, PUT
-p, dorm_manager, /api/v1/admin/passes/:passId/revoke, PUT
-p, faculty_dean_office, /api/v1/admin/passes/:passId/revoke, PUT
-
-p, admin, /api/v1/admin/events, *
-p, superadmin, /api/v1/admin/events, *
-p, faculty_dean_office, /api/v1/admin/events, POST
-p, faculty_dean_office, /api/v1/admin/events/:eventId, PUT
-p, faculty_dean_office, /api/v1/admin/events/:eventId, DELETE
-p, faculty_dean_office, /api/v1/admin/events, GET
-p, dorm_manager, /api/v1/admin/events, POST
-p, dorm_manager, /api/v1/admin/events/:eventId, PUT
-p, dorm_manager, /api/v1/admin/events/:eventId, DELETE
-p, dorm_manager, /api/v1/admin/events, GET
-
-# Public view access (already in your provided file)
-p, student, /api/v1/settlement-schedule, GET
-
-# Admin view access for all (*) is already covered by:
-# p, admin, /api/v1/admin/settlement-schedule, *
-# p, superadmin, /api/v1/admin/settlement-schedule, *
-
-# Specific CRUD for faculty_dean_office on ADMIN settlement schedule
-p, faculty_dean_office, /api/v1/admin/settlement-schedule, GET
-p, faculty_dean_office, /api/v1/admin/settlement-schedule, POST
-p, faculty_dean_office, /api/v1/admin/settlement-schedule/:id, GET
-p, faculty_dean_office, /api/v1/admin/settlement-schedule/:id, PUT
-p, faculty_dean_office, /api/v1/admin/settlement-schedule/:id, DELETE
-
-# Specific CRUD for dorm_manager on ADMIN settlement schedule
-p, dorm_manager, /api/v1/admin/settlement-schedule, GET
-p, dorm_manager, /api/v1/admin/settlement-schedule, POST
-p, dorm_manager, /api/v1/admin/settlement-schedule/:id, GET
-p, dorm_manager, /api/v1/admin/settlement-schedule/:id, PUT
-p, dorm_manager, /api/v1/admin/settlement-schedule/:id, DELETE
-
-# Permissions for users to view events through secure routes
 p, student, /api/v1/secure/events, GET
 p, student, /api/v1/secure/events/:eventId, GET
-p, dorm_manager, /api/v1/secure/events, GET
-p, dorm_manager, /api/v1/secure/events/:eventId, GET
-p, faculty_dean_office, /api/v1/secure/events, GET 
-p, faculty_dean_office, /api/v1/secure/events/:eventId, GET
-p, student_council_head, /api/v1/secure/events, GET
-p, student_council_head, /api/v1/secure/events/:eventId, GET
-p, student_council_member, /api/v1/secure/events, GET
-p, student_council_member, /api/v1/secure/events/:eventId, GET
+p, student, /api/v1/secure/settlement-schedule, GET
+# FIX: Додано дозвіл для my-accommodation-applications. Зверніть увагу, що шлях /secure/ вже є, але для authorize потрібен конкретний.
+p, student, /api/v1/accommodation-applications/my, GET 
+p, student, /api/v1/accommodation-applications/my/:id, * # На майбутнє, повний доступ до своєї заявки
+# Маршрути сервісів
+p, student, /api/v1/services/accommodation-application, POST
+p, student, /api/v1/services/settlement-agreement, POST
+p, student, /api/v1/services/rooms/search, GET
+p, student, /api/v1/services/rooms/:roomId, GET
+p, student, /api/v1/services/rooms/:roomId/reserve, POST
+# Загальнодоступні, але вимагають автентифікації для студента
+p, student, /api/v1/dormitories, GET
+p, student, /api/v1/dormitories/:id, GET
+p, student, /api/v1/faculties, GET
+p, student, /api/v1/faculties/:facultyId/groups, GET
+p, student, /api/v1/faculty-dormitories, GET
+p, student, /api/v1/auth/validate-token, GET
+# FIX: Надаємо права на читання application-presets для студента, що необхідно для сторінки договору
+p, student, /api/v1/application-presets, GET
+p, student, /api/v1/application-presets/dormitory/:dormitoryId, GET
