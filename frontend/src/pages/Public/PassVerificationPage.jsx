@@ -1,91 +1,113 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useUser } from '../../contexts/UserContext';
 import api from '../../utils/api';
 import styles from './styles/PassVerificationPage.module.css';
 import Avatar from '../../components/UI/Avatar/Avatar';
-import { CheckCircleIcon, XCircleIcon, ShieldExclamationIcon, HomeIcon } from '@heroicons/react/24/solid';
-import logoImg from '../../images/logo.svg'; // Your app logo
+import { CheckCircleIcon, XCircleIcon, HomeIcon } from '@heroicons/react/24/outline';
+import logoImg from '../../images/logo.svg';
 
 const PassVerificationPage = () => {
     const { passIdentifier } = useParams();
-    const [verificationResult, setVerificationResult] = useState(null);
+    const [passDetails, setPassDetails] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    const { user, isLoading: isUserLoading } = useUser();
+    const navigate = useNavigate();
 
     useEffect(() => {
-        if (passIdentifier) {
-            const verifyPass = async () => {
-                setIsLoading(true);
-                try {
-                    const response = await api.public.get(`/passes/public-verify/${passIdentifier}`);
-                    setVerificationResult(response.data);
-                } catch (err) {
-                    console.error("Verification error:", err.response?.data || err.message);
-                    setVerificationResult({ 
-                        isValid: false, 
-                        message: err.response?.data?.message || "Помилка перевірки перепустки. Зверніться до адміністрації." 
-                    });
-                } finally {
-                    setIsLoading(false);
-                }
-            };
-            verifyPass();
-        } else {
-            setVerificationResult({ isValid: false, message: "Не вказано ідентифікатор перепустки." });
-            setIsLoading(false);
-        }
+        const verifyPass = async () => {
+            if (!passIdentifier) {
+                setError("Ідентифікатор перепустки відсутній.");
+                setIsLoading(false);
+                return;
+            }
+            setIsLoading(true);
+            try {
+                const response = await api.public.get(`/passes/public-verify/${passIdentifier}`);
+                setPassDetails(response.data);
+            } catch (err) {
+                const errorMessage = err.response?.data?.message || "Сталася помилка під час перевірки.";
+                setError(errorMessage);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        verifyPass();
     }, [passIdentifier]);
+
+    const handleReturnHome = () => {
+        if (user) {
+            navigate('/dashboard');
+        } else {
+            navigate('/login');
+        }
+    };
 
     const formatDate = (dateString) => {
         if (!dateString) return 'N/A';
-        try { return new Date(dateString).toLocaleDateString('uk-UA', { year: 'numeric', month: 'long', day: 'numeric' }); }
-        catch { return 'N/A'; }
+        try {
+            return new Date(dateString).toLocaleDateString('uk-UA', { year: 'numeric', month: 'long', day: 'numeric' });
+        } catch { return 'N/A'; }
+    };
+
+    const renderContent = () => {
+        if (isLoading) {
+            return (
+                <>
+                    <div className={styles.loadingSpinner}></div>
+                    <p className={styles.statusMessage}>Перевірка даних перепустки...</p>
+                </>
+            );
+        }
+
+        if (error || !passDetails?.isValid) {
+            return (
+                <>
+                    <XCircleIcon className={styles.statusIcon} />
+                    <h2 className={styles.title}>Перепустка недійсна</h2>
+                    <p className={styles.statusMessage}>{error || passDetails?.message || "Перепустку не знайдено або термін її дії закінчився."}</p>
+                </>
+            );
+        }
+
+        return (
+            <>
+                <CheckCircleIcon className={styles.statusIcon} />
+                <h2 className={styles.title}>Перепустка дійсна</h2>
+                <div className={styles.passDetails}>
+                    <div className={styles.detailPhoto}>
+                        <Avatar user={{ avatar: passDetails.studentAvatar, email: passDetails.studentName }} size={90} />
+                    </div>
+                    <p><strong>П.І.Б.:</strong> {passDetails.studentName}</p>
+                    <p><strong>Факультет:</strong> {passDetails.facultyName || 'N/A'}</p>
+                    <p><strong>Гуртожиток:</strong> {passDetails.dormitoryName || 'N/A'}</p>
+                    <p><strong>Кімната:</strong> {passDetails.roomDisplayNumber || 'N/A'}</p>
+                    <p><strong>Дійсна до:</strong> {formatDate(passDetails.validUntil)}</p>
+                </div>
+            </>
+        );
     };
 
     return (
         <div className={styles.pageWrapper}>
-            <div className={styles.logoHeader}>
-                <img src={logoImg} alt="Dorm Life" className={styles.pageLogo} />
+            <header className={styles.logoHeader}>
+                <img src={logoImg} alt="Dorm Life Logo" className={styles.pageLogo} />
                 <span>DORM LIFE</span>
-            </div>
-            <div className={`${styles.container} ${verificationResult?.isValid ? styles.valid : styles.invalid}`}>
-                {isLoading ? (
-                    <>
-                        <div className={styles.loadingSpinner}></div>
-                        <p className={styles.statusMessage}>Перевірка перепустки...</p>
-                    </>
-                ) : (
-                    <>
-                        {verificationResult?.isValid ? (
-                            <CheckCircleIcon className={styles.statusIcon} />
-                        ) : (
-                            <XCircleIcon className={styles.statusIcon} />
-                        )}
-                        <h1 className={styles.title}>
-                            {verificationResult?.isValid ? "Перепустка Дійсна" : "Перепустка Недійсна"}
-                        </h1>
-                        
-                        {verificationResult?.isValid && verificationResult.studentName ? (
-                            <div className={styles.passDetails}>
-                                <div className={styles.detailPhoto}>
-                                    <Avatar user={{ avatar: verificationResult.studentAvatar, email: 'student' }} size={100} />
-                                </div>
-                                <p><strong>Студент:</strong> {verificationResult.studentName}</p>
-                                <p><strong>Факультет:</strong> {verificationResult.facultyName || 'N/A'}</p>
-                                <p><strong>Гуртожиток:</strong> {verificationResult.dormitoryName || 'N/A'}</p>
-                                <p><strong>Кімната:</strong> {verificationResult.roomDisplayNumber || 'N/A'}</p>
-                                <p><strong>Дійсна до:</strong> {formatDate(verificationResult.validUntil)}</p>
-                            </div>
-                        ) : (
-                            <p className={styles.statusMessage}>{verificationResult?.message || "Додаткова інформація відсутня."}</p>
-                        )}
-                    </>
-                )}
-                {!isLoading && (
-                    <Link to="/" className={styles.homeLink}>
-                        <HomeIcon /> Повернутися на головну сайту
-                    </Link>
-                )}
-            </div>
+            </header>
+            <main className={`${styles.container} ${isLoading ? '' : (error || !passDetails?.isValid ? styles.invalid : styles.valid)}`}>
+                {renderContent()}
+                <button
+                    onClick={handleReturnHome}
+                    className={styles.homeLink}
+                    disabled={isUserLoading}
+                >
+                    <HomeIcon />
+                    {isUserLoading ? 'Перевірка сесії...' : 'Повернутися на головну'}
+                </button>
+            </main>
         </div>
     );
 };

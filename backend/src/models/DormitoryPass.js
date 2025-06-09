@@ -32,13 +32,15 @@ class DormitoryPass {
     static async findActiveByUserId(userId) {
         const query = `
             SELECT dp.*,
-                   u.name as student_name, u.avatar as student_avatar,
-                   f.name as faculty_name,
-                   d.name as dormitory_name,
-                   COALESCE(r.number, dp.room_number_text) as room_display_number
+                u.name as student_name, u.avatar as student_avatar,
+                COALESCE(f_profile.name, f_user.name) as faculty_name,
+                d.name as dormitory_name,
+                COALESCE(r.number, dp.room_number_text) as room_display_number
             FROM dormitory_passes dp
             JOIN users u ON dp.user_id = u.id
-            LEFT JOIN faculties f ON u.faculty_id = f.id /* Assumes faculty_id is on users table */
+            LEFT JOIN user_profiles up ON u.id = up.user_id
+            LEFT JOIN faculties f_profile ON up.faculty_id = f_profile.id
+            LEFT JOIN faculties f_user ON u.faculty_id = f_user.id
             JOIN dormitories d ON dp.dormitory_id = d.id
             LEFT JOIN rooms r ON dp.room_id = r.id
             WHERE dp.user_id = ? AND dp.status = 'active' AND dp.valid_until >= CURDATE()
@@ -54,14 +56,16 @@ class DormitoryPass {
             SELECT
                 u.name as student_name,
                 u.avatar as student_avatar,
-                f.name as faculty_name,
+                COALESCE(f_profile.name, f_user.name) as faculty_name,
                 d.name as dormitory_name,
                 COALESCE(r.number, dp.room_number_text) as room_display_number,
                 DATE_FORMAT(dp.valid_until, '%Y-%m-%d') as valid_until,
                 dp.status
             FROM dormitory_passes dp
             JOIN users u ON dp.user_id = u.id
-            LEFT JOIN faculties f ON u.faculty_id = f.id
+            LEFT JOIN user_profiles up ON u.id = up.user_id
+            LEFT JOIN faculties f_profile ON up.faculty_id = f_profile.id
+            LEFT JOIN faculties f_user ON u.faculty_id = f_user.id
             JOIN dormitories d ON dp.dormitory_id = d.id
             LEFT JOIN rooms r ON dp.room_id = r.id
             WHERE dp.pass_identifier = ?
@@ -74,9 +78,9 @@ class DormitoryPass {
         let query = `
             SELECT id, pass_identifier, room_id, room_number_text, valid_from, valid_until, status FROM dormitory_passes
             WHERE user_id = ?
-              AND dormitory_id = ?
-              AND valid_until = ?
-              AND status = 'active'
+            AND dormitory_id = ?
+            AND valid_until = ?
+            AND status = 'active'
         `;
         const params = [user_id, dormitory_id, valid_until_date];
 
@@ -87,8 +91,9 @@ class DormitoryPass {
             query += ` AND room_number_text = ?`;
             params.push(room_number_text);
         }
-        query += ` LIMIT 1`;
         
+        query += ` LIMIT 1`;
+
         const [rows] = await pool.execute(query, params);
         return rows[0] || null;
     }
@@ -105,11 +110,11 @@ class DormitoryPass {
         if (source_id !== undefined) { fields.push("source_id = ?"); values.push(source_id); }
         if (source_type !== undefined) { fields.push("source_type = ?"); values.push(source_type); }
 
-
-        if (fields.length === 0) return false; // No fields to update
+        if (fields.length === 0) return false;
 
         const query = `UPDATE dormitory_passes SET ${fields.join(", ")}, updated_at = NOW() WHERE id = ?`;
         values.push(passId);
+
         const [result] = await pool.execute(query, values);
         return result.affectedRows > 0;
     }

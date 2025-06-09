@@ -1,147 +1,226 @@
 .notificationsContainer {
   position: relative;
 }
+
 .bellButton {
   background: none;
   border: none;
   cursor: pointer;
   position: relative;
-  padding: 8px; /* Standard padding for icon buttons */
-  border-radius: var(--border-radius-full); /* Circular */
+  padding: 8px;
+  border-radius: var(--border-radius-full);
   transition: background-color var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
+
 .bellButton:hover {
-  background-color: var(--background-light);
+  background-color: var(--primary-bg-hover-light);
 }
+
 .bellIcon {
   width: 24px;
   height: 24px;
-  color: var(--text-secondary, #333);
+  color: var(--text-secondary, #4b5563);
 }
+
 .badge {
   position: absolute;
-  top: 4px; /* Adjusted for better placement */
-  right: 4px;
+  top: 6px;
+  right: 6px;
   width: 10px;
   height: 10px;
-  background-color: var(--error-color, #ff4d4f); /* Use error color for notification dot */
-  border-radius: var(--border-radius-full);
-  border: 1px solid var(--card-background-color); /* Make dot stand out */
+  background-color: var(--error-color, #ef4444);
+  border-radius: 50%;
+  border: 2px solid var(--card-background-color, #fff);
+  box-shadow: 0 0 0 1px var(--error-color, #ef4444);
 }
+
 .notificationsDropdown {
   position: absolute;
-  top: calc(100% + 8px); /* Position below the button */
+  top: calc(100% + 12px);
   right: 0;
-  width: 320px;
+  width: 360px;
   background-color: var(--card-background-color, #fff);
-  border: 1px solid var(--border-color, #e0e0e0);
+  border: 1px solid var(--border-color, #e5e7eb);
   border-radius: var(--border-radius-lg, 8px);
   z-index: 1000;
-  overflow: hidden; /* To make border-radius apply to children */
+  overflow: hidden;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
 }
+
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 16px; /* Consistent padding */
-  border-bottom: 1px solid var(--border-color-light, #eee);
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-color-light, #f3f4f6);
+  background-color: var(--background-light);
 }
+
 .header h3 {
   margin: 0;
-  font-size: 1rem; /* Standardized size */
+  font-size: 1rem;
   font-weight: 600;
   color: var(--text-primary);
 }
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.markAllReadButton {
+  font-size: 0.75rem;
+  color: var(--primary-color);
+  font-weight: 500;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  transition: color var(--transition-fast);
+}
+
+.markAllReadButton:hover {
+  color: var(--primary-color-dark);
+}
+
 .closeButton {
   background: none;
   border: none;
   cursor: pointer;
-  padding: 4px; /* Clickable area */
-  border-radius: var(--border-radius-full);
+  padding: 4px;
+  border-radius: 50%;
   transition: background-color var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
+
 .closeButton:hover {
-  background-color: var(--background-light);
+  background-color: var(--border-color);
 }
+
 .closeIcon {
   width: 18px;
   height: 18px;
-  color: var(--text-muted, #666);
+  color: var(--text-muted, #6b7280);
 }
+
 .notificationsList {
   list-style: none;
   padding: 0;
   margin: 0;
-  max-height: 300px;
+  max-height: 400px;
   overflow-y: auto;
 }
+
 .notificationItem {
+  display: flex;
+  gap: 12px;
   padding: 12px 16px;
-  border-bottom: 1px solid var(--border-color-light, #eee);
+  border-bottom: 1px solid var(--border-color-light, #f3f4f6);
   transition: background-color var(--transition-base);
 }
+
 .notificationItem:last-child {
   border-bottom: none;
 }
+
 .notificationItem.read {
-  background-color: var(--background-light, #f9f9f9); /* Subtle read state */
-  opacity: 0.7; /* Dim read notifications */
+  opacity: 0.65;
 }
+
 .notificationItem:hover {
-  background-color: var(--primary-bg-light, #f5f5f5);
+  background-color: var(--primary-bg-light);
 }
+
+.notificationIconWrapper {
+    flex-shrink: 0;
+    margin-top: 4px;
+}
+
+.notificationIcon {
+    width: 20px;
+    height: 20px;
+    color: var(--primary-color);
+}
+
 .notificationContent h4 {
-  margin: 0 0 4px 0; /* Adjusted margin */
-  font-size: 0.9rem; /* Standardized size */
-  font-weight: 500;
+  margin: 0 0 4px 0;
+  font-size: 0.9rem;
+  font-weight: 600;
   color: var(--text-primary);
 }
+
 .notificationContent p {
-  margin: 0; /* Removed default margin */
-  font-size: 0.8rem;
-  color: var(--text-secondary, #666);
-  line-height: 1.4;
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary, #6b7280);
+  line-height: 1.5;
 }
+
 .timestamp {
-  font-size: 0.7rem; /* Smaller timestamp */
-  color: var(--text-muted, #999);
-  display: block; /* Ensure it's on its own line or properly spaced */
+  font-size: 0.75rem;
+  color: var(--text-muted, #9ca3af);
+  display: block;
   margin-top: 6px;
 }
+
 .actions {
   display: flex;
-  justify-content: flex-end;
-  align-items: center; /* Vertically align buttons */
-  margin-top: 8px;
-  gap: 8px; /* Add gap between action buttons */
+  align-items: center;
+  margin-left: auto;
+  gap: 8px;
+  flex-shrink: 0;
 }
-.readButton,
-.deleteButton {
-  background: none;
-  border: 1px solid transparent; /* Base border for consistent height */
-  color: var(--primary-color, #006aff);
-  cursor: pointer;
-  font-size: 0.75rem; /* Smaller action text */
-  padding: 4px 8px; /* Consistent padding */
-  border-radius: var(--border-radius-sm);
-  transition: color var(--transition-base), background-color var(--transition-base), border-color var(--transition-base);
+
+.actionButton {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 50%;
+    color: var(--text-muted);
+    transition: background-color 0.2s, color 0.2s;
 }
-.readButton:hover {
-  background-color: var(--primary-bg-light);
-  border-color: var(--primary-color-light);
-  color: var(--primary-color-dark);
+
+.actionButton:hover {
+    background-color: var(--border-color);
+    color: var(--text-primary);
 }
-.deleteButton {
-  color: var(--error-color, #dc3545);
+
+.actionIcon {
+    width: 16px;
+    height: 16px;
 }
-.deleteButton:hover {
-  background-color: var(--error-bg-light);
-  border-color: var(--error-color);
-  color: var(--error-color-dark);
-}
+
+.readButton { color: var(--success-color); }
+.readButton:hover { color: var(--success-color-dark); }
+.deleteButton { color: var(--error-color); }
+.deleteButton:hover { color: var(--error-color-dark); }
+
 .noNotifications {
-  padding: 16px; /* Increased padding */
+  padding: 24px;
   text-align: center;
-  color: var(--text-muted, #666);
-  font-size: 0.9rem; /* Standardized size */
+  color: var(--text-muted, #6b7280);
+  font-size: 0.9rem;
+}
+
+.sectionTitle {
+    padding: 8px 16px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    background-color: var(--background-light);
+    border-bottom: 1px solid var(--border-color-light);
+    border-top: 1px solid var(--border-color-light);
+}
+.sectionTitle:first-child {
+    border-top: none;
 }

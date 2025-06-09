@@ -1,7 +1,7 @@
 .passCardContainer {
     width: 100%;
-    max-width: 380px;
-    height: 230px;
+    max-width: 400px;
+    height: 270px;
     perspective: 1200px;
     cursor: pointer;
     margin: 0 auto; /* Updated: Removed top/bottom margin, auto for horizontal centering if max-width applies */

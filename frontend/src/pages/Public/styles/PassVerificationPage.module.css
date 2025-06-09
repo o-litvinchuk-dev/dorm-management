@@ -6,6 +6,8 @@
     min-height: 100vh;
     background-color: var(--background-color, #f8fafc);
     padding-top: 3rem; /* Space for logo */
+    padding-left: 1rem;
+    padding-right: 1rem;
 }
 
 .logoHeader {
@@ -104,6 +106,8 @@
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
+    border: none;
+    cursor: pointer;
 }
 .homeLink svg {
     width: 18px;
@@ -111,6 +115,10 @@
 }
 .homeLink:hover {
     background-color: var(--primary-color-dark);
+}
+.homeLink:disabled {
+    background-color: var(--text-muted);
+    cursor: not-allowed;
 }
 
 .loadingSpinner {

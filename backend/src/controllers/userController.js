@@ -7,8 +7,8 @@ const roleAssignmentSchema = Joi.object({
   role: Joi.string()
     .valid("faculty_dean_office", "dorm_manager", "student_council_head", "student_council_member")
     .required(),
-  facultyId: Joi.number().integer().positive().optional().allow(null),
-  dormitoryId: Joi.number().integer().positive().optional().allow(null),
+  facultyId: Joi.number().integer().positive().optional().allow(null, ""),
+  dormitoryId: Joi.number().integer().positive().optional().allow(null, ""),
 }).unknown(false);
 
 export const assignFacultyDeanOfficeRole = async (req, res) => {
@@ -180,14 +180,14 @@ export const assignStudentCouncilRole = async (req, res) => {
 export const getAllUsers = async (req, res) => {
   try {
     const schema = Joi.object({
-      role: Joi.string().allow('').optional().pattern(/^[a-zA-Z_]+(,[a-zA-Z_]+)*$/),
-      exclude_roles: Joi.string().allow('').optional().pattern(/^[a-zA-Z_]+(,[a-zA-Z_]+)*$/),
+      role: Joi.string().allow("").optional().pattern(/^[a-zA-Z_]+(,[a-zA-Z_]+)*$/),
+      exclude_roles: Joi.string().allow("").optional().pattern(/^[a-zA-Z_]+(,[a-zA-Z_]+)*$/),
       faculty_id: Joi.number().integer().positive().optional().allow(null),
-      search: Joi.string().allow('').optional(),
+      search: Joi.string().allow("").optional(),
       page: Joi.number().integer().min(1).optional().default(1),
       limit: Joi.number().integer().min(1).optional().default(1000),
-      sortBy: Joi.string().allow('').optional().default('name'),
-      sortOrder: Joi.string().valid('asc', 'desc').allow('').optional().default('asc'),
+      sortBy: Joi.string().allow("").optional().default("name"),
+      sortOrder: Joi.string().valid("asc", "desc").allow("").optional().default("asc"),
     });
 
     const { error, value } = schema.validate(req.query);
@@ -195,93 +195,70 @@ export const getAllUsers = async (req, res) => {
       return res.status(400).json({ error: "Невірні параметри запиту", details: error.details });
     }
 
-    let query = `
+    let queryBase = `
       SELECT u.id, u.email, u.role, u.name, u.faculty_id, u.dormitory_id,
              f.name AS faculty_name, d.name AS dormitory_name
       FROM users u
       LEFT JOIN faculties f ON u.faculty_id = f.id
       LEFT JOIN dormitories d ON u.dormitory_id = d.id
-      WHERE 1=1
     `;
-    const params = [];
-    const countParams = []; // Separate params for count query
-
-    let roles = [];
-    if (value.role) {
-      roles = value.role.split(',').map(r => r.trim()).filter(Boolean);
-      if (roles.length > 0) {
-        query += ` AND u.role IN (${roles.map(() => '?').join(',')})`;
-        params.push(...roles);
-        countParams.push(...roles); // Add to countParams
-      }
-    }
-
-    let excludeRoles = [];
-    if (value.exclude_roles) {
-      excludeRoles = value.exclude_roles.split(',').map(r => r.trim()).filter(Boolean);
-      if (excludeRoles.length > 0) {
-        query += ` AND u.role NOT IN (${excludeRoles.map(() => '?').join(',')})`;
-        params.push(...excludeRoles);
-        countParams.push(...excludeRoles); // Add to countParams
-      }
-    }
-
-    if (value.faculty_id) {
-      query += ` AND u.faculty_id = ?`;
-      params.push(value.faculty_id);
-      countParams.push(value.faculty_id); // Add to countParams
-    }
-
-    let searchTerm = '';
-    if (value.search) {
-      searchTerm = `%${value.search}%`;
-      query += ` AND (u.name LIKE ? OR u.email LIKE ?)`;
-      params.push(searchTerm, searchTerm);
-      countParams.push(searchTerm, searchTerm); // Add to countParams
-    }
-
-    const validSortFields = ['name', 'email', 'role', 'created_at', 'updated_at'];
-    const sortBy = validSortFields.includes(value.sortBy) ? value.sortBy : 'name';
-    const sortOrder = value.sortOrder === 'desc' ? 'DESC' : 'ASC';
-
-    const countQueryBase = `
-      SELECT COUNT(*) as total
+    let countQueryBase = `
+      SELECT COUNT(DISTINCT u.id) as total
       FROM users u
       LEFT JOIN faculties f ON u.faculty_id = f.id
       LEFT JOIN dormitories d ON u.dormitory_id = d.id
-      WHERE 1=1
     `;
-    let countQueryWhere = "";
-    if (roles.length > 0) { // Check if roles array was populated
-        countQueryWhere += ` AND u.role IN (${roles.map(() => '?').join(',')})`;
+    const whereClauses = [];
+    const whereParams = [];
+
+    if (value.role) {
+      const roles = value.role.split(",").map((r) => r.trim()).filter(Boolean);
+      if (roles.length > 0) {
+        whereClauses.push(`u.role IN (${roles.map(() => "?").join(",")})`);
+        whereParams.push(...roles);
+      }
     }
-    if (excludeRoles.length > 0) { // Check if excludeRoles array was populated
-        countQueryWhere += ` AND u.role NOT IN (${excludeRoles.map(() => '?').join(',')})`;
+
+    if (value.exclude_roles) {
+      const excludeRoles = value.exclude_roles.split(",").map((r) => r.trim()).filter(Boolean);
+      if (excludeRoles.length > 0) {
+        whereClauses.push(`u.role NOT IN (${excludeRoles.map(() => "?").join(",")})`);
+        whereParams.push(...excludeRoles);
+      }
     }
+
     if (value.faculty_id) {
-        countQueryWhere += ` AND u.faculty_id = ?`;
+      const facultyIds = String(value.faculty_id).split(",").map((id) => parseInt(id.trim(), 10)).filter((id) => !isNaN(id) && id > 0);
+      if (facultyIds.length > 0) {
+        whereClauses.push(`u.faculty_id IN (${facultyIds.map(() => "?").join(",")})`);
+        whereParams.push(...facultyIds);
+      }
     }
+
     if (value.search) {
-        countQueryWhere += ` AND (u.name LIKE ? OR u.email LIKE ?)`;
+      const searchTerm = `%${value.search}%`;
+      whereClauses.push(`(u.name LIKE ? OR u.email LIKE ? OR f.name LIKE ? OR d.name LIKE ?)`);
+      whereParams.push(searchTerm, searchTerm, searchTerm, searchTerm);
     }
 
-    const countQuery = countQueryBase + countQueryWhere;
+    const whereString = whereClauses.length > 0 ? ` WHERE ${whereClauses.join(" AND ")}` : "";
+    const countQuery = countQueryBase + whereString;
+    const [totalResult] = await pool.query(countQuery, whereParams);
 
-    query += ` ORDER BY u.${sortBy} ${sortOrder}`;
+    const validSortFields = ["name", "email", "role", "created_at", "updated_at"];
+    const sortBy = validSortFields.includes(value.sortBy) ? `u.${value.sortBy}` : "u.name";
+    const sortOrder = value.sortOrder === "desc" ? "DESC" : "ASC";
     const offset = (value.page - 1) * value.limit;
-    query += ` LIMIT ? OFFSET ?`;
-    params.push(value.limit, offset);
+    const query = `${queryBase} ${whereString} ORDER BY ${sortBy} ${sortOrder} LIMIT ? OFFSET ?`;
+    const params = [...whereParams, value.limit, offset];
 
     const [users] = await pool.query(query, params);
-    const [totalResult] = await pool.query(countQuery, countParams); // Use countParams here
-
     res.json({ users, total: totalResult[0].total, page: value.page, limit: value.limit });
   } catch (error) {
     console.error("[UserController] Помилка отримання користувачів:", error);
     res.status(500).json({ error: "Помилка сервера" });
   }
 };
-
 
 export const updateUserRole = async (req, res) => {
   const connection = await pool.getConnection();
@@ -300,8 +277,8 @@ export const updateUserRole = async (req, res) => {
           "student_council_member"
         )
         .required(),
-      facultyId: Joi.number().integer().positive().optional(),
-      dormitoryId: Joi.number().integer().positive().optional(),
+      facultyId: Joi.number().integer().positive().optional().allow(null, ""),
+      dormitoryId: Joi.number().integer().positive().optional().allow(null, ""),
     });
 
     const { error, value } = schema.validate(req.body);
@@ -383,6 +360,7 @@ export const getProfile = async (req, res) => {
     res.status(500).json({ error: "Помилка сервера" });
   }
 };
+
 export default {
   assignFacultyDeanOfficeRole,
   assignFacultyDeanOffice,

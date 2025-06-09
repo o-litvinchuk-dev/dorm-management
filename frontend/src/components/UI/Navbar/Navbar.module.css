@@ -1,5 +1,3 @@
-@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap");
-
 .navbar {
   position: fixed;
   top: 16px;
@@ -29,81 +27,168 @@
   height: 100%;
 }
 
-.greeting {
-  font-size: 16px;
-  color: var(--gray-700);
-  font-family: "Roboto", sans-serif;
-  font-weight: 400;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 50%;
-}
-
-.greeting .userName {
-  font-weight: 500;
-  color: var(--gray-900);
+.rightSection {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .searchContainer {
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: 300px;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  background: #fff;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  z-index: 101;
-}
-
-.searchIconButton {
-  background: none;
-  border: none;
-  padding: 8px;
-  cursor: pointer;
-  color: var(--gray-700);
-  transition: background 0.1s ease, color 0.1s ease;
+  position: relative;
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 40px;
   height: 40px;
-  border-radius: 8px;
+  width: 40px;
+  background: var(--background-light, #f9fafb);
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 50%;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
 }
 
-.searchIconButton:hover {
-  background: var(--gray-100);
-  color: var(--gray-900);
+.searchContainer:hover:not(.open) {
+  background-color: var(--border-color-light);
+}
+
+.searchContainer.open {
+  width: 100%;
+  max-width: 350px;
+  cursor: default;
+  background-color: var(--card-background-color);
+  border-radius: var(--border-radius-lg);
+}
+
+.searchContainer:focus-within {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb, 59, 130, 246), 0.2);
 }
 
 .searchIcon {
-  width: 20px;
-  height: 20px;
+  position: absolute;
+  left: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  color: var(--text-muted);
+  transition: color 0.2s ease;
+  pointer-events: none;
+}
+
+.searchContainer:hover:not(.open) .searchIcon {
+  color: var(--text-primary);
 }
 
 .searchInput {
   width: 100%;
-  padding: 12px 16px;
+  height: 100%;
+  padding-left: 40px;
+  padding-right: 12px;
   border: none;
-  border-radius: 8px;
-  font-size: 14px;
   background: transparent;
   font-family: "Roboto", sans-serif;
-  color: var(--gray-700);
-}
-
-.searchInput:focus {
+  color: var(--text-primary);
+  font-size: 14px;
+  opacity: 0;
+  cursor: text;
+  transition: opacity 0.2s ease-in-out;
   outline: none;
-  box-shadow: 0 0 0 3px rgba(37, 123, 244, 0.1);
+  pointer-events: none;
 }
 
-.rightSection {
+.searchContainer.open .searchInput {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.searchInput::placeholder {
+  color: var(--text-placeholder);
+}
+
+.searchResultsDropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: 100%;
+  background: var(--card-background-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  z-index: 1001;
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.searchResultGroup {
+  margin-bottom: 8px;
+}
+
+.searchResultGroupTitle {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  padding: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.searchResultItem {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all 150ms ease;
+  user-select: none;
+}
+
+.searchResultItem:hover {
+  background: var(--primary-bg-light);
+  color: var(--text-primary);
+}
+
+.searchResultItem svg {
+  width: 20px;
+  height: 20px;
+  color: var(--primary-color);
+  flex-shrink: 0;
+}
+
+.searchResultItem div {
+  display: flex;
+  flex-direction: column;
+}
+
+.searchResultItem p {
+  margin: 0;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.searchResultItem span {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.greeting {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .greeting {
+    display: block;
+    font-size: 16px;
+    color: var(--gray-700);
+    font-family: "Roboto", sans-serif;
+    font-weight: 400;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 50%;
+  }
 }
 
 .notificationWrapper {
@@ -311,50 +396,33 @@
     right: 16px;
     padding: 8px 12px;
   }
-
   .container {
+    flex-wrap: nowrap;
     gap: 8px;
   }
-
-  .greeting {
-    max-width: 150px;
-  }
-
   .rightSection {
     gap: 8px;
   }
-
   .profileSection {
-    max-width: 150px;
+    padding: 4px;
   }
-
   .profileSection .userInfo {
     display: none;
   }
-
   .avatar {
     width: 28px;
     height: 28px;
   }
-
-  .notificationButton,
-  .searchIconButton {
+  .notificationButton {
     width: 36px;
     height: 36px;
     padding: 4px;
   }
-
+  .searchContainer.open {
+    max-width: 250px;
+  }
   .divider {
     height: 20px;
-  }
-
-  .searchContainer {
-    left: 0;
-    right: 0;
-    transform: none;
-    width: auto;
-    margin: 0 16px;
-    max-width: none;
   }
 }
 
@@ -362,11 +430,10 @@
   .greeting {
     display: none;
   }
-
   .searchContainer {
     margin: 0 8px;
+    display: none;
   }
-
   .dropdownMenu {
     width: 200px;
   }

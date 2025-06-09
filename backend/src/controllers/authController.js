@@ -1,6 +1,5 @@
-// src/controllers/authController.js
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken"; // Залишаємо для verifyEmail та resetPassword
+import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import { sendVerificationEmail, sendPasswordResetEmail } from "../utils/emailSender.js";
 import redisClient from "../config/redis.js";
@@ -11,13 +10,12 @@ import Dormitory from "../models/Dormitory.js";
 import Faculties from "../models/Faculties.js";
 import UserProfile from "../models/UserProfile.js";
 import { isProfileComplete } from "../utils/profileUtils.js";
-import { generateTokens as generateTokensService } from "../services/tokenService.js"; // Додано імпорт
-import { v4 as uuidv4 } from "uuid"; // Додано імпорт
+import { generateTokens as generateTokensService } from "../services/tokenService.js";
+import { v4 as uuidv4 } from "uuid";
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { encrypt, decrypt } from "../utils/crypto.js";
-
 
 const validatePassword = (password) => {
   if (!password) return false;
@@ -34,6 +32,7 @@ const validatePassword = (password) => {
     process.env.PASSWORD_REQUIRE_SYMBOLS === "true"
       ? /[!@#$%^&*(),.?":{}|<>]/.test(password)
       : true;
+
   return (
     password.length >= minLength && hasUpperCase && hasNumber && hasSymbol
   );
@@ -78,12 +77,10 @@ export const googleSignIn = async (req, res) => {
     if (!token) {
       return res.status(400).json({ error: "Токен відсутній" });
     }
-
     const payload = await verifyGoogleToken(token);
     if (!payload.email) {
       return res.status(400).json({ error: "Не вдалося отримати email" });
     }
-
     let user = await User.findByEmail(payload.email);
     if (user) {
       if (user.provider !== "google") {
@@ -92,14 +89,15 @@ export const googleSignIn = async (req, res) => {
           code: "ACCOUNT_CONFLICT",
         });
       }
-      const newTokenVersion = await User.incrementTokenVersion(user.id); // Отримуємо нову версію токена
-      user = await User.findById(user.id); // Оновлюємо об'єкт користувача після інкременту
 
-      const sessionId = uuidv4(); // Генеруємо новий sessionId
-      const { accessToken, refreshToken } = generateTokensService(user, sessionId, newTokenVersion); // Передаємо sessionId та newTokenVersion
-      
-      await redisClient.del(`refresh:${user.id}:*`); // Очищаємо всі старі refresh токени для цього user_id
-      await redisClient.setEx(`refresh:${user.id}:${sessionId}`, parseInt(process.env.REFRESH_TOKEN_TTL_SECONDS), refreshToken); // Зберігаємо з sessionId
+      const newTokenVersion = await User.incrementTokenVersion(user.id);
+      user = await User.findById(user.id);
+
+      const sessionId = uuidv4();
+      const { accessToken, refreshToken } = generateTokensService(user, sessionId, newTokenVersion);
+
+      await redisClient.del(`refresh:${user.id}:*`);
+      await redisClient.setEx(`refresh:${user.id}:${sessionId}`, parseInt(process.env.REFRESH_TOKEN_TTL_SECONDS), refreshToken);
 
       let additionalFields = {};
       if (user.role === "dorm_manager" && user.dormitory_id) {
@@ -129,7 +127,7 @@ export const googleSignIn = async (req, res) => {
       res.json({
         accessToken,
         refreshToken,
-        sessionId, // Повертаємо sessionId
+        sessionId,
         user: {
           id: user.id,
           email: user.email,
@@ -141,7 +139,6 @@ export const googleSignIn = async (req, res) => {
           ...additionalFields,
         },
       });
-
     } else {
       const hashedPassword = await bcrypt.hash(
         payload.email + process.env.JWT_SECRET,
@@ -156,18 +153,19 @@ export const googleSignIn = async (req, res) => {
         google_id: payload.sub,
         isVerified: true,
         role: process.env.DEFAULT_ROLE || "student",
-        token_version: 0, // Початкова версія токена
+        token_version: 0,
         gender: payload.gender || 'not_specified',
       });
+
       await pool.execute(
         `INSERT INTO user_profiles (user_id) VALUES (?) ON DUPLICATE KEY UPDATE user_id = user_id`,
         [user.id]
       );
 
-      const sessionId = uuidv4(); // Генеруємо новий sessionId для нового користувача
-      const { accessToken, refreshToken } = generateTokensService(user, sessionId, user.token_version); // Передаємо sessionId
-      
-      await redisClient.setEx(`refresh:${user.id}:${sessionId}`, parseInt(process.env.REFRESH_TOKEN_TTL_SECONDS), refreshToken); // Зберігаємо з sessionId
+      const sessionId = uuidv4();
+      const { accessToken, refreshToken } = generateTokensService(user, sessionId, user.token_version);
+
+      await redisClient.setEx(`refresh:${user.id}:${sessionId}`, parseInt(process.env.REFRESH_TOKEN_TTL_SECONDS), refreshToken);
 
       const isComplete = await isProfileComplete(user.id, user.role);
       const userFromDbForCompletion = await User.findById(user.id);
@@ -182,7 +180,7 @@ export const googleSignIn = async (req, res) => {
       res.json({
         accessToken,
         refreshToken,
-        sessionId, // Повертаємо sessionId
+        sessionId,
         user: {
           id: user.id,
           email: user.email,
@@ -215,6 +213,7 @@ export const register = async (req, res) => {
         error: "Користувач з цією адресою вже зареєстрований",
       });
     }
+
     const hashedPassword = await bcrypt.hash(password, 12);
     const role = req.body.role || process.env.DEFAULT_ROLE || "student";
     const user = await User.create({
@@ -226,6 +225,7 @@ export const register = async (req, res) => {
       `INSERT INTO user_profiles (user_id) VALUES (?) ON DUPLICATE KEY UPDATE user_id = user_id`,
       [user.id]
     );
+
     if (!process.env.JWT_SECRET) {
       return res.status(500).json({
         error: "Помилка сервера: відсутній JWT_SECRET",
@@ -234,6 +234,7 @@ export const register = async (req, res) => {
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
       expiresIn: "1h",
     });
+
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
       return res.status(500).json({
         error: "Помилка сервера: відсутні поштові налаштування",
@@ -251,7 +252,9 @@ export const register = async (req, res) => {
             : undefined,
       });
     }
+
     const isComplete = await isProfileComplete(user.id, user.role);
+
     return res.status(201).json({
       message: "Лист з підтвердженням успішно відправлено",
       user: {
@@ -340,7 +343,6 @@ export const login = async (req, res) => {
         code: "USER_NOT_FOUND",
       });
     }
-
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(401).json({
@@ -348,7 +350,6 @@ export const login = async (req, res) => {
         code: "INVALID_PASSWORD",
       });
     }
-
     if (!user.isVerified) {
       return res.status(403).json({
         error: "Електронну адресу не підтверджено",
@@ -356,12 +357,13 @@ export const login = async (req, res) => {
       });
     }
 
-    const newTokenVersion = await User.incrementTokenVersion(user.id); // Інкрементуємо token_version
-    const sessionId = uuidv4(); // Генеруємо унікальний sessionId
-    const { accessToken, refreshToken } = generateTokensService(user, sessionId, newTokenVersion); // Передаємо sessionId та newTokenVersion
+    const newTokenVersion = await User.incrementTokenVersion(user.id);
 
-    await redisClient.del(`refresh:${user.id}:*`); // Очищаємо всі старі refresh токени для цього user_id
-    await redisClient.setEx(`refresh:${user.id}:${sessionId}`, parseInt(process.env.REFRESH_TOKEN_TTL_SECONDS), refreshToken); // Зберігаємо з sessionId
+    const sessionId = uuidv4();
+    const { accessToken, refreshToken } = generateTokensService(user, sessionId, newTokenVersion);
+
+    await redisClient.del(`refresh:${user.id}:*`);
+    await redisClient.setEx(`refresh:${user.id}:${sessionId}`, parseInt(process.env.REFRESH_TOKEN_TTL_SECONDS), refreshToken);
 
     let additionalFields = {};
     if (user.role === "dorm_manager" && user.dormitory_id) {
@@ -391,7 +393,7 @@ export const login = async (req, res) => {
     res.json({
       accessToken,
       refreshToken,
-      sessionId, // Повертаємо sessionId
+      sessionId,
       user: {
         id: user.id,
         email: user.email,
@@ -419,13 +421,13 @@ export const login = async (req, res) => {
 export const logout = async (req, res) => {
   try {
     const userId = req.user.userId;
-    const sessionId = req.user.sessionId; // Отримуємо sessionId з req.user
+    const sessionId = req.user.sessionId;
 
     if (userId && sessionId) {
-      await redisClient.del(`refresh:${userId}:${sessionId}`); // Видаляємо конкретний refresh токен
+      await redisClient.del(`refresh:${userId}:${sessionId}`);
     }
-    await User.incrementTokenVersion(userId); // Інвалідуємо всі інші токени для цього user
 
+    await User.incrementTokenVersion(userId);
     res.status(200).json({ success: true, message: "Вихід успішний" });
   } catch (error) {
     console.error("Помилка виходу:", error);
@@ -450,14 +452,12 @@ export const refreshToken = async (req, res) => {
       return res.status(401).json({ error: "Недійсний токен оновлення", code: "INVALID_REFRESH_TOKEN" });
     }
 
-    // Перевіряємо наявність userId та sessionId у декодованому токені
     if (!decoded.userId || !decoded.sessionId) {
       return res.status(401).json({ error: "Недійсний пейлоад токена оновлення", code: "INVALID_REFRESH_TOKEN_PAYLOAD" });
     }
 
     const storedToken = await redisClient.get(`refresh:${decoded.userId}:${decoded.sessionId}`);
     if (!storedToken || token !== storedToken) {
-      // Якщо токен не знайдено або не збігається, можливо, він був використаний або відкликаний
       return res.status(401).json({ error: "Токен оновлення вже використано або недійсний", code: "REFRESH_TOKEN_USED_OR_INVALID" });
     }
 
@@ -466,9 +466,7 @@ export const refreshToken = async (req, res) => {
       return res.status(403).json({ error: "Користувача не знайдено для токена", code: "USER_NOT_FOUND_FOR_TOKEN" });
     }
 
-    // Генеруємо нові токени, використовуючи ту саму sessionId та поточну token_version користувача
     const { accessToken } = generateTokensService(user, decoded.sessionId, user.token_version);
-
     res.json({ accessToken });
   } catch (error) {
     console.error("[RefreshToken] Помилка:", error);
@@ -478,9 +476,8 @@ export const refreshToken = async (req, res) => {
 
 export const validateToken = async (req, res) => {
   try {
-    // Дані вже додані middleware auth.js
     const userFromDb = req.user;
-    if (!userFromDb) { // Це не повинно відбуватися, якщо authenticate відпрацював успішно
+    if (!userFromDb) {
       return res.status(404).json({ error: "Користувача не знайдено", code: "USER_NOT_FOUND" });
     }
 
@@ -497,7 +494,7 @@ export const validateToken = async (req, res) => {
     }
 
     const isComplete = await isProfileComplete(userFromDb.userId, userFromDb.role);
-    // Оновлюємо is_profile_complete в базі, якщо він не збігається
+
     if (userFromDb.is_profile_complete !== isComplete) {
       await pool.execute(
         `UPDATE users SET is_profile_complete = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
@@ -508,7 +505,7 @@ export const validateToken = async (req, res) => {
     res.json({
       isValid: true,
       user: {
-        id: userFromDb.userId, // Використовуємо userId з req.user
+        id: userFromDb.userId,
         email: userFromDb.email,
         name: userFromDb.name,
         avatar: userFromDb.avatar,
@@ -519,7 +516,7 @@ export const validateToken = async (req, res) => {
         dormitory_id: userFromDb.dormitory_id,
         dormitory_name: dormitoryName,
         is_profile_complete: isComplete,
-        sessionId: userFromDb.sessionId, // Повертаємо sessionId
+        sessionId: userFromDb.sessionId,
       },
     });
   } catch (error) {
@@ -545,6 +542,7 @@ export const forgotPassword = async (req, res) => {
         code: "GOOGLE_ACCOUNT",
       });
     }
+
     const resetToken = jwt.sign(
       { userId: user.id },
       process.env.JWT_SECRET,
@@ -556,8 +554,10 @@ export const forgotPassword = async (req, res) => {
         throw new Error("Помилка Redis: не вдалося підключитися");
       });
     }
+
     await redisClient.del(`reset:${user.id}`);
     await redisClient.setEx(`reset:${user.id}`, 60 * 60, resetToken);
+
     const storedToken = await redisClient.get(`reset:${user.id}`);
     if (!storedToken || storedToken !== resetToken) {
       throw new Error("Невдалося зберегти токен для скидання пароля в Redis.");
@@ -592,6 +592,7 @@ export const resetPassword = async (req, res) => {
     if (!token) {
       return res.status(401).json({ error: "Токен не надано", code: "TOKEN_MISSING" });
     }
+
     if (!token.match(/^[\w-]+\.[\w-]+\.[\w-_.+/=]*$/)) {
       return res.status(401).json({ error: "Недійсний формат токена", code: "INVALID_TOKEN_FORMAT" });
     }
@@ -599,6 +600,7 @@ export const resetPassword = async (req, res) => {
     if(!decoded || !decoded.userId) {
       return res.status(401).json({ error: "Недійсний токен (немає userId)", code: "INVALID_TOKEN_PAYLOAD" });
     }
+
     const storedToken = await redisClient.get(`reset:${decoded.userId}`);
     if (!storedToken) {
       return res.status(401).json({
@@ -606,24 +608,29 @@ export const resetPassword = async (req, res) => {
         code: "TOKEN_EXPIRED_OR_USED_REDIS"
       });
     }
+
     if (token !== storedToken) {
       return res.status(401).json({ error: "Недійсний токен (неспівпадіння з Redis)", code: "TOKEN_MISMATCH_REDIS" });
     }
     await redisClient.del(`reset:${decoded.userId}`);
+
     if (!validatePassword(password)) {
       return res.status(400).json({
         error: getPasswordRequirementsMessage(),
         code: "INVALID_NEW_PASSWORD_FORMAT"
       });
     }
+
     const hashedPassword = await bcrypt.hash(password, 12);
     const result = await User.updatePassword(
       decoded.userId,
       hashedPassword
     );
+
     if (result.affectedRows === 0) {
       throw new Error("Користувача не знайдено для оновлення пароля");
     }
+
     res.json({
       success: true,
       message: "Пароль успішно оновлено. Увійдіть з новим паролем.",
@@ -656,26 +663,26 @@ export const resetPassword = async (req, res) => {
 async function getProfileInternal(userId) {
   const [userRows] = await pool.query(
     `
-SELECT
-u.id, u.email, u.name, u.avatar, u.role, u.gender,
-u.faculty_id AS user_table_faculty_id,
-u.dormitory_id AS user_table_dormitory_id,
-u.is_profile_complete,
-up.birthday, up.phone, up.about_me, up.interests, up.room,
-up.dormitory, up.instagram, up.telegram, up.banner,
-up.faculty_id AS profile_faculty_id, up.group_id, up.course,
-f_user.name AS user_faculty_name,
-f_profile.name AS profile_faculty_name,
-d.name AS dormitory_name,
-g.name AS group_name
-FROM users u
-LEFT JOIN user_profiles up ON u.id = up.user_id
-LEFT JOIN faculties f_user ON u.faculty_id = f_user.id
-LEFT JOIN faculties f_profile ON up.faculty_id = f_profile.id
-LEFT JOIN dormitories d ON u.dormitory_id = d.id
-LEFT JOIN \`groups\` g ON up.group_id = g.id
-WHERE u.id = ?
-`,
+    SELECT
+      u.id, u.email, u.name, u.avatar, u.role, u.gender,
+      u.faculty_id AS user_table_faculty_id,
+      u.dormitory_id AS user_table_dormitory_id,
+      u.is_profile_complete,
+      up.birthday, up.phone, up.about_me, up.interests, up.room,
+      up.dormitory, up.instagram, up.telegram, up.banner,
+      up.faculty_id AS profile_faculty_id, up.group_id, up.course,
+      f_user.name AS user_faculty_name,
+      f_profile.name AS profile_faculty_name,
+      d.name AS dormitory_name,
+      g.name AS group_name
+    FROM users u
+    LEFT JOIN user_profiles up ON u.id = up.user_id
+    LEFT JOIN faculties f_user ON u.faculty_id = f_user.id
+    LEFT JOIN faculties f_profile ON up.faculty_id = f_profile.id
+    LEFT JOIN dormitories d ON u.dormitory_id = d.id
+    LEFT JOIN \`groups\` g ON up.group_id = g.id
+    WHERE u.id = ?
+    `,
     [userId]
   );
 
@@ -696,7 +703,6 @@ WHERE u.id = ?
     gender: user.gender,
     is_profile_complete: isComplete,
     birthday: user.birthday ? decrypt(user.birthday) : null,
-    // FIX: Перевіряємо, чи є поле зашифрованим перед дешифруванням
     phone: user.phone ? (String(user.phone).includes(':') ? decrypt(user.phone) : user.phone) : null,
     about_me: user.about_me ? decrypt(user.about_me) : null,
     interests: user.interests ? decrypt(user.interests) : null,
@@ -718,7 +724,7 @@ WHERE u.id = ?
     profile.faculty_id = user.user_table_faculty_id || null;
     profile.faculty_name = user.user_faculty_name || null;
   }
-  
+
   return profile;
 }
 
@@ -726,6 +732,7 @@ export const getProfile = async (req, res) => {
   try {
     const userId = req.user.userId;
     const profileData = await getProfileInternal(userId);
+
     const userFromDb = await User.findById(userId);
     if (userFromDb && (userFromDb.is_profile_complete === 1) !== profileData.is_profile_complete) {
       await pool.execute(
@@ -733,6 +740,7 @@ export const getProfile = async (req, res) => {
         [profileData.is_profile_complete ? 1 : 0, userId]
       );
     }
+
     res.json(profileData);
   } catch (error) {
     console.error("[GetProfile] Помилка:", error);
@@ -746,12 +754,11 @@ export const updateProfile = async (req, res) => {
     await connection.beginTransaction();
     const userId = req.user.userId;
     const role = req.user.role;
-
     const isStudent = role === "student";
     const isFacultyRole = ["faculty_dean_office", "student_council_head", "student_council_member"].includes(role);
     const isDormManager = role === "dorm_manager";
-
     const profileData = req.body;
+
     const validationSchema = Joi.object({
       name: Joi.string().trim().max(255).optional().allow(null, ''),
       gender: Joi.string().valid('male', 'female', 'other', 'not_specified').optional(),
@@ -768,14 +775,15 @@ export const updateProfile = async (req, res) => {
       course: Joi.number().integer().min(1).max(6).optional().allow(null),
       dormitory_id: Joi.number().integer().positive().optional().allow(null),
     }).unknown(true);
-    
+
     const { error, value: validatedData } = validationSchema.validate(profileData);
     if (error) {
       await connection.rollback();
       return res.status(400).json({ error: "Невалідні дані", details: error.details });
     }
-    
+
     const currentUserProfile = await UserProfile.findByUserId(userId, connection);
+
     const userUpdates = {};
     const profileUpdates = {};
 
@@ -793,14 +801,13 @@ export const updateProfile = async (req, res) => {
         await fs.unlink(oldBannerPath);
       }
     }
-    
+
     if (validatedData.name !== undefined) userUpdates.name = validatedData.name;
     if (validatedData.gender !== undefined) userUpdates.gender = validatedData.gender;
     if (isFacultyRole && validatedData.faculty_id !== undefined) userUpdates.faculty_id = validatedData.faculty_id || null;
     if (isDormManager && validatedData.dormitory_id !== undefined) userUpdates.dormitory_id = validatedData.dormitory_id || null;
 
-    // FIX: Завжди шифруємо чутливі дані при збереженні
-    if (validatedData.phone !== undefined) profileUpdates.phone = validatedData.phone ? encrypt(validatedData.phone) : null;
+    if (validatedData.phone !== undefined) profileUpdates.phone = validatedData.phone ? validatedData.phone : null;
     if (validatedData.birthday !== undefined) profileUpdates.birthday = validatedData.birthday ? encrypt(new Date(validatedData.birthday).toISOString().split('T')[0]) : null;
     if (validatedData.room !== undefined) profileUpdates.room = validatedData.room ? encrypt(validatedData.room) : null;
     if (validatedData.dormitory !== undefined) profileUpdates.dormitory = validatedData.dormitory ? encrypt(validatedData.dormitory) : null;
@@ -814,12 +821,11 @@ export const updateProfile = async (req, res) => {
       if(validatedData.group_id !== undefined) profileUpdates.group_id = validatedData.group_id || null;
       if(validatedData.course !== undefined) profileUpdates.course = validatedData.course || null;
     }
-    
+
     if (Object.keys(userUpdates).length > 0) {
       const userFields = Object.keys(userUpdates).map(field => `\`${field}\` = ?`).join(', ');
       await connection.execute(`UPDATE users SET ${userFields}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`, [...Object.values(userUpdates), userId]);
     }
-    
     if (Object.keys(profileUpdates).length > 0) {
       if (currentUserProfile) {
         const profileFields = Object.keys(profileUpdates).map(field => `\`${field}\` = ?`).join(', ');
@@ -842,7 +848,6 @@ export const updateProfile = async (req, res) => {
     connection.release();
   }
 };
-
 
 export default {
   register,

@@ -1,36 +1,66 @@
-// src/components/UI/Navbar/Navbar.jsx
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import api from "../../../utils/api";
 import { useUser } from "../../../contexts/UserContext";
 import styles from "./Navbar.module.css";
 import Breadcrumb from "./Breadcrumb/Breadcrumb";
 import Avatar from "../Avatar/Avatar";
+import SearchResultsDropdown from "./SearchResultsDropdown";
 import Notifications from "../Notifications/Notifications";
-import {
-  BellIcon,
-  MagnifyingGlassIcon,
-  ChevronDownIcon,
-} from "@heroicons/react/24/outline";
+import { BellIcon, MagnifyingGlassIcon, ChevronDownIcon } from "@heroicons/react/24/outline";
 import {
   UserCircleIcon,
   Cog6ToothIcon,
   ArrowLeftOnRectangleIcon,
 } from "@heroicons/react/24/solid";
-// import MyProfileForm from "../../components/Profile/MyProfileForm"; // Remove if not directly rendered here
 
 const Navbar = ({ isSidebarExpanded }) => {
   const { user, isLoading, logout } = useUser();
   const navigate = useNavigate();
   const location = useLocation();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const dropdownRef = useRef(null);
-  const searchRef = useRef(null);
-  const [notifications] = useState([
-    { id: 1, title: "Нове повідомлення", text: "Ви отримали нове повідомлення", read: false },
-    { id: 2, title: "Оновлення системи", text: "Заплановане ТО", read: true },
-  ]);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [results, setResults] = useState(null);
+  const searchContainerRef = useRef(null);
+  const searchInputRef = useRef(null);
+
+  const handleSelectResult = (path) => {
+    navigate(path);
+    setSearch("");
+    setResults(null);
+    setIsSearchOpen(false);
+  };
+
+  const handleSearchIconClick = () => {
+    if (!isSearchOpen) {
+      setIsSearchOpen(true);
+    }
+  };
+
+  useEffect(() => {
+    if (isSearchOpen) {
+      searchInputRef.current?.focus();
+    }
+  }, [isSearchOpen]);
+
+  useEffect(() => {
+    if (search.length < 2) {
+      setResults(null);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    const debounce = setTimeout(() => {
+      api.get(`/search?q=${search}`)
+        .then((res) => setResults(res.data))
+        .catch((err) => console.error("Search failed", err))
+        .finally(() => setLoading(false));
+    }, 300);
+    return () => clearTimeout(debounce);
+  }, [search]);
 
   const getDisplayName = () => {
     if (isLoading) return "Завантаження...";
@@ -63,19 +93,17 @@ const Navbar = ({ isSidebarExpanded }) => {
 
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (dropdownRef.current?.contains(e.target)) return;
-      if (searchRef.current?.contains(e.target)) return;
-      setIsDropdownOpen(false);
-      setIsSearchExpanded(false);
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setIsDropdownOpen(false);
+      }
+      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target)) {
+        setIsSearchOpen(false);
+        setSearch("");
+        setResults(null);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  useEffect(() => {
-    const handleStorageChange = () => window.location.reload();
-    window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
   const handleLogout = async () => {
@@ -89,7 +117,6 @@ const Navbar = ({ isSidebarExpanded }) => {
     }
   };
 
-  const unreadNotifications = notifications.filter((n) => !n.read).length;
   const isDashboard = location.pathname === "/dashboard";
 
   return (
@@ -102,19 +129,31 @@ const Navbar = ({ isSidebarExpanded }) => {
         ) : (
           <Breadcrumb />
         )}
-        {isSearchExpanded && (
-          <div className={styles.searchContainer} ref={searchRef}>
-            <input type="text" placeholder="Пошук..." className={styles.searchInput} autoFocus />
-          </div>
-        )}
         <div className={styles.rightSection}>
-          <button
-            className={styles.searchIconButton}
-            onClick={() => setIsSearchExpanded(!isSearchExpanded)}
-            aria-label={isSearchExpanded ? "Закрити пошук" : "Відкрити пошук"}
+          <div
+            ref={searchContainerRef}
+            className={`${styles.searchContainer} ${isSearchOpen ? styles.open : ""}`}
+            onClick={handleSearchIconClick}
           >
             <MagnifyingGlassIcon className={styles.searchIcon} />
-          </button>
+            <input
+              ref={searchInputRef}
+              type="text"
+              placeholder="Глобальний пошук..."
+              className={styles.searchInput}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
+            />
+            {isSearchOpen && search.length > 0 && (
+              <SearchResultsDropdown
+                loading={loading}
+                results={results}
+                onSelect={handleSelectResult}
+              />
+            )}
+          </div>
+
           <Notifications />
           <div className={styles.divider}></div>
           <div

@@ -4,175 +4,172 @@
 # ==================================
 
 # ----------------
-#  Superadmin
-#  Має повний доступ до всього.
+#  Superadmin :: Повний доступ
 # ----------------
 p, superadmin, /*, *
 
 
 # ----------------
-#  Admin
-#  Має доступ до більшості операцій, окрім керування ключовими сутностями.
+#  Admin :: Адміністратор системи
 # ----------------
-# Заявки на поселення (Accommodation Applications)
+# Керування заявками, бронюваннями, договорами
 p, admin, /api/v1/admin/accommodation-applications, *
 p, admin, /api/v1/admin/accommodation-applications/:id, *
 p, admin, /api/v1/admin/accommodation-applications/:id/status, *
 p, admin, /api/v1/admin/accommodation-applications/:id/comments, *
-# Бронювання (Room Reservations)
 p, admin, /api/v1/admin/room-reservations, *
 p, admin, /api/v1/admin/room-reservations/:reservationId/status, *
-# Договори (Settlement Agreements)
 p, admin, /api/v1/admin/settlement-agreements, *
 p, admin, /api/v1/admin/settlement-agreements/:id, *
-# Налаштування періодів подачі заяв (Application Presets)
+# Керування налаштуваннями, розкладом, подіями
 p, admin, /api/v1/application-presets, *
 p, admin, /api/v1/application-presets/:id, *
-# Розклад поселення та Події
 p, admin, /api/v1/admin/settlement-schedule, *
 p, admin, /api/v1/admin/settlement-schedule/:id, *
 p, admin, /api/v1/admin/events, *
 p, admin, /api/v1/admin/events/:eventId, *
-# Загальні ресурси для адміністрування
+# Перегляд загальних ресурсів
 p, admin, /api/v1/users/all, GET 
 p, admin, /api/v1/dormitories, GET
+p, admin, /api/v1/dormitories/:id, GET
 p, admin, /api/v1/faculties, GET
 p, admin, /api/v1/faculties/:facultyId/groups, GET
-# Захищені роути (профіль, сповіщення)
+# Пошук та публічні профілі
+p, admin, /api/v1/search, GET
+p, admin, /api/v1/users/:userId/profile, GET
+# Базові захищені роути (профіль, сповіщення, валідація сесії)
 p, admin, /api/v1/secure/*, *
+p, admin, /api/v1/auth/validate-token, GET
 
 
 # ----------------
-#  Faculty Dean Office (Деканат)
-#  Керує ресурсами в межах свого факультету.
+#  Faculty Dean Office :: Деканат
 # ----------------
-# Заявки (в межах факультету, фільтрується в контролері)
+# Керування заявками
 p, faculty_dean_office, /api/v1/admin/accommodation-applications, GET
 p, faculty_dean_office, /api/v1/admin/accommodation-applications/:id, GET
 p, faculty_dean_office, /api/v1/admin/accommodation-applications/:id/status, PUT
 p, faculty_dean_office, /api/v1/admin/accommodation-applications/:id/comments, *
-# Групи (повний CRUD в межах свого факультету, контролюється в логіці)
+# Керування групами та студрадою
 p, faculty_dean_office, /api/v1/faculties/:facultyId/groups, *
 p, faculty_dean_office, /api/v1/groups/:id, *
-# Призначення ролей для студради
+p, faculty_dean_office, /api/v1/users/assign-role, POST
 p, faculty_dean_office, /api/v1/users/:id/role, PUT
-# Налаштування періодів подачі заяв
+# Керування налаштуваннями, розкладом, подіями
 p, faculty_dean_office, /api/v1/application-presets, *
 p, faculty_dean_office, /api/v1/application-presets/:id, *
-# Розклад поселення (може створювати/редагувати для свого факультету/курсу/групи або загальні)
 p, faculty_dean_office, /api/v1/admin/settlement-schedule, *
 p, faculty_dean_office, /api/v1/admin/settlement-schedule/:id, *
-# Події (може створювати для свого факультету)
 p, faculty_dean_office, /api/v1/admin/events, *
 p, faculty_dean_office, /api/v1/admin/events/:eventId, *
-# Ресурси для перегляду
+# Перегляд загальних ресурсів
 p, faculty_dean_office, /api/v1/users/all, GET
 p, faculty_dean_office, /api/v1/dormitories, GET
+p, faculty_dean_office, /api/v1/dormitories/:id, GET
 p, faculty_dean_office, /api/v1/faculties, GET
 p, faculty_dean_office, /api/v1/faculty-dormitories, GET
-# Захищені роути (профіль, сповіщення і т.д.)
+# Пошук та публічні профілі
+p, faculty_dean_office, /api/v1/search, GET
+p, faculty_dean_office, /api/v1/users/:userId/profile, GET
+# Базові захищені роути
 p, faculty_dean_office, /api/v1/secure/*, *
 p, faculty_dean_office, /api/v1/auth/validate-token, GET 
 
 
 # ----------------
-#  Dorm Manager (Комендант)
-#  Керує ресурсами в межах свого гуртожитку.
+#  Dorm Manager :: Комендант
 # ----------------
-# Заявки (в межах гуртожитку, фільтрується в контролері)
+# Керування заявками, бронюваннями, договорами
 p, dorm_manager, /api/v1/admin/accommodation-applications, GET
 p, dorm_manager, /api/v1/admin/accommodation-applications/:id, GET
 p, dorm_manager, /api/v1/admin/accommodation-applications/:id/status, PUT
 p, dorm_manager, /api/v1/admin/accommodation-applications/:id/comments, *
-# Бронювання (в межах гуртожитку, фільтрується в контролері)
 p, dorm_manager, /api/v1/admin/room-reservations, GET
 p, dorm_manager, /api/v1/admin/room-reservations/:reservationId/status, PUT
-# Договори (в межах гуртожитку, фільтрується в контролері)
 p, dorm_manager, /api/v1/admin/settlement-agreements, *
 p, dorm_manager, /api/v1/admin/settlement-agreements/:id, *
-# Кімнати (повний CRUD в межах свого гуртожитку)
+# Керування кімнатами
 p, dorm_manager, /api/v1/dormitories/:dormitoryId/rooms, *
 p, dorm_manager, /api/v1/rooms/:id, *
-# Налаштування періодів подачі заяв (лише для свого гуртожитку)
+# Керування налаштуваннями, розкладом, подіями
 p, dorm_manager, /api/v1/application-presets, *
 p, dorm_manager, /api/v1/application-presets/:id, *
 p, dorm_manager, /api/v1/application-presets/dormitory/:dormitoryId, GET
-# Розклад поселення (може створювати/редагувати для свого гуртожитку)
 p, dorm_manager, /api/v1/admin/settlement-schedule, *
 p, dorm_manager, /api/v1/admin/settlement-schedule/:id, *
-# Події (може створювати для свого гуртожитку)
 p, dorm_manager, /api/v1/admin/events, *
 p, dorm_manager, /api/v1/admin/events/:eventId, *
-# Ресурси для перегляду
+# Перегляд загальних ресурсів та статистики
 p, dorm_manager, /api/v1/users/all, GET
 p, dorm_manager, /api/v1/dorm-manager/stats, GET
+p, dorm_manager, /api/v1/dormitories, GET
+p, dorm_manager, /api/v1/dormitories/:id, GET
 p, dorm_manager, /api/v1/faculties, GET
 p, dorm_manager, /api/v1/faculty-dormitories, GET
-# Захищені роути
+p, dorm_manager, /api/v1/users/assign-role, POST
+# Пошук та публічні профілі
+p, dorm_manager, /api/v1/search, GET
+p, dorm_manager, /api/v1/users/:userId/profile, GET
+# Базові захищені роути
 p, dorm_manager, /api/v1/secure/*, *
 p, dorm_manager, /api/v1/auth/validate-token, GET
 
 
 # ----------------
-#  Student Council Head & Member (Студентська рада)
+#  Student Council Head & Member :: Студентська рада
 # ----------------
+# Голова студради (може додавати коментарі)
 p, student_council_head, /api/v1/admin/accommodation-applications, GET
 p, student_council_head, /api/v1/admin/accommodation-applications/:id, GET
-p, student_council_head, /api/v1/admin/accommodation-applications/:id/comments, POST
-p, student_council_head, /api/v1/admin/accommodation-applications/:id/comments, GET
-p, student_council_head, /api/v1/secure/*, *
-p, student_council_head, /api/v1/auth/validate-token, GET
-p, student_council_head, /api/v1/dormitories, GET
-p, student_council_head, /api/v1/settlement-schedule, GET
-p, student_council_head, /api/v1/faculties, GET
-p, student_council_head, /api/v1/faculty-dormitories, GET
-p, student_council_head, /api/v1/application-presets, GET # FIX
-
-# ----
+p, student_council_head, /api/v1/admin/accommodation-applications/:id/comments, *
+# Член студради (може лише переглядати коментарі)
 p, student_council_member, /api/v1/admin/accommodation-applications, GET
 p, student_council_member, /api/v1/admin/accommodation-applications/:id, GET
 p, student_council_member, /api/v1/admin/accommodation-applications/:id/comments, GET
+# Загальні права для обох ролей студради
+p, student_council_head, /api/v1/secure/*, *
+p, student_council_head, /api/v1/auth/validate-token, GET
+p, student_council_head, /api/v1/dormitories, GET
+p, student_council_head, /api/v1/dormitories/:id, GET
+p, student_council_head, /api/v1/settlement-schedule, GET
+p, student_council_head, /api/v1/faculties, GET
+p, student_council_head, /api/v1/faculty-dormitories, GET
+p, student_council_head, /api/v1/application-presets, GET
+p, student_council_head, /api/v1/users/:userId/profile, GET
 p, student_council_member, /api/v1/secure/*, *
 p, student_council_member, /api/v1/auth/validate-token, GET
 p, student_council_member, /api/v1/dormitories, GET
+p, student_council_member, /api/v1/dormitories/:id, GET
 p, student_council_member, /api/v1/settlement-schedule, GET
 p, student_council_member, /api/v1/faculties, GET
 p, student_council_member, /api/v1/faculty-dormitories, GET
-p, student_council_member, /api/v1/application-presets, GET # FIX
+p, student_council_member, /api/v1/application-presets, GET
+p, student_council_member, /api/v1/users/:userId/profile, GET
 
 
 # ----------------
-#  Student (Студент)
+#  Student :: Студент
 # ----------------
-# Захищені маршрути студента
-p, student, /api/v1/secure/profile, *
-p, student, /api/v1/secure/dashboard, GET
-p, student, /api/v1/secure/notifications, *
-p, student, /api/v1/secure/my-reservations, GET
-p, student, /api/v1/secure/my-reservations/:reservationId, DELETE
-p, student, /api/v1/secure/my-settlement-agreements, GET
-p, student, /api/v1/secure/my-settlement-agreements/:id, GET
-p, student, /api/v1/secure/my-pass, GET
-p, student, /api/v1/secure/my-roommates, GET
-p, student, /api/v1/secure/events, GET
-p, student, /api/v1/secure/events/:eventId, GET
-p, student, /api/v1/secure/settlement-schedule, GET
-# FIX: Додано дозвіл для my-accommodation-applications. Зверніть увагу, що шлях /secure/ вже є, але для authorize потрібен конкретний.
+# Базові захищені роути (профіль, сповіщення, дашборд і т.д.)
+p, student, /api/v1/secure/*, *
+# Специфічні маршрути для студента
 p, student, /api/v1/accommodation-applications/my, GET 
-p, student, /api/v1/accommodation-applications/my/:id, * # На майбутнє, повний доступ до своєї заявки
+p, student, /api/v1/accommodation-applications/my/:id, *
 # Маршрути сервісів
 p, student, /api/v1/services/accommodation-application, POST
 p, student, /api/v1/services/settlement-agreement, POST
 p, student, /api/v1/services/rooms/search, GET
 p, student, /api/v1/services/rooms/:roomId, GET
 p, student, /api/v1/services/rooms/:roomId/reserve, POST
-# Загальнодоступні, але вимагають автентифікації для студента
+# Загальнодоступні ресурси
 p, student, /api/v1/dormitories, GET
 p, student, /api/v1/dormitories/:id, GET
 p, student, /api/v1/faculties, GET
 p, student, /api/v1/faculties/:facultyId/groups, GET
 p, student, /api/v1/faculty-dormitories, GET
-p, student, /api/v1/auth/validate-token, GET
-# FIX: Надаємо права на читання application-presets для студента, що необхідно для сторінки договору
 p, student, /api/v1/application-presets, GET
 p, student, /api/v1/application-presets/dormitory/:dormitoryId, GET
+p, student, /api/v1/settlement-schedule, GET
+p, student, /api/v1/users/:userId/profile, GET
+# Валідація сесії
+p, student, /api/v1/auth/validate-token, GET

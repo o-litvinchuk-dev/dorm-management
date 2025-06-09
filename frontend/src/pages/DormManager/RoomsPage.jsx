@@ -1,4 +1,3 @@
-// frontend/src/pages/DormManager/RoomsPage.jsx
 import React, { useState, useEffect } from "react";
 import RoomForm from "../../components/DormManager/RoomForm";
 import api from "../../utils/api";
@@ -12,7 +11,7 @@ const RoomsPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState(null);
 
-  usekhookEffect(() => {
+  useEffect(() => {
     fetchRooms();
   }, []);
 

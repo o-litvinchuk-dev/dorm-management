@@ -25,10 +25,7 @@
 }
 
 .pageContainer {
-  /* background: var(--card-background-color); */
-  /* border: 1px solid var(--border-color); */
   border-radius: var(--border-radius-xl);
-  /* padding: 24px; */
   margin-top: var(--page-container-margin-top);
   width: 100%;
   box-sizing: border-box;
@@ -43,29 +40,22 @@
 .dashboardGrid {
   display: grid;
   height: 100%;
-  gap: 1.25rem; /* Відстань між картками */
-  
-  /* Визначаємо колонки. Пропорції підібрані під скріншот */
+  gap: 1.25rem;
   grid-template-columns: 2fr 3fr 1.5fr; 
-  
-  /* Визначаємо рядки. Перший ряд займає більше місця, другий - менше. */
   grid-template-rows: 60% auto;
-
-  /* Визначаємо імена областей для зручного розміщення */
   grid-template-areas:
     "pass progress actions"
     "pass neighbors applications";
 }
 
 /* --- Розміщення елементів у сітці --- */
-.gridAreaPass         { grid-area: pass; }
-.gridAreaProgress     { grid-area: progress; }
-.gridAreaActions      { grid-area: actions; }
-.gridAreaNeighbors    { grid-area: neighbors; }
+.gridAreaPass { grid-area: pass; }
+.gridAreaProgress { grid-area: progress; }
+.gridAreaActions { grid-area: actions; }
+.gridAreaNeighbors { grid-area: neighbors; }
 .gridAreaApplications { 
   grid-area: applications; 
-  /* На скріншоті ця секція займає місце під Progress та Actions */
-  grid-column: 2 / 4; /* Починаємо з 2-ї колонки і закінчуємо перед 4-ю */
+  grid-column: 2 / 4;
   grid-row: 2 / 3;
 }
 
@@ -81,12 +71,12 @@
   background-color: var(--card-background-color);
   border-radius: var(--border-radius-xl);
   border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
 /* --- Заголовки секцій --- */
 .sectionTitle {
-  font-size: 1.1rem; /* Трохи менший, як на скріншоті */
+  font-size: 1.1rem;
   font-weight: 600; 
   color: var(--text-primary);
   margin: 0 0 1rem 0; 
@@ -94,7 +84,7 @@
   border-bottom: 1px solid var(--border-color-light);
   display: flex; 
   align-items: center; 
-  flex-shrink: 0; /* Заголовок не має стискатися */
+  flex-shrink: 0;
 }
 .sectionTitleIconInternal {
   width: 1em; height: 1em; margin-right: 0.5em; color: var(--primary-color);
@@ -106,11 +96,11 @@
 .quickActions,
 .roommatesList,
 .activityList {
-  flex-grow: 1; /* Займає весь доступний простір у картці */
-  overflow-y: auto; /* Додає скрол, якщо контент не влазить */
+  flex-grow: 1;
+  overflow-y: auto;
   min-height: 0;
-  padding-right: 5px; /* Місце для скролбару */
-  margin-right: -5px; /* Компенсація ширини скролбару */
+  padding-right: 8px; 
+  margin-right: -8px; 
   list-style: none; padding-left: 0; margin: 0;
 }
 
@@ -139,31 +129,47 @@
   padding: 0.8rem 1rem;
   border-radius: var(--border-radius-lg);
   background-color: var(--background-ultralight);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border-color-light);
   transition: all var(--transition-base);
   cursor: default; 
   margin-bottom: 0.85rem;
+  opacity: 0.6;
 }
 .settlementStep:last-child { margin-bottom: 0; }
-.settlementStep[role="button"]:hover:not(.activeStep):not(.completedStep) {
-  border-color: var(--primary-color-medium);
-  transform: translateY(-2px); 
-}
 .settlementStep.activeStep {
-  border-color: var(--success-color); 
-  background-color: var(--success-bg-light);
+  border-color: var(--primary-color); 
+  background-color: var(--primary-bg-light);
   cursor: pointer;
+  opacity: 1;
+  box-shadow: 0 2px 8px -2px var(--primary-color-light);
 }
-.settlementStep.activeStep .stepTitle { color: var(--success-color-darker); }
-.settlementStep.activeStep .stepIconWrapper { background-color: var(--success-color); color: var(--text-on-success); }
+.settlementStep[role="button"]:hover:not(.activeStep):not(.completedStep) {
+  border-color: var(--primary-color);
+}
+.settlementStep.completedStep {
+  opacity: 1;
+  border-color: var(--success-color);
+  background-color: var(--success-bg-light);
+}
+.settlementStep.completedStep .stepTitle { color: var(--success-color-dark); }
+.settlementStep.completedStep .stepIconWrapper { background-color: var(--success-color); }
+
+.settlementStep.rejectedCompletedStep {
+    border-color: var(--error-color);
+    background-color: var(--error-bg-light);
+}
+.settlementStep.rejectedCompletedStep .stepTitle { color: var(--error-color-dark); }
+.settlementStep.rejectedCompletedStep .stepIconWrapper { background-color: var(--error-color); }
+
 .stepIconWrapper {
   margin-right: 1rem; width: 40px; height: 40px;
   border-radius: 50%; display: flex; align-items: center; justify-content: center;
-  background-color: var(--border-color-strong); color: var(--text-secondary); 
+  background-color: var(--border-color-dark); color: white; 
   transition: background-color 0.2s, color 0.2s;
   flex-shrink: 0;
 }
-.stepIcon, .stepIconCompleted { width: 22px; height: 22px; }
+.stepIcon, .stepIconCompleted, .stepIconRejected { width: 22px; height: 22px; }
+
 .stepText { flex-grow: 1; min-width: 0; }
 .stepTitle { font-size: 1rem; margin-bottom: 0.2rem; font-weight: 500; color: var(--text-primary); }
 .stepStatus { font-size: 0.85rem; line-height: 1.4; color: var(--text-secondary); }
@@ -185,7 +191,7 @@
 .viewAllLink:hover { text-decoration: underline; }
 
 /* --- Activity Item (елемент списку заяв) --- */
-.activityItem { display: flex; align-items: flex-start; padding: 0.8rem 0.3rem; border-bottom: 1px solid var(--border-color-lightest); cursor: pointer; transition: background-color var(--transition-fast); }
+.activityItem { display: flex; align-items: flex-start; padding: 0.8rem 0.3rem; border-bottom: 1px solid var(--border-color-light); cursor: pointer; transition: background-color var(--transition-fast); }
 .activityItem:last-child { border-bottom: none; }
 .activityItem:hover { background-color: var(--background-light); }
 .itemIcon { width: 20px; height: 20px; margin-right: 0.75rem; margin-top: 2px; color: var(--primary-color); flex-shrink: 0; }
@@ -193,6 +199,10 @@
 .itemTitle { font-size: 0.95rem; font-weight: 500; margin-bottom: 0.15rem; }
 .itemStatus { font-weight: 400; color: var(--text-muted); }
 .itemDetails, .itemDate { font-size: 0.8rem; color: var(--text-secondary); line-height: 1.35; }
+.roommatesList { display: flex; flex-direction: column; gap: 0.8rem; }
+.roommateItem { display: flex; align-items: center; gap: 0.75rem; }
+.roommateInfo { font-size: 0.9rem; }
+.roommateName { font-weight: 500; color: var(--text-primary); }
 
 /* --- "No Items" Placeholders (для "Моїх сусідів") --- */
 .noItemsMessage {
@@ -200,6 +210,7 @@
   text-align: center; flex-grow: 1; display: flex; flex-direction: column;
   align-items: center; justify-content: center;
 }
+.compactNoItems { padding: 0.5rem; font-size: 0.85rem; }
 .noItemsIconSmall { color: var(--text-placeholder); margin-bottom: 0.5rem; width: 28px; height: 28px; }
 
 /* --- Full Page Loading/Error States --- */

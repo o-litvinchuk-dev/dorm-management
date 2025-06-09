@@ -1,5 +1,5 @@
 // src/pages/Dashboard/DashboardPage.jsx
-// УВАГА: Структура JSX була змінена для відповідності новому CSS Grid макету.
+// УВАГА: Структура JSX та логіка визначення етапів були значно оновлені.
 
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
@@ -31,7 +31,7 @@ const SettlementStep = ({ title, status, isActive, isCompleted, onClick, actionT
   const IconComponent = icon;
   return (
     <div
-      className={`${styles.settlementStep} ${isActive ? styles.activeStep : ''} ${isCompleted ? styles.completedStep : ''} ${isCompleted && status.toLowerCase().includes('відхилено') ? styles.rejectedCompletedStep : ''}`}
+      className={`${styles.settlementStep} ${isActive ? styles.activeStep : ''} ${isCompleted ? styles.completedStep : ''} ${isCompleted && (status.toLowerCase().includes('відхилено') || status.toLowerCase().includes('скасовано')) ? styles.rejectedCompletedStep : ''}`}
       onClick={onClick}
       role={onClick ? "button" : undefined}
       tabIndex={onClick ? 0 : -1}
@@ -39,14 +39,14 @@ const SettlementStep = ({ title, status, isActive, isCompleted, onClick, actionT
       aria-label={`Етап поселення: ${title}. Статус: ${status}`}
     >
       <div className={styles.stepIconWrapper}>
-        {isCompleted && !status.toLowerCase().includes('відхилено') ? <CheckCircleIcon className={styles.stepIconCompleted} /> :
-         isCompleted && status.toLowerCase().includes('відхилено') ? <XCircleIcon className={styles.stepIconRejected} /> :
+        {isCompleted && !(status.toLowerCase().includes('відхилено') || status.toLowerCase().includes('скасовано')) ? <CheckCircleIcon className={styles.stepIconCompleted} /> :
+         isCompleted && (status.toLowerCase().includes('відхилено') || status.toLowerCase().includes('скасовано')) ? <XCircleIcon className={styles.stepIconRejected} /> :
          (IconComponent ? <IconComponent className={styles.stepIcon} /> : <InformationCircleIcon className={styles.stepIcon} />)}
       </div>
       <div className={styles.stepText}>
         <h4 className={styles.stepTitle}>{title}</h4>
         <p className={styles.stepStatus}>{status}</p>
-        {isActive && actionText && !status.toLowerCase().includes('відхилено') && (
+        {isActive && actionText && !(status.toLowerCase().includes('відхилено') || status.toLowerCase().includes('скасовано')) && (
           <span className={styles.stepAction}>
             {actionText} <ArrowRightIcon className={styles.stepActionIcon}/>
           </span>
@@ -137,54 +137,48 @@ const DashboardPage = () => {
 
       const latestApplication = dashboardResult.applications?.[0];
       let stageKey = 'initial_application';
-      let appStatusForStage = null;
+      let appStatusForStage = latestApplication?.status || null;
 
-      if (activePassResult) {
-        stageKey = 'completed';
-        appStatusForStage = latestApplication?.status ? getStatusDetails(latestApplication.status, 'application') : 'Поселено';
-        try {
-          const roommatesRes = await api.get('/secure/my-roommates');
-          setRoommates(roommatesRes.data || []);
-        } catch (roommatesError) {
-          if (roommatesError.response?.status !== 404) {
-            console.warn("Could not fetch roommates:", roommatesError);
-          }
-          setRoommates([]);
-        }
-      } else if (latestApplication) {
-        appStatusForStage = latestApplication.status;
-        if (['settled'].includes(appStatusForStage)) {
+      const activeReservation = reservationsResult.find(r => r.status === 'confirmed' || r.status === 'checked_in');
+      const pendingReservation = reservationsResult.find(r => r.status === 'pending_confirmation');
+      const activeAgreement = agreementsResult.find(a => a.status === 'approved');
+      const pendingAgreement = agreementsResult.find(a => a.status === 'pending_review');
+
+      if (activePassResult || (activeAgreement && activeAgreement.status === 'approved')) {
           stageKey = 'completed';
-        } else if (['rejected', 'rejected_by_faculty', 'rejected_by_dorm', 'cancelled_by_user'].includes(appStatusForStage)) {
-          stageKey = 'application_rejected';
-        } else {
-          const activeReservation = reservationsResult.find(r => r.status === 'confirmed' || r.status === 'checked_in');
-          const pendingReservation = reservationsResult.find(r => r.status === 'pending_confirmation');
-          const activeAgreement = agreementsResult.find(a => a.status === 'approved');
-          const pendingAgreement = agreementsResult.find(a => a.status === 'pending_review');
-
-          if (activeAgreement) {
-            stageKey = 'completed'; 
-          } else if (pendingAgreement) {
-            stageKey = 'agreement_review';
-          } else if (activeReservation || ['approved', 'approved_by_dorm'].includes(appStatusForStage)) {
-            stageKey = 'agreement';
-          } else if (pendingReservation) {
-            stageKey = 'reservation_pending';
-          } else if (['approved_by_faculty'].includes(appStatusForStage) || (appStatusForStage === 'pending' && dashboardResult.applications.length > 0)) {
-             stageKey = 'reservation';
-          } else if (appStatusForStage === 'pending') {
-            stageKey = 'application_review';
+          if (activePassResult) {
+              try {
+                  const roommatesRes = await api.get('/secure/my-roommates');
+                  setRoommates(roommatesRes.data || []);
+              } catch (roommatesError) {
+                  if (roommatesError.response?.status !== 404) {
+                      console.warn("Could not fetch roommates:", roommatesError);
+                  }
+                  setRoommates([]);
+              }
           }
-        }
+      } else if (pendingAgreement) {
+          stageKey = 'agreement_review';
+      } else if (activeReservation || (latestApplication && ['approved', 'approved_by_dorm'].includes(latestApplication.status))) {
+          stageKey = 'agreement';
+      } else if (pendingReservation) {
+          stageKey = 'reservation_pending';
+      } else if (latestApplication && ['approved_by_faculty'].includes(latestApplication.status)) {
+          stageKey = 'reservation';
+      } else if (latestApplication && ['rejected', 'rejected_by_faculty', 'rejected_by_dorm', 'cancelled_by_user'].includes(latestApplication.status)) {
+          stageKey = 'application_rejected';
+      } else if (latestApplication && latestApplication.status === 'pending') {
+          stageKey = 'application_review';
+      } else {
+          stageKey = 'initial_application';
       }
       
       setSettlementStatus({
         currentStage: stageKey,
         applicationStatus: appStatusForStage,
         hasActivePass: !!activePassResult,
-        reservationDetails: reservationsResult.find(r => r.status === 'confirmed' || r.status === 'pending_confirmation'),
-        agreementDetails: agreementsResult.find(a => a.status === 'approved' || a.status === 'pending_review')
+        reservationDetails: activeReservation || pendingReservation,
+        agreementDetails: activeAgreement || pendingAgreement
       });
 
     } catch (err) {
@@ -252,26 +246,20 @@ const DashboardPage = () => {
   if (contextUser && contextUser.role === 'student') {
     const stageDetails = {
       initial_application: { title: "1. Подача Заяви", status: "Подайте заяву на поселення, щоб розпочати", actionText: "Подати заяву", actionLink: "/services/accommodation-application", icon: ClipboardDocumentCheckIcon, isActive: true, isCompleted: false },
-      application_review: { title: "1. Заява на Розгляді", status: `Ваша заява зі статусом: ${getStatusDetails(settlementStatus?.applicationStatus, 'application')}`, actionText: "Переглянути заяви", actionLink: "/my-accommodation-applications", icon: ClockIcon, isActive: false, isCompleted: false },
+      application_review: { title: "1. Заява на Розгляді", status: `Ваша заява зі статусом: ${getStatusDetails(settlementStatus?.applicationStatus, 'application')}`, actionText: "Переглянути заяви", actionLink: "/my-accommodation-applications", icon: ClockIcon, isActive: false, isCompleted: true },
       application_rejected: { title: "1. Заяву Відхилено", status: `Статус: ${getStatusDetails(settlementStatus?.applicationStatus, 'application')}`, actionText: "Подати нову заяву", actionLink: "/services/accommodation-application", icon: XCircleIcon, isActive: true, isCompleted: true, },
       reservation: { title: "2. Бронювання Кімнати", status: "Заява затверджена. Оберіть кімнату для проживання.", actionText: "Знайти та забронювати", actionLink: "/services/rooms/search", icon: BookmarkSquareIcon, isActive: true, isCompleted: false },
-      reservation_pending: { title: "2. Бронювання Очікує", status: `Бронювання кімнати №${settlementStatus?.reservationDetails?.room_number || '...'} ${getStatusDetails(settlementStatus?.reservationDetails?.status, 'reservation')}`, actionText: "Мої бронювання", actionLink: "/my-reservations", icon: ClockIcon, isActive: false, isCompleted: false },
+      reservation_pending: { title: "2. Бронювання Очікує", status: `Бронювання кімнати №${settlementStatus?.reservationDetails?.room_number || '...'} ${getStatusDetails(settlementStatus?.reservationDetails?.status, 'reservation')}`, actionText: "Мої бронювання", actionLink: "/my-reservations", icon: ClockIcon, isActive: false, isCompleted: true },
       agreement: { title: "3. Оформлення Договору", status: `Кімната №${settlementStatus?.reservationDetails?.room_number || (settlementStatus?.applicationStatus === 'approved_by_dorm' && dashboardData?.applications?.[0]?.preferred_room) || '...'} заброньована/визначена. Заповніть договір.`, actionText: "Заповнити договір", actionLink: "/services/settlement-agreement", icon: DocumentTextIcon, isActive: true, isCompleted: false },
-      agreement_review: { title: "3. Договір на Розгляді", status: `Ваш договір (${getStatusDetails(settlementStatus?.agreementDetails?.status, 'agreement')}) перевіряється.`, actionText: "Мої активності", actionLink: "/my-accommodation-applications", icon: ClockIcon, isActive: false, isCompleted: false },
+      agreement_review: { title: "3. Договір на Розгляді", status: `Ваш договір (${getStatusDetails(settlementStatus?.agreementDetails?.status, 'agreement')}) перевіряється.`, actionText: "Мої активності", actionLink: "/my-accommodation-applications", icon: ClockIcon, isActive: false, isCompleted: true },
       completed: { title: "4. Поселення Завершено!", status: "Вітаємо! Усі етапи пройдено. Ваша перепустка активна.", icon: HomeSolidIcon, isActive: false, isCompleted: true }
     };
 
     const currentStageKey = settlementStatus?.currentStage || 'initial_application';
     const currentStageDefinition = stageDetails[currentStageKey] || stageDetails.initial_application;
     const stepsOrder = ['initial_application', 'reservation', 'agreement', 'completed'];
-    const baseStageOfCurrent = currentStageKey.split('_')[0];
-    const activeStageOrderIndex = stepsOrder.indexOf(baseStageOfCurrent);
+    const activeStageOrderIndex = stepsOrder.findIndex(key => key.startsWith(currentStageKey.split('_')[0]));
     
-    // Визначення активного етапу для "Швидких дій" на основі скріншоту
-    const quickActionStageKey = settlementStatus?.currentStage === 'reservation' ? 'reservation' : currentStageDefinition.actionLink === '/services/rooms/search' ? 'reservation' : currentStageKey;
-    const quickActionStage = stageDetails[quickActionStageKey] || currentStageDefinition;
-
-
     return (
       <div className={styles.dashboardLayout}>
         <Sidebar onToggle={handleSidebarToggle} isExpanded={isSidebarExpanded} />
@@ -290,28 +278,24 @@ const DashboardPage = () => {
               ) : dashboardData && settlementStatus ? (
                 <div className={styles.dashboardGrid}>
                   
-                  {/* --- Grid Area: Pass --- */}
                   <section className={`${styles.section} ${styles.gridAreaPass}`}>
                     <h2 className={styles.sectionTitle}>Моя Перепустка</h2>
                     <DormPassCard />
                   </section>
                   
-                  {/* --- Grid Area: Progress --- */}
                   <section className={`${styles.section} ${styles.gridAreaProgress}`}>
                     <h2 className={styles.sectionTitle}>Мій Прогрес Поселення</h2>
                     <div className={styles.settlementStepsContainer}>
                       {stepsOrder.map((key, index) => {
                         let stageToRender = stageDetails[key];
-                        let isStepActive = false;
+                        const baseStageOfCurrent = currentStageKey.split('_')[0];
                         let isStepCompleted = index < activeStageOrderIndex;
+                        let isStepActive = false;
 
-                        if (key === baseStageOfCurrent) {
-                          stageToRender = currentStageDefinition;
-                          isStepActive = currentStageDefinition.isActive;
-                          isStepCompleted = currentStageDefinition.isCompleted;
-                        } else if (key === 'initial_application' && currentStageKey === 'application_rejected') {
-                            stageToRender = stageDetails.application_rejected;
-                            isStepCompleted = true; 
+                        if (key.startsWith(baseStageOfCurrent)) {
+                            stageToRender = currentStageDefinition;
+                            isStepActive = stageToRender.isActive;
+                            isStepCompleted = stageToRender.isCompleted;
                         }
                         
                         return <SettlementStep 
@@ -325,7 +309,6 @@ const DashboardPage = () => {
                     </div>
                   </section>
 
-                  {/* --- Grid Area: Quick Actions --- */}
                   <section className={`${styles.section} ${styles.gridAreaActions}`}>
                     <h2 className={styles.sectionTitle}>Швидкі Дії</h2>
                     <div className={styles.quickActions}>
@@ -343,7 +326,6 @@ const DashboardPage = () => {
                     </div>
                   </section>
 
-                  {/* --- Grid Area: Neighbors --- */}
                   <section className={`${styles.section} ${styles.gridAreaNeighbors}`}>
                     <h2 className={styles.sectionTitle}><UsersIcon className={styles.sectionTitleIconInternal} />Мої Сусіди</h2>
                     {activePass && roommates.length > 0 ? (
@@ -363,7 +345,6 @@ const DashboardPage = () => {
                     )}
                   </section>
                   
-                  {/* --- Grid Area: Applications --- */}
                   <section className={`${styles.section} ${styles.gridAreaApplications}`}>
                     <div className={styles.listHeader}>
                       <h2 className={styles.sectionTitle}>Останні Заяви на Поселення</h2>
@@ -398,7 +379,6 @@ const DashboardPage = () => {
     );
   }
 
-  // Fallback/Loading for other roles or while user context is loading
   return (
     <div className={styles.dashboardLayout}>
       <Sidebar onToggle={handleSidebarToggle} isExpanded={isSidebarExpanded} />

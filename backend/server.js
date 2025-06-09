@@ -28,6 +28,7 @@ import adminSettlementContractRoutes from "./src/routes/v1/adminSettlementContra
 import dormitoryPassRoutes from "./src/routes/v1/dormitoryPassRoutes.js";
 import settlementScheduleAdminRoutes from "./src/routes/v1/settlementScheduleAdminRoutes.js";
 import publicRoutes from "./src/routes/v1/publicRoutes.js"; // Import new public routes
+import searchRoutes from "./src/routes/v1/searchRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -94,6 +95,7 @@ app.use("/api/v1", dormitoryRoutes);
 app.use("/api/v1/application-presets", dormitoryApplicationPresetRoutes);
 app.use("/api/v1", dormitoryPassRoutes);
 app.use("/api/v1/admin/settlement-schedule", settlementScheduleAdminRoutes);
+app.use("/api/v1/search", searchRoutes);
 
 app.use(errorHandler);
 

@@ -13,7 +13,6 @@ import {
   BuildingLibraryIcon,
   WrenchScrewdriverIcon,
   UserGroupIcon as StudentCouncilIcon,
-  // CalendarDaysIcon as EventsIcon, // ВИДАЛЕНО
   ListBulletIcon as ScheduleAdminIcon
 } from '@heroicons/react/24/outline';
 import { useUser } from '../../contexts/UserContext';
@@ -140,11 +139,10 @@ const DormManagerDashboardPage = () => {
     { title: "Бронювання Кімнат", countKey: "roomReservationsCount", labelPrefix: "Активних: ", icon: BookmarkSquareIcon, linkTo: "/admin/room-reservations", description: "Управління бронюваннями кімнат у вашому гуртожитку." },
     { title: "Договори на Поселення", countKey: "settlementAgreementsCount", labelPrefix: "На розгляді: ", icon: ContractIcon, linkTo: "/admin/settlement-agreements", description: "Перегляд та адміністрування договорів на поселення для вашого гуртожитку." },
     { title: "Керування Кімнатами", icon: BuildingLibraryIcon, linkTo: "/dorm-manager/rooms", description: "Додавання, редагування та видалення кімнат у вашому гуртожитку." },
-    { title: "Розклад Поселення (Адмін)", icon: ScheduleAdminIcon, linkTo: "/admin/manage-settlement-schedule", description: "Адміністрування записів у загальному розкладі поселення."},
-    { title: "Студентські Ради", icon: StudentCouncilIcon, linkTo: "/dean/student-council", description: "Перегляд інформації про студентські ради факультетів." },
-    { title: "Налаштування Заяв", icon: WrenchScrewdriverIcon, linkTo: "/admin/application-presets", description: "Конфігурація параметрів подачі заяв для вашого гуртожитку." },
+    { title: "Розклад Поселення", icon: ScheduleAdminIcon, linkTo: "/admin/manage-settlement-schedule", description: "Адміністрування записів у загальному розкладі поселення."},
+    { title: "Студентські Ради", icon: StudentCouncilIcon, linkTo: "/dean/student-council", description: "Перегляд інформації про студради факультетів, що проживають у гуртожитку." },
+    { title: "Налаштування Заяв", icon: WrenchScrewdriverIcon, linkTo: "/admin/application-presets", description: "Конфігурація параметрів подачі заяв для вашого гуртожитку." }
   ];
-
 
   return (
     <div className={styles.layout}>
